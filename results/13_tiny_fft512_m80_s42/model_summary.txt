@@ -1,0 +1,33 @@
+Model: "XiaoChirp_Tiny_GAP_Depthwise_Aggresssive_m80"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input_1 (InputLayer)        [(None, 96, 80, 1)]       0         
+                                                                 
+ conv2d (Conv2D)             (None, 94, 78, 4)         40        
+                                                                 
+ activation (Activation)     (None, 94, 78, 4)         0         
+                                                                 
+ max_pooling2d (MaxPooling2  (None, 47, 39, 4)         0         
+ D)                                                              
+                                                                 
+ depthwise_conv2d (Depthwis  (None, 45, 37, 4)         40        
+ eConv2D)                                                        
+                                                                 
+ conv2d_1 (Conv2D)           (None, 45, 37, 3)         15        
+                                                                 
+ activation_1 (Activation)   (None, 45, 37, 3)         0         
+                                                                 
+ max_pooling2d_1 (MaxPoolin  (None, 22, 18, 3)         0         
+ g2D)                                                            
+                                                                 
+ global_average_pooling2d (  (None, 3)                 0         
+ GlobalAveragePooling2D)                                         
+                                                                 
+ dense (Dense)               (None, 2)                 8         
+                                                                 
+=================================================================
+Total params: 103 (412.00 Byte)
+Trainable params: 103 (412.00 Byte)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________

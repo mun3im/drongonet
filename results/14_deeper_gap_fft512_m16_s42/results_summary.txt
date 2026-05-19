@@ -1,0 +1,20 @@
+============================================================
+Deeper GAP Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9944
+TFLite int8 Model:
+  Accuracy: 0.9694
+  AUC: 0.9932
+  Avg Inference Time: 0.39ms
+  Model Size: 32.82 KB
+  (Experimental) Total Params: 25,890
+
+AUC Degradation: 0.0012 (0.12%)
+
+============================================================
+Timing Breakdown
+============================================================
+Preprocessing: 2m 51.30s
+Training: 12m 48.26s
+Total: 16m 06.50s

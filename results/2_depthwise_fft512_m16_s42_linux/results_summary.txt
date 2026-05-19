@@ -1,0 +1,20 @@
+============================================================
+MyBADv2 CNN-Mel Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9608
+TFLite int8 Model:
+  Accuracy: 0.9042
+  AUC: 0.9602
+  Avg Inference Time: 0.07ms
+  Model Size: 8.65 KB
+  (Experimental) Total Params: 8,856
+
+AUC Degradation: 0.0006 (0.06%)
+
+============================================================
+Timing Breakdown
+============================================================
+Preprocessing: 1m 59.28s
+Training: 4m 02.12s
+Total: 6m 08.25s

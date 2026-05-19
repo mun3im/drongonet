@@ -1,0 +1,33 @@
+Model: "TinyChirp_CNNTime"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input_1 (InputLayer)        [(None, 48000, 1)]        0         
+                                                                 
+ conv1d (Conv1D)             (None, 48000, 4)          16        
+                                                                 
+ activation (Activation)     (None, 48000, 4)          0         
+                                                                 
+ max_pooling1d (MaxPooling1  (None, 24000, 4)          0         
+ D)                                                              
+                                                                 
+ conv1d_1 (Conv1D)           (None, 24000, 8)          104       
+                                                                 
+ activation_1 (Activation)   (None, 24000, 8)          0         
+                                                                 
+ dropout (Dropout)           (None, 24000, 8)          0         
+                                                                 
+ average_pooling1d (Average  (None, 12000, 8)          0         
+ Pooling1D)                                                      
+                                                                 
+ flatten (Flatten)           (None, 96000)             0         
+                                                                 
+ dense (Dense)               (None, 64)                6144064   
+                                                                 
+ dense_1 (Dense)             (None, 2)                 130       
+                                                                 
+=================================================================
+Total params: 6144314 (23.44 MB)
+Trainable params: 6144314 (23.44 MB)
+Non-trainable params: 0 (0.00 Byte)
+_________________________________________________________________

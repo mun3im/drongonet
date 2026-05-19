@@ -1,0 +1,155 @@
+# SEABADNet
+
+Lean TinyML CNN for binary bird activity detection, targeting embedded hardware (ARM Cortex-M4 and single-board computers). Derived from the [TinyChirp](https://arxiv.org/abs/2408.01976) CNN-Mel architecture and trained on the **SEABAD** (South-East Asian Bird Activity Detection) dataset.
+
+## Models
+
+| Variant | Target hardware | Size | AUC |
+|---|---|---|---|
+| **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | ≤8 KB INT8 | 0.9741 |
+| **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | ≤35 KB INT8 | 0.9994 |
+
+Both models use mel spectrogram input, Global Average Pooling, and focal loss. Micro uses depthwise separable convolutions (6 filters, n_mels=16, n_fft=512); Edge uses standard Conv2D (8 filters, n_mels=80, n_fft=1024).
+
+## Dataset
+
+**SEABAD** — binary classification (bird activity present / absent), 16 kHz, 3-second clips, 80/10/10 split.
+
+Mel caches are keyed by `(n_mels, n_fft, hop_length)` and stored separately from the raw audio:
+
+```
+Mac Mini:  /Volumes/Evo/cache_seabad_m{n_mels}/
+Linux GPU: /data/cache_seabad_m{n_mels}/
+```
+
+## Quickstart
+
+All training scripts share the same CLI:
+
+```bash
+python 6a_micro_final.py \
+    --dataset-path /path/to/seabad \
+    --cache-dir    /path/to/cache_seabad_m16 \
+    --n_mels       16 \
+    --n_fft        512 \
+    --random_seed  42
+```
+
+Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
+
+## Repository structure
+
+### Phase 0 — TinyChirp baselines (run as-published on SEABAD)
+
+| Script | Model |
+|---|---|
+| `0a_tinychirp_cnnmel.py` | CNN-Mel — primary baseline |
+| `0b_tinychirp_cnntime.py` | CNN-Time |
+| `0c_tinychirp_transformer.py` | Transformer |
+| `0d_tinychirp_squeezenettime.py` | SqueezeNet-Time |
+| `0e_tinychirp_squeezenetmel.py` | SqueezeNet-Mel |
+
+### Phase 1 — n_mels sweep (frequency resolution)
+
+| Script | Purpose |
+|---|---|
+| `1a_baseline2d.py` | CNN-Mel on SEABAD, sweep n_mels ∈ {16,32,48,64,80} |
+| `1b_transformer.py` | Transformer on raw waveform (reference) |
+| `1c_cnntime.py` | CNN-Time on SEABAD (reference) |
+| `1d_cnntime_gap.py` | CNN-Time + GAP |
+| `1e_cnntime_enhanced.py` | CNN-Time with extended metrics |
+| `1f_cnntime_deeper.py` | CNN-Time with extra conv layer |
+
+### Phase 2 — Pooling: Flatten vs GAP
+
+| Script | Key change |
+|---|---|
+| `2a_baseline_gap.py` | Replace Flatten with Global Average Pooling |
+| `2b_baseline_gap_learned.py` | GAP + learned pooling weights |
+| `2c_baseline_gap_1x1.py` | GAP + 1×1 bottleneck conv |
+
+### Phase 3 — Conv type, filter count, loss function
+
+| Script | Key change |
+|---|---|
+| `3a_depthwise.py` | SeparableConv2D, 4 filters |
+| `3b_filters8.py` | Conv2D, 8 filters |
+| `3c_gap_focal_loss.py` | GAP + focal loss (α=0.25, γ=2) |
+| `3d_gap_freq_emphasis.py` | + frequency emphasis augmentation |
+| `3e_gap_freq_emph_ds.py` | Frequency emphasis + depthwise separable |
+| `3f_gap_focal_loss_freq_emph_pointwise.py` | GAP + focal loss + freq emphasis + pointwise conv |
+| `3g_strided_focal_tuned.py` | Strided conv + focal loss |
+| `3h_strided_focal_no1x1.py` | Strided, no 1×1 conv |
+| `3i_strided_focal_depthwise.py` | Strided + depthwise separable |
+
+### Phase 4 — Dropout sweep
+
+**Track A — Edge (Conv2D, 8 filters):** `4a_dropout01.py` through `4d_dropout04.py` (dropout 0.1–0.4)
+
+**Track B — Micro (depthwise, n_mels=16):** `4e_depthwise_drop01.py` through `4h_depthwise_drop04.py` (dropout 0.1–0.4)
+
+### Phase 5 — Micro filter count
+
+| Script | Filters |
+|---|---|
+| `5a_depthwise_f6.py` | 6 |
+| `5b_depthwise_f5.py` | 5 |
+
+### Phase 6 — Final candidates
+
+| Script | Model |
+|---|---|
+| `6a_micro_final.py` | SEABADNet-Micro |
+| `6b_edge_final.py` | SEABADNet-Edge |
+| `6b_micro_improved.py` | Micro with additional pointwise conv (multi-seed validation) |
+
+### Capacity references (run once, not in ablation chain)
+
+| Script | Purpose |
+|---|---|
+| `cap_high_accuracy.py` | High-capacity ceiling (large filter counts, no size constraint) |
+| `cap_low_power.py` | Low-power baseline reference |
+| `alt_tiny.py` / `alt_tiny_gap.py` / `alt_tiny_gap_agg.py` | Alternative 96-timestep design (n_mels=80, hop=494) |
+
+### Confirmed-rejected configurations
+
+| Script | Reason rejected |
+|---|---|
+| `rej_batchnorm.py` | No AUC gain; adds quantisation sensitivity at this scale |
+| `rej_depthwise_bn_f6.py` | Same as above |
+| `rej_dense32.py` | Size cost with no meaningful gain over Dense(8) |
+| `rej_accurate_se.py` | Squeeze-excite does not help 4-filter models |
+| `rej_deeper_1x1_gap.py` | Redundant given `6b_edge_final.py` |
+
+### Analysis and figure scripts
+
+| Script | Purpose |
+|---|---|
+| `collect_all_results.py` | Aggregate all `results_summary.txt` into CSV |
+| `analyze_ablation_results.py` | Ablation table for paper |
+| `analyze_all_ablations.py` | Cross-phase summary |
+| `analyze_baseline_sweep.py` | n_mels sweep plots |
+| `generate_paper_figures.py` | All paper figures |
+| `generate_paper_tables.py` | All tables (LaTeX-ready) |
+| `generate_publication_figures.py` | Final publication-quality figures |
+| `generate_pr_curves.py` | Precision-Recall curves |
+| `combine_roc_curves.py` | Combined ROC figure across models |
+| `benchmark_mel_latency.py` | Mel computation latency on target hardware |
+| `find_098_threshold.py` | Threshold sweep for ≥0.98 recall |
+| `train_standard_architectures.py` | VGG16, ResNet50, EfficientNetB0, MobileNetV3-Small (dataset validation) |
+
+## Requirements
+
+- Python 3.10+
+- TensorFlow 2.15 (GPU recommended for final validation runs)
+- librosa, numpy, scikit-learn, matplotlib
+
+## Reproducibility
+
+Every training script writes a `config.txt` (all hyperparameters + git hash) and a parseable `results_summary.txt` to its output directory. Mel caches are generated once per `(n_mels, n_fft, hop_length)` triple and reused across all runs that share that configuration.
+
+## Citation
+
+> M. Zabidi, "SEABADNet: A TinyML CNN for Bird Activity Detection on SEABAD," *manuscript in preparation*, 2026.
+
+Based on: Huang et al., "TinyChirp: Bird Song Recognition Using TinyML," 2024.

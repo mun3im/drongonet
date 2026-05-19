@@ -1,0 +1,42 @@
+\begin{table}[ht]
+\centering
+\caption{Structures of TinyML Models}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Model} & \textbf{Layer} & \textbf{Input Shape} & \textbf{Output Shape} \\
+\hline
+CNN-Time & 
+3 $\times$ 1 Conv1D + ReLU & 1 $\times$ 48000 & 4 $\times$ 48000 \\
+& MaxPooling & 4 $\times$ 48000 & 4 $\times$ 24000 \\
+& 3 $\times$ 1 Conv1D & 4 $\times$ 24000 & 8 $\times$ 24000 \\
+& Dropout 0.25 & 8 $\times$ 12000 & 8 $\times$ 12000 \\
+& Average Pooling & 8 $\times$ 12000 & 8 $\times$ 1 \\
+& FC + ReLU & 8 $\times$ 1 & 64 $\times$ 1 \\
+& FC + Softmax & 64 $\times$ 1 & 2 $\times$ 1 \\
+\hline
+Transformer-Time & 
+Conv1D + ReLU & 1 $\times$ 48000 & 16 $\times$ 48000 \\
+& MaxPooling & 16 $\times$ 48000 & 16 $\times$ 24000 \\
+& Dropout 0.25 & 16 $\times$ 48000 & 16 $\times$ 24000 \\
+& Average Pooling & 16 $\times$ 24000 & 16 $\times$ 1 \\
+& SingleHeadTransformer & 16 $\times$ 1 & 16 $\times$ 1 \\
+& FC + Softmax & 16 $\times$ 24000 & 2 $\times$ 1 \\
+\hline
+SqueezeNet-Time & 
+SqueezeNet as backbone; Conv2D $\rightarrow$ Conv1D; reduce filter number by 70\% & 
+1 $\times$ 48000 & 2 $\times$ 1 \\
+\hline
+CNN-Mel & 
+3 $\times$ 3 Conv2D + ReLU & 184 $\times$ 80 $\times$ 1 & 182 $\times$ 78 $\times$ 4 \\
+& MaxPooling & 182 $\times$ 78 $\times$ 4 & 91 $\times$ 39 $\times$ 4 \\
+& 3 $\times$ 3 Conv2D + ReLU & 91 $\times$ 39 $\times$ 4 & 89 $\times$ 37 $\times$ 4 \\
+& MaxPooling & 89 $\times$ 37 $\times$ 4 & 44 $\times$ 18 $\times$ 4 \\
+& Reshape & 44 $\times$ 18 $\times$ 4 & 3168 $\times$ 1 \\
+& FC + ReLU & 3168 $\times$ 1 & 8 $\times$ 1 \\
+& FC + Softmax & 8 $\times$ 1 & 2 $\times$ 1 \\
+\hline
+SqueezeNet-Mel & 
+Same with SqueezeNet & 184 $\times$ 80 $\times$ 1 & 2 $\times$ 1 \\
+\hline
+\end{tabular}
+\end{table}

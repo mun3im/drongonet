@@ -1,0 +1,51 @@
+============================================================
+TRAINING CONFIGURATION - MYBADV2 CNN-MEL
+============================================================
+
+System Information:
+  Platform: Linux
+  Machine: x86_64
+  Python Version: 3.10.19
+  TensorFlow Version: 2.15.0
+  GPU Available: True
+  GPU Devices: /physical_device:GPU:0
+
+Model Architecture:
+  Model: CNN-Mel (Table II)
+  Input Shape: (184, 80, 1)
+
+Training Parameters:
+  Epochs: 100
+  Batch Size: 32
+  Learning Rate: 0.001
+  LR Patience: 5
+  LR Reduction Factor: 0.5
+  Min LR: 1e-05
+  Early Stopping Patience: 15
+  Random Seed: 42
+  Dataset Fraction: 1
+
+Audio Configuration:
+  Target Sample Rate: 16000 Hz
+  Target Length: 48000 samples
+  Target Duration: 3.0 seconds
+
+Mel Spectrogram Configuration:
+  N Mels: 64
+  N FFT: 1024
+  Hop Length: 256
+
+Dataset Configuration:
+  Dataset: MyBADv2
+  Total Samples: 50k (25k positive + 25k negative)
+  Split Ratios: 80% train / 10% val / 10% test
+
+Paths:
+  Dataset Path: /Volumes/Evo/mybad
+  Output Dir: results/7a_gap_focal_loss_fft1024_m64_s42
+  Cache Dir: /Volumes/Evo/cache_mybad_m64_fft1024/
+
+CLI Arguments:
+  Representative Samples: 500
+  Force Reprocess: False
+

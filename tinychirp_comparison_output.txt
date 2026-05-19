@@ -1,0 +1,62 @@
+
+================================================================================
+TABLE: Latency Comparison with TinyChirp Baseline
+================================================================================
+
+| Model | n_mels | AUC (%) | Latency (ms) | Size (KB) | Params | Platform | Speedup |
+|-------|--------|---------|--------------|-----------|--------|----------|---------|
+| TinyChirp CNN-Mel | 80 |   [TBD] |        [TBD] |     [TBD] |   [TBD] | STM32F4  | 1.00× |
+|-------|--------|---------|--------------|-----------|--------|----------|---------|
+| MyBAD @ n_mels=80          |     80 |   98.55 |         0.42 |     29.28 |  25,558 | GTX1080  |   [TBD] |
+| MyBAD @ n_mels=48          |     48 |   98.65 |         0.24 |     18.28 |  14,294 | GTX1080  |   [TBD] |
+| MyBAD-Fast (n_mels=32)     |     32 |   98.32 |         0.16 |     12.78 |   8,662 | GTX1080  |   [TBD] |
+| MyBAD-Tiny (n_mels=16)     |     16 |   97.19 |         0.08 |     10.40 |   4,367 | GTX1080  |   [TBD] |
+| MyBAD-Balanced (n_mels=48) |     48 |   98.40 |         0.23 |     19.80 |  14,179 | GTX1080  |   [TBD] |
+
+**Notes:**
+- [TBD] values require TinyChirp paper citation and measurements
+- MyBAD latency measured on GTX 1080 Ti GPU (Linux)
+- Speedup = TinyChirp_latency / MyBAD_latency
+- **KEY INSIGHT**: TinyChirp uses FIXED n_mels=80 (no ablation)
+- **MyBAD CONTRIBUTION**: Systematic n_mels exploration for stage-1 detection
+- **FINDING**: n_mels=32-48 sufficient for activity detection (vs 80 for species ID)
+- Latency reduction comes from: (1) lower n_mels, (2) architecture optimization
+- Same test platform needed for fair comparison
+
+================================================================================
+ACTION ITEMS:
+================================================================================
+1. [ ] Find TinyChirp paper and extract:
+       - Exact latency measurement (ms)
+       - Model size (KB)
+       - Accuracy/AUC metric
+       - Test platform specifications
+2. [ ] Verify our models measured on same/comparable platform
+3. [ ] Calculate speedup ratios
+4. [ ] Add proper citation to TinyChirp in references
+================================================================================
+
+================================================================================
+EXPECTED LATENCY IMPROVEMENTS (Hypothetical)
+================================================================================
+
+Assuming TinyChirp @ n_mels=80 has similar latency to our n_mels=80 baseline:
+(TinyChirp latency ≈ MyBAD @ n_mels=80 = 0.42ms)
+
+| Model | n_mels | Latency (ms) | vs TinyChirp | Improvement |
+|-------|--------|--------------|--------------|-------------|
+| TinyChirp (n_mels=80) | 80 |         0.42 | 1.00× | baseline |
+|-------|--------|--------------|--------------|-------------|
+| MyBAD @ n_mels=80          |     80 |         0.42 |         1.00× |        0.0% |
+| MyBAD @ n_mels=48          |     48 |         0.24 |         1.75× |       42.9% |
+| MyBAD-Fast (n_mels=32)     |     32 |         0.16 |         2.62× |       61.9% |
+| MyBAD-Tiny (n_mels=16)     |     16 |         0.08 |         5.25× |       81.0% |
+| MyBAD-Balanced (n_mels=48) |     48 |         0.23 |         1.83× |       45.2% |
+
+**Key Finding:**
+- Reducing n_mels from 80→32: 2.6× speedup (62% faster)
+- Reducing n_mels from 80→16: 5.2× speedup (81% faster)
+- Minimal accuracy loss: 98.55% (n_mels=80) → 98.32% (n_mels=32) = -0.23%
+
+⚠️  Assumes TinyChirp latency ≈ our n_mels=80 baseline (same architecture)
+    Verify with actual TinyChirp measurements from literature.

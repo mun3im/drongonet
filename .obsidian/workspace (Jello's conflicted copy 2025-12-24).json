@@ -1,0 +1,220 @@
+{
+  "main": {
+    "id": "332f84d2d186b5f1",
+    "type": "split",
+    "children": [
+      {
+        "id": "c2a3b78f05673e7b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "be29adb925089616",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "PAPER_MANUSCRIPT.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PAPER_MANUSCRIPT"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d1cd58f7ef73a619",
+    "type": "split",
+    "children": [
+      {
+        "id": "50734322f848fdee",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6a77adabef2d249a",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "b683f3e0f225cffa",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "a4ab635712a79b79",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "df654758cd31d377",
+    "type": "split",
+    "children": [
+      {
+        "id": "15c79e8602342acf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ea652e90ca0b4d89",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "PAPER_MANUSCRIPT.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for PAPER_MANUSCRIPT"
+            }
+          },
+          {
+            "id": "dcfbdfab3dbae9d3",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "PAPER_MANUSCRIPT.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from PAPER_MANUSCRIPT"
+            }
+          },
+          {
+            "id": "e7d8c7fd6825cc64",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "4e0f237308fce5ee",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "6ee6c1182eee4de0",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "PAPER_MANUSCRIPT.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of PAPER_MANUSCRIPT"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "be29adb925089616",
+  "lastOpenFiles": [
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766546292750",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766545908586",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766545659991",
+    "0c_tinychirp_transformer.py",
+    "0b_tinychirp_cnntime.py",
+    "0a_tinychirp_cnnmel.py",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766543422729",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766543405426",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766543388207",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766543366986",
+    "PAPER_MANUSCRIPT.md.tmp.792778.1766543345018",
+    "results/8d_dropout04_m48_s42/tflite_roc_curve.png",
+    "results/8d_dropout04_m48_s42/tflite_confusion_matrix.png",
+    "results/8d_dropout04_m48_s42/float_roc_curve.png",
+    "results/8d_dropout04_m48_s42/float_confusion_matrix.png",
+    "results/8d_dropout04_m48_s42/training_history.png",
+    "results/8c_dropout03_m48_s42/tflite_roc_curve.png",
+    "results/8c_dropout03_m48_s42/tflite_confusion_matrix.png",
+    "results/8c_dropout03_m48_s42/float_roc_curve.png",
+    "results/8c_dropout03_m48_s42/float_confusion_matrix.png",
+    "results/8c_dropout03_m48_s42/training_history.png",
+    "PIPELINE_GUIDE.md",
+    "RERUN_PLAN.md",
+    "PAPER_PROGRESS_SUMMARY.md",
+    "PAPER_MANUSCRIPT.md",
+    "TINYCHIRP_NMELS_CORRECTION.md",
+    "UPDATES_SONA_CASCADING.md",
+    "PAPER_PLANNING.md",
+    "MYBAD_QUICK_REFERENCE.md",
+    "RESULTS.md",
+    "DEPLOYMENT_RECOMMENDATIONS.md"
+  ]
+}

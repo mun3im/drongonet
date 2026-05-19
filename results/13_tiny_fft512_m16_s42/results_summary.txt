@@ -1,0 +1,19 @@
+============================================================
+XiaoChirp-Tiny Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9491
+TFLite int8 Model:
+  Accuracy: 0.8952
+  AUC: 0.9493
+  Avg Inference Time: 0.04ms
+  Model Size: 5.34 KB
+  (Experimental) Total Params: 5,464
+
+AUC Degradation: -0.0002 (-0.03%)
+
+============================================================
+Timing Breakdown
+============================================================
+Training: 6m 20.48s
+Total: 6m 25.74s

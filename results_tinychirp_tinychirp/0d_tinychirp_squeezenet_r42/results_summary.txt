@@ -1,0 +1,18 @@
+============================================================
+TinyChirp SqueezeNet-Time Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9973
+TFLite int8 Model:
+  Accuracy: 0.9871
+  AUC: 0.9972
+  Avg Inference Time: 2.82ms
+  Model Size: 12010.41 KB
+
+AUC Degradation: 0.0001 (0.01%)
+
+============================================================
+Timing Breakdown
+============================================================
+Training: 6m 56.45s
+Total: 7m 34.70s

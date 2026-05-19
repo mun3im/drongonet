@@ -1,0 +1,37 @@
+Model: "TinyChirp_SqueezeTTime"
+__________________________________________________________________________________________________
+ Layer (type)                Output Shape                 Param #   Connected to                  
+==================================================================================================
+ input_1 (InputLayer)        [(None, 48000, 1)]           0         []                            
+                                                                                                  
+ conv1d (Conv1D)             (None, 48000, 8)             32        ['input_1[0][0]']             
+                                                                                                  
+ max_pooling1d (MaxPooling1  (None, 24000, 8)             0         ['conv1d[0][0]']              
+ D)                                                                                               
+                                                                                                  
+ conv1d_1 (Conv1D)           (None, 24000, 4)             36        ['max_pooling1d[0][0]']       
+                                                                                                  
+ conv1d_2 (Conv1D)           (None, 24000, 8)             40        ['conv1d_1[0][0]']            
+                                                                                                  
+ conv1d_3 (Conv1D)           (None, 24000, 8)             104       ['conv1d_1[0][0]']            
+                                                                                                  
+ concatenate (Concatenate)   (None, 24000, 16)            0         ['conv1d_2[0][0]',            
+                                                                     'conv1d_3[0][0]']            
+                                                                                                  
+ dropout (Dropout)           (None, 24000, 16)            0         ['concatenate[0][0]']         
+                                                                                                  
+ average_pooling1d (Average  (None, 12000, 16)            0         ['dropout[0][0]']             
+ Pooling1D)                                                                                       
+                                                                                                  
+ flatten (Flatten)           (None, 192000)               0         ['average_pooling1d[0][0]']   
+                                                                                                  
+ dense (Dense)               (None, 64)                   1228806   ['flatten[0][0]']             
+                                                          4                                       
+                                                                                                  
+ dense_1 (Dense)             (None, 2)                    130       ['dense[0][0]']               
+                                                                                                  
+==================================================================================================
+Total params: 12288406 (46.88 MB)
+Trainable params: 12288406 (46.88 MB)
+Non-trainable params: 0 (0.00 Byte)
+__________________________________________________________________________________________________

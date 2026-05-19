@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "7c577195a83f6b76",
+    "type": "split",
+    "children": [
+      {
+        "id": "70b2ef2ba423c3cd",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ab77888a973f5e9a",
+            "type": "leaf",
+            "state": {
+              "type": "pdf",
+              "state": {
+                "file": "figures/figure3_dropout_comparison.pdf"
+              },
+              "icon": "lucide-file-text",
+              "title": "figure3_dropout_comparison"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e3dd140429d64aae",
+    "type": "split",
+    "children": [
+      {
+        "id": "b3a8a3e33a41a15f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8ad7d12c5c9d98df",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "ac1c4ea2c1a900d2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "cae1a5ca9f41b280",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "058d7027b3e7eab8",
+    "type": "split",
+    "children": [
+      {
+        "id": "a35149d07248e606",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cd6d5b21c79371b4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "figures/figure3_dropout_comparison.pdf",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for figure3_dropout_comparison"
+            }
+          },
+          {
+            "id": "9e9e4373907b2f96",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "figures/figure3_dropout_comparison.pdf",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from figure3_dropout_comparison"
+            }
+          },
+          {
+            "id": "d191dafbf2a59a2b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "888d3967610942a7",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "cadb19e55459137e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "figures/figure3_dropout_comparison.pdf",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of figure3_dropout_comparison"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "8ad7d12c5c9d98df",
+  "lastOpenFiles": [
+    "rerun_logs/8c_dropout03_m48_s42.log",
+    "results/2_depthwise_m16_s42/best_model.keras",
+    "results/2_depthwise_m16_s42/model_summary.txt",
+    "results/2_depthwise_m16_s42/config.txt",
+    "results/2_depthwise_m16_s42",
+    "results/1_baseline_m80_s42/elapsed.txt",
+    "results/1_baseline_m80_s42/results_summary.txt",
+    "results/1_baseline_m80_s42/tflite_classification_report.txt",
+    "results/1_baseline_m80_s42/tflite_roc_curve.png",
+    "results/1_baseline_m80_s42/tflite_confusion_matrix.png",
+    "results/1_baseline_m80_s42/model_int8.tflite",
+    "results/1_baseline_m80_s42/float_classification_report.txt",
+    "results/1_baseline_m80_s42/float_roc_curve.png",
+    "results/1_baseline_m80_s42/float_confusion_matrix.png",
+    "results/1_baseline_m80_s42/training_history.png",
+    "rerun_logs/8b_dropout02_m48_s42.log",
+    "results/1_baseline_m64_s42/tflite_roc_curve.png",
+    "results/1_baseline_m64_s42/tflite_confusion_matrix.png",
+    "results/1_baseline_m64_s42/float_roc_curve.png",
+    "results/1_baseline_m64_s42/float_confusion_matrix.png",
+    "results/1_baseline_m64_s42/training_history.png",
+    "DEPLOYMENT_RECOMMENDATIONS.md",
+    "EXECUTION_PLAN.md",
+    "MYBAD_QUICK_REFERENCE.md",
+    "PAPER_MANUSCRIPT.md",
+    "PAPER_PLANNING.md",
+    "UPDATES_SONA_CASCADING.md",
+    "TINYCHIRP_NMELS_CORRECTION.md",
+    "RESULTS.md",
+    "RERUN_PLAN.md",
+    "PIPELINE_GUIDE.md"
+  ]
+}

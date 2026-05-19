@@ -1,0 +1,18 @@
+============================================================
+MyBAD Transformer-Time Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9387
+TFLite int8 Model:
+  Accuracy: 0.6196
+  AUC: 0.7464
+  Avg Inference Time: 12.70ms
+  Model Size: 24.74 KB
+
+AUC Degradation: 0.1923 (20.49%)
+
+============================================================
+Timing Breakdown
+============================================================
+Training: 37m 06.52s
+Total: 39m 46.91s

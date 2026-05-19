@@ -1,0 +1,18 @@
+============================================================
+TinyChirp CNN-Mel Training Results Summary
+============================================================
+
+Float32 Model AUC: 0.9985
+TFLite int8 Model:
+  Accuracy: 0.9864
+  AUC: 0.9985
+  Avg Inference Time: 0.36ms
+  Model Size: 29.23 KB
+
+AUC Degradation: -0.0000 (-0.00%)
+
+============================================================
+Timing Breakdown
+============================================================
+Training: 1m 29.31s
+Total: 1m 38.55s
