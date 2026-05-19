@@ -69,6 +69,9 @@ cache_seabad_*/
 # macOS
 .DS_Store
 
+# Internal project notes
+CLAUDE.md
+
 # Temporary / scratch files
 *.tmp
 *.bak
