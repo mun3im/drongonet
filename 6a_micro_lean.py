@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-6a_micro_final.py: SEABADNet-Micro Final Candidate
-XiaoChirp V1.1 adds frequency emphasis for improved bird detection
-- 2 Conv blocks (8→16 filters)
-- GlobalAveragePooling2D (efficient)
-- Frequency Emphasis layer (learnable)
-- Optimized for n_mels=16, n_fft=512
-- Target: <10 KB, <0.1 ms inference, >92% accuracy
+6a_micro_lean.py: SEABADNet-Micro-Lean
+Smallest Micro variant (5.41 KB INT8, 763 params). Use when size matters
+more than hitting the 0.98 recall target. Superseded by 6b_micro_final
+for deployments that require ≥0.98 recall.
+- FrequencyEmphasis → Conv(6) → MaxPool → Conv(12) → GAP → Dropout → Dense
+- Focal loss, dropout=0.1, n_mels=16, n_fft=1024
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
@@ -80,7 +79,7 @@ class TrainingConfig:
     random_seed: int = 42
     # Path configurations
     dataset_path: str = '/Volumes/Evo/seabad'
-    output_dir: str = 'results_6a_micro_final'
+    output_dir: str = 'results_6a_micro_lean'
     cache_dir: str = '/Volumes/Evo/cache_seabad_mels'
     # Train/val/test split ratios
     train_ratio: float = 0.8
@@ -1056,7 +1055,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("XIAOCHIRP V1.1 TRAINING CONFIGURATION\n")
+        f.write("SEABADNET-MICRO-LEAN TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
 
         f.write("Model Information:\n")
@@ -1329,7 +1328,7 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("XIAOCHIRP V1.1 RESULTS SUMMARY\n")
+            f.write("SEABADNET-MICRO-LEAN RESULTS SUMMARY\n")
             f.write("=" * 60 + "\n\n")
             f.write(f"Model Version: {args.version}\n")
             f.write(f"n_mels: {config.n_mels}\n")
