@@ -92,8 +92,8 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 
 | Script | Filters |
 |---|---|
-| `5a_depthwise_f6.py` | 6 |
-| `5b_depthwise_f5.py` | 5 |
+| `5a_depthwise_f5.py` | 5 |
+| `5b_depthwise_f6.py` | 6 |
 
 ### Phase 6 — Final candidates
 
