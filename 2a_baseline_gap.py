@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-CNN-Mel + GAP: Replace Flatten with GlobalAveragePooling2D
-Ablation study model: 2a_baseline_gap
+2a_baseline_gap.py: CNN-Mel + GAP (Phase 2 ablation)
+Replaces Flatten with GlobalAveragePooling2D. Gate 2: confirms GAP reduces
+params significantly with no meaningful AUC loss → locked for all subsequent phases.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

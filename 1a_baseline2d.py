@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-1a_baseline2d.py: CNN-Mel Baseline on SEABAD + n_mels sweep
-Transfer of TinyChirp CNN-Mel to SEABAD dataset; sweep n_mels to find optimal frequency resolution.
+1a_baseline2d.py: CNN-Mel baseline on SEABAD + n_mels sweep (Phase 1)
+Transfers TinyChirp CNN-Mel to SEABAD; sweeps n_mels ∈ {16,32,48,64,80}.
+Gate 1: locks best n_mels for Edge branch; n_mels=16 is Micro branch start.
+Conv2D, 4 filters, Dense(8), no dropout, n_fft=1024, hop=256, seed=42.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

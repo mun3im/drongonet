@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-1d_cnntime_gap.py: CNN-Time with Global Average Pooling on SEABAD
-Trains CNN-Time model on raw audio waveforms with GAP replacing Flatten
-Uses CNN-Time architecture with 1D convolutions on raw waveforms
+1d_cnntime_gap.py: CNN-Time + GAP on SEABAD (Phase 1 parallel reference)
+CNN-Time with GlobalAveragePooling replacing Flatten.
+Run once (seed=42) for the paper comparison table. Not an ablation step.
 """
 
 import os

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Option A: Add Dropout(0.2) before final classifier
-Ablation Study Model: 4b_dropout02
-Based on 1a_baseline2d.py with specific architectural modification
+4b_dropout02.py: Dropout(0.2) sweep — Edge track (Phase 4A ablation)
+Conv2D, 8 filters, gated n_mels, GAP, focal loss + dropout=0.2.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

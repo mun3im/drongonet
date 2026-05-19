@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 """
-7_low_power.py: Ultra-Lightweight Low Power Model
-Minimal CNN for edge devices and MCUs
-- 2 Conv blocks (8→16 filters)
-- GlobalAveragePooling2D (efficient)
-- Optimized for n_mels=16, n_fft=512
-- Target: <10 KB, <0.1 ms inference, >90% accuracy
+3e_gap_freq_emph_ds.py: Frequency emphasis + depthwise separable conv (Phase 3 — Micro direction)
+Combines freq emphasis (3d) with depthwise sep (3a).
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

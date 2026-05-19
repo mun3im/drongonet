@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Ultra-Lightweight Low Power Model for Bird Sound Detection
-GAP + Focal Loss + Frequency Emphasis + Pointwise Conv before GAP
+3f_gap_focal_loss_freq_emph_pointwise.py: GAP + focal loss + freq emphasis + pointwise conv (Phase 3)
+Adds 1×1 pointwise Conv2D before GAP on top of 3d. Highest Phase 3 AUC (0.9958 at m80).
+Architecture carried forward into 6b_micro_final (the locked Micro final).
+Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
 import os

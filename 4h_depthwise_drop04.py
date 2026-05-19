@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-4h_depthwise_drop04: Depthwise Separable + Dropout(0.4)
-Ablation Study Model: 4h_depthwise_drop04
-Combines parameter efficiency with regularization
+4h_depthwise_drop04.py: Depthwise sep + Dropout(0.4) — Micro track (Phase 4B ablation)
+SeparableConv2D, 4 filters, n_mels=16, GAP, focal loss + dropout=0.4.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

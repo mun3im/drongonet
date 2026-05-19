@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Ultra-Lightweight Low Power Model for Bird Sound Detection
-Minimal CNN for edge devices and MCUs with frequency emphasis
+3d_gap_freq_emphasis.py: GAP + focal loss + frequency emphasis augmentation (Phase 3 ablation)
+Adds learnable frequency emphasis layer to 3c.
+Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
 import os

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-TensorFlow Audio Classification Training Script for TinyChirp Dataset
-Trains SqueezeNet-Time model on raw audio waveforms (derived from 0e_tinychirp_cnntime.py)
+0d_tinychirp_squeezenettime.py: TinyChirp SqueezeNet-Time baseline on TinyChirp dataset
+Phase 0 reference — SqueezeNet architecture on raw waveforms.
 """
 
 import os

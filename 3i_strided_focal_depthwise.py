@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Ultra-Lightweight Low Power Model for Bird Sound Detection
-TIER-1 & TIER-2: Strided Conv + Focal Loss + Depthwise Separable Conv
+3i_strided_focal_depthwise.py: Strided conv + focal loss + depthwise sep (Phase 3 strided investigation)
+Combines strided conv (3g) with depthwise separable convolutions.
+Strided aside — no gate, result reported for completeness.
+Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
 import os

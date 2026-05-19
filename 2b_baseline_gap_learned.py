@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-CNN-Mel + GAP + Learned Pooling
-Ablation study model: 2b_baseline_gap_learned
+2b_baseline_gap_learned.py: CNN-Mel + GAP + learned pooling weights (Phase 2 ablation)
+GAP variant with learnable pooling. Expected marginal vs plain GAP (2a).
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

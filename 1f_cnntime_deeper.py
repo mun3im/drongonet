@@ -1,25 +1,8 @@
 #!/usr/bin/env python3
 """
-1f_cnntime_deeper.py: CNN-Time Deeper on SEABAD Dataset
-Trains deeper CNN-Time model on raw audio waveforms
-Uses CNN-Time architecture with 1D convolutions on raw waveforms
-
-DEEPER VERSION with one additional convolutional layer:
-- Conv1D(4, k=3) → ReLU → MaxPool(2)
-- Conv1D(8, k=3) → ReLU → AvgPool(2)
-- Conv1D(16, k=9, dilation=2) → ReLU (receptive enhancer)
-- Conv1D(24, k=5) → ReLU → AvgPool(2) ← NEW DEEPER LAYER
-- [Optional] Conv1D(32, k=1) → ReLU (pointwise projection)
-- GlobalAveragePooling1D → Dense(32) → Dense(num_classes)
-
-ENHANCED with comprehensive gatekeeper metrics:
-- Recall (primary metric for catching bird sounds)
-- Precision (minimize false alarms)
-- F1-Score (balanced performance)
-- F2-Score (recall-weighted performance)
-- PR-AUC (precision-recall area under curve)
-- ROC-AUC (overall discrimination)
-- Threshold analysis for deployment decisions
+1f_cnntime_deeper.py: CNN-Time Deeper on SEABAD (Phase 1 parallel reference)
+CNN-Time with one additional Conv1D layer.
+Run once (seed=42) for the paper comparison table. Not an ablation step.
 """
 
 import os

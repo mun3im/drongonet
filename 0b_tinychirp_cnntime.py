@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-TensorFlow Audio Classification Training Script for TinyChirp Dataset
-Trains CNN-Time model on raw audio waveforms (derived from 0d_tinychirp_cnnmel.py)
-Uses CNN-Time architecture with 1D convolutions on raw waveforms
+0b_tinychirp_cnntime.py: TinyChirp CNN-Time baseline on TinyChirp dataset
+Phase 0 reference — raw waveform 1D-conv architecture as published.
 """
 
 import os

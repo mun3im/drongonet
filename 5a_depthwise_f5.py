@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-5b_depthwise_f5: Depthwise Separable 5 filters — Micro filter count sweep
-Phase 5 — Micro Filter Count
+5a_depthwise_f5.py: Depthwise sep, 5 filters — Micro filter count sweep (Phase 5)
+SeparableConv2D, 5 filters, n_mels=16, dropout=0.1, GAP, focal loss.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

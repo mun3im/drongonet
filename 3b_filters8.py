@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-8-Filter Ablation - Double the filter count from 4 to 8
-Architecture modification for ablation study (Table 3)
-Compatible with Linux (Ubuntu 22.04, Python 3.10, TensorFlow 2.15)
+3b_filters8.py: Conv2D, 8 filters (Phase 3 — Edge direction)
+Doubles filter count from 4 to 8. Gate 3A candidate: Conv2D-8f + GAP + focal loss → edge_arch.
+Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
 import os

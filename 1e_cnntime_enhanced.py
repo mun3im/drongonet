@@ -1,17 +1,8 @@
 #!/usr/bin/env python3
 """
-1e_cnntime_enhanced.py: CNN-Time Enhanced on SEABAD Dataset
-Trains enhanced CNN-Time model on raw audio waveforms
-Uses CNN-Time architecture with 1D convolutions on raw waveforms
-
-ENHANCED VERSION with comprehensive gatekeeper metrics:
-- Recall (primary metric for catching bird sounds)
-- Precision (minimize false alarms)
-- F1-Score (balanced performance)
-- F2-Score (recall-weighted performance)
-- PR-AUC (precision-recall area under curve)
-- ROC-AUC (overall discrimination)
-- Threshold analysis for deployment decisions
+1e_cnntime_enhanced.py: CNN-Time Enhanced on SEABAD (Phase 1 parallel reference)
+CNN-Time with extended metrics (recall, precision, F1, F2, PR-AUC).
+Run once (seed=42) for the paper comparison table. Not an ablation step.
 """
 
 import os

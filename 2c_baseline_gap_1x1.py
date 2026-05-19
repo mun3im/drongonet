@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-CNN-Mel + GAP + 1x1 Bottleneck
-Ablation study model: 2c_baseline_gap_1x1
+2c_baseline_gap_1x1.py: CNN-Mel + GAP + 1×1 bottleneck conv (Phase 2 ablation)
+GAP variant with 1×1 bottleneck. Expected marginal vs plain GAP (2a).
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

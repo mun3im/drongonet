@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-TensorFlow Audio Classification Training Script for TinyChirp Dataset
-Trains CNN-Mel model on cached 80x184 mel spectrograms (derived from 0c_tinychirp_baseline.py)
-Uses Table II CNN-Mel architecture with 2D mel spectrogram inputs
+0a_tinychirp_cnnmel.py: TinyChirp CNN-Mel baseline on TinyChirp dataset
+Phase 0 reference — architecture as published in Huang et al. 2024.
+Conv2D, n_mels=80, Flatten, Dense(8). Starting point for SEABAD transfer.
 """
 
 for i in range(5): print("🟥"*i)

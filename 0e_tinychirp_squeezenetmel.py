@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-TensorFlow Audio Classification Training Script for TinyChirp Dataset
-Trains SqueezeNet-Mel model on cached 80x184 mel spectrograms (derived from 0c_tinychirp_baseline.py)
-Uses Table II CNN-Mel architecture with 2D mel spectrogram inputs
+0e_tinychirp_squeezenetmel.py: TinyChirp SqueezeNet-Mel baseline on TinyChirp dataset
+Phase 0 reference — SqueezeNet architecture on mel spectrograms.
 """
 
 for i in range(5): print("🟥"*i)

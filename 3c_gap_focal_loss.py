@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 """
-7_low_power.py: Ultra-Lightweight Low Power Model
-Minimal CNN for edge devices and MCUs
-- 2 Conv blocks (8→16 filters)
-- GlobalAveragePooling2D (efficient)
-- Optimized for n_mels=16, n_fft=512
-- Target: <10 KB, <0.1 ms inference, >90% accuracy
+3c_gap_focal_loss.py: GAP + focal loss (Phase 3 ablation)
+Adds focal loss (α=0.25, γ=2) to the GAP baseline. Tests loss function impact on recall.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

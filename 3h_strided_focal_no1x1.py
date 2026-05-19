@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-Ultra-Lightweight Low Power Model for Bird Sound Detection
-TIER-1 Optimizations: Strided Conv + Tuned Focal Loss + Remove Redundant 1x1
+3h_strided_focal_no1x1.py: Strided conv + focal loss, no 1×1 (Phase 3 strided investigation)
+Removes 1×1 bottleneck from 3g for a simpler strided arch.
+Strided aside — no gate, result reported for completeness.
+Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
 import os

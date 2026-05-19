@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-1c_cnntime.py: CNN-Time (1D) Baseline on SEABAD Dataset
-Trains CNN-Time model on raw audio waveforms (SEABAD counterpart of 0b_tinychirp_cnntime.py)
-Uses CNN-Time architecture with 1D convolutions on raw waveforms
+1c_cnntime.py: CNN-Time on SEABAD (Phase 1 parallel reference)
+SEABAD counterpart of 0b. 1D-conv on raw waveforms.
+Run once (seed=42) for the paper comparison table. Not an ablation step.
 """
 
 import os

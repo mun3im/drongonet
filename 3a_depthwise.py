@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Option F: Depthwise Separable Convolutions
-Ablation Study Model: 3a_depthwise
-Replaces standard Conv2D with SeparableConv2D for parameter efficiency
+3a_depthwise.py: SeparableConv2D, 4 filters (Phase 3 — Micro direction)
+Replaces Conv2D with SeparableConv2D for parameter efficiency.
+Gate 3B candidate: depthwise sep + GAP + focal loss → micro_arch.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 

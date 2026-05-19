@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-1b_transformer.py: Transformer-Time Baseline on SEABAD Dataset
-Trains Transformer-Time model on raw audio waveforms (SEABAD counterpart of 0c_tinychirp_transformer.py)
-Uses Transformer-Time architecture with Conv1D + Single-Head Transformer on raw waveforms
+1b_transformer.py: Transformer-Time on SEABAD (Phase 1 parallel reference)
+SEABAD counterpart of 0c. Conv1D + single-head Transformer on raw waveforms.
+Run once (seed=42) for the paper comparison table. Not an ablation step.
 """
 
 import os

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-TensorFlow Audio Classification Training Script for TinyChirp Dataset
-Trains Transformer-Time model on raw audio waveforms (derived from 0e_tinychirp_cnntime.py)
-Uses Transformer-Time architecture with Conv1D + Single-Head Transformer on raw waveforms
+0c_tinychirp_transformer.py: TinyChirp Transformer-Time baseline on TinyChirp dataset
+Phase 0 reference — Conv1D + single-head Transformer on raw waveforms.
 """
 
 import os
