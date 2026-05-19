@@ -1,5 +1,0 @@
-1_baseline,80,42,0.9797,0.9795,0.9283,0.35,29.28,0.0002,0.02,3m,1_baseline_m80_s42,Phase 1: Baseline
-5_filters,48,42,0.9826,0.9822,0.9365,0.19,32.62,0.0004,0.04,2m,5_filters_m48_s42,Other
-9a_depthwise_drop01,48,42,0.974,0.9739,0.9203,0.22,19.8,0.0,0.0,1m,9a_depthwise_drop01_m48_s42,Phase 2: Dropout Sweep
-1_baseline,32,42,0.9745,0.9733,0.9207,0.15,12.78,0.0012,0.12,12m,1_baseline_m32_s42,Phase 1: Baseline
-10_depthwise_f6,16,42,0.9638,0.9633,0.909,0.07,10.4,0.0005,0.05,5m,10_depthwise_f6_m16_s42,Phase 3A: Power Efficiency

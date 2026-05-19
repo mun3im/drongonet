@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# TensorFlow / Keras
+*.h5
+*.keras
+*.pb
+saved_model/
+
+# TFLite models (large binaries; tracked per-result dir if needed)
+*.tflite
+
+# Experiment results (regenerable from scripts)
+results/
+results_tinychirp_tinychirp/
+
+# Aggregated CSVs and analysis outputs (regenerable)
+ablation_complete_results.csv
+ablation_study_results.csv
+ablation_pareto_analysis.png
+ablation_study_analysis.png
+all_results_comparison.csv
+baseline_sweep_analysis.png
+baseline_sweep_complete_analysis.csv
+baseline_sweep_results.csv
+mcu_deployment_detailed.csv
+mcu_deployment_summary.csv
+paper_tables_output.txt
+pareto_plots/
+resource_usage_analysis.csv
+sweep_results_all_models.csv
+threshold_sweep_*.png
+
+# Figures (regenerable)
+figures/
+figures_publication/
+
+# Deployment artefacts
+deployment/
+deployment.zip
+
+# Logs
+*.log
+
+# Mel cache (large; stored on external drive)
+cache_seabad_*/
+
+# Obsidian workspace (machine-local, conflict-prone)
+.obsidian/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# Temporary / scratch files
+*.tmp
+*.bak
+model_summary.md.tmp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Stale one-off fix scripts
+fix_nfft_args.py
+fix_nfft_args_v2.py
+fix_nfft_args_v3.py
+fix_output_dirs.py
+auto_create_3j.py
+update_ablation_configs.py
+update_ablations_to_m64.py

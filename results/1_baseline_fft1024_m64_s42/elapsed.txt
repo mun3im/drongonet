@@ -1,2 +1,0 @@
-Total execution time: 3m 08.94s
-Total seconds: 188.944
