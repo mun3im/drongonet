@@ -4,12 +4,12 @@ Lean TinyML CNN for binary bird activity detection, targeting embedded hardware 
 
 ## Models
 
-| Variant | Target hardware | Size | AUC |
-|---|---|---|---|
-| **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | ≤8 KB INT8 | 0.9741 |
-| **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | ≤35 KB INT8 | 0.9994 |
+| Variant | Target hardware | Size | **Target recall** | τ | AUC |
+|---|---|---|---|---|---|
+| **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | ≤8 KB INT8 | **≥0.98** | swept | 0.9741 |
+| **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | ≤35 KB INT8 | **≥0.99** | swept | 0.9994 |
 
-Both models use mel spectrogram input, Global Average Pooling, and focal loss. Micro uses depthwise separable convolutions (6 filters, n_mels=16, n_fft=512); Edge uses standard Conv2D (8 filters, n_mels=80, n_fft=1024).
+Recall is the primary deployment metric — missed bird calls are false negatives, and the application tolerates some false positives to minimise misses. AUC is reported for comparison. Both models use mel spectrogram input, Global Average Pooling, and focal loss. Micro uses depthwise separable convolutions (6 filters, n_mels=16, n_fft=512); Edge uses standard Conv2D (8 filters, n_mels=80, n_fft=1024).
 
 ## Dataset
 
@@ -31,7 +31,7 @@ python 6a_micro_final.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_seabad_m16 \
     --n_mels       16 \
-    --n_fft        512 \
+    --n_fft        1024 \
     --random_seed  42
 ```
 
@@ -86,7 +86,7 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 
 **Track A — Edge (Conv2D, 8 filters):** `4a_dropout01.py` through `4d_dropout04.py` (dropout 0.1–0.4)
 
-**Track B — Micro (depthwise, n_mels=16):** `4e_depthwise_drop01.py` through `4h_depthwise_drop04.py` (dropout 0.1–0.4)
+**Track B — Micro (depthwise sep branch, n_mels=16):** `4e_depthwise_drop01.py` through `4h_depthwise_drop04.py` (dropout 0.1–0.4) — this branch was abandoned; depthwise sep proved counter-productive at this scale (see Phase 6)
 
 ### Phase 5 — Micro filter count
 
