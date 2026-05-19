@@ -103,40 +103,6 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 | `6b_edge_final.py` | SEABADNet-Edge |
 | `6b_micro_improved.py` | Micro with additional pointwise conv (multi-seed validation) |
 
-### Capacity references (run once, not in ablation chain)
-
-| Script | Purpose |
-|---|---|
-| `cap_high_accuracy.py` | High-capacity ceiling (large filter counts, no size constraint) |
-| `cap_low_power.py` | Low-power baseline reference |
-| `alt_tiny.py` / `alt_tiny_gap.py` / `alt_tiny_gap_agg.py` | Alternative 96-timestep design (n_mels=80, hop=494) |
-
-### Confirmed-rejected configurations
-
-| Script | Reason rejected |
-|---|---|
-| `rej_batchnorm.py` | No AUC gain; adds quantisation sensitivity at this scale |
-| `rej_depthwise_bn_f6.py` | Same as above |
-| `rej_dense32.py` | Size cost with no meaningful gain over Dense(8) |
-| `rej_accurate_se.py` | Squeeze-excite does not help 4-filter models |
-| `rej_deeper_1x1_gap.py` | Redundant given `6b_edge_final.py` |
-
-### Analysis and figure scripts
-
-| Script | Purpose |
-|---|---|
-| `collect_all_results.py` | Aggregate all `results_summary.txt` into CSV |
-| `analyze_ablation_results.py` | Ablation table for paper |
-| `analyze_all_ablations.py` | Cross-phase summary |
-| `analyze_baseline_sweep.py` | n_mels sweep plots |
-| `generate_paper_figures.py` | All paper figures |
-| `generate_paper_tables.py` | All tables (LaTeX-ready) |
-| `generate_publication_figures.py` | Final publication-quality figures |
-| `generate_pr_curves.py` | Precision-Recall curves |
-| `combine_roc_curves.py` | Combined ROC figure across models |
-| `benchmark_mel_latency.py` | Mel computation latency on target hardware |
-| `find_098_threshold.py` | Threshold sweep for ≥0.98 recall |
-| `train_standard_architectures.py` | VGG16, ResNet50, EfficientNetB0, MobileNetV3-Small (dataset validation) |
 
 ## Requirements
 
@@ -150,6 +116,6 @@ Every training script writes a `config.txt` (all hyperparameters + git hash) and
 
 ## Citation
 
-> M. Zabidi, "SEABADNet: A TinyML CNN for Bird Activity Detection on SEABAD," *manuscript in preparation*, 2026.
+> M. Zabidi, "SEABADNet: Lightweight CNNs for Tropical Bird Audio Detection on Edge Devices," *manuscript in preparation*, 2026.
 
 Based on: Huang et al., "TinyChirp: Bird Song Recognition Using TinyML," 2024.
