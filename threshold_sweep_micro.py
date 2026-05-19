@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 TARGET_RECALL = 0.98
 SEEDS = [42, 100, 786]
 THRESHOLDS = np.round(np.arange(0.05, 0.96, 0.05), 2)
-RESULTS_DIRNAME = "6b_micro_improved_fft1024_m16_s{seed}"
+RESULTS_DIRNAME = "6b_micro_final_fft1024_m16_s{seed}"
 
 
 # ---------------------------------------------------------------------------

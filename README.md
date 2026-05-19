@@ -27,7 +27,7 @@ Linux GPU: /data/cache_seabad_m{n_mels}/
 All training scripts share the same CLI:
 
 ```bash
-python 6b_micro_improved.py \
+python 6b_micro_final.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_seabad_m16 \
     --n_mels       16 \
@@ -99,8 +99,8 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 
 | Script | Model | Conv type | Filters | n_mels | Size (INT8) | Target recall |
 |---|---|---|---|---|---|---|
-| `6a_micro_v1_superseded.py` | SEABADNet-Micro (v1, superseded) | SeparableConv2D | 6 | 16 | 5.41 KB | — |
-| `6b_micro_improved.py` | **SEABADNet-Micro (final)** | SeparableConv2D + pointwise | 6 | 16 | 6.56 KB | ≥0.98 |
+| `6a_micro_lean.py` | SEABADNet-Micro-Lean (no recall target) | SeparableConv2D | 6 | 16 | 5.41 KB | — |
+| `6b_micro_final.py` | **SEABADNet-Micro (final)** | SeparableConv2D + pointwise | 6 | 16 | 6.56 KB | ≥0.98 |
 | `6c_edge_final.py` | **SEABADNet-Edge (final)** | Conv2D 3-block 16→32→64 | 64 | 80 | 32.82 KB | ≥0.99 |
 
 
