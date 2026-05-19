@@ -9,7 +9,7 @@ Lean TinyML CNN for binary bird activity detection, targeting embedded hardware 
 | **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | ≤8 KB INT8 | **≥0.98** | swept | 0.9741 |
 | **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | ≤35 KB INT8 | **≥0.99** | swept | 0.9994 |
 
-Recall is the primary deployment metric — missed bird calls are false negatives, and the application tolerates some false positives to minimise misses. AUC is reported for comparison. Both models use mel spectrogram input, Global Average Pooling, and focal loss. Micro uses depthwise separable convolutions (6 filters, n_mels=16, n_fft=512); Edge uses standard Conv2D (8 filters, n_mels=80, n_fft=1024).
+Recall is the primary deployment metric — missed bird calls are false negatives, and the application tolerates some false positives to minimise misses. AUC is reported for comparison. Micro (`6b_micro_improved`) uses SeparableConv2D + pointwise conv (6 filters, n_mels=16, n_fft=1024, 919 params, 6.56 KB INT8). Edge (`6c_edge_final`) uses standard Conv2D 3-block 16→32→64 filters (n_mels=80, n_fft=1024, ~25k params, 32.82 KB INT8). Both use GAP and focal loss.
 
 ## Dataset
 
@@ -27,7 +27,7 @@ Linux GPU: /data/cache_seabad_m{n_mels}/
 All training scripts share the same CLI:
 
 ```bash
-python 6a_micro_final.py \
+python 6b_micro_improved.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_seabad_m16 \
     --n_mels       16 \
@@ -99,9 +99,9 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 
 | Script | Model | Conv type | Filters | n_mels | Size (INT8) | Target recall |
 |---|---|---|---|---|---|---|
-| `6a_micro_final.py` | SEABADNet-Micro (v1) | SeparableConv2D | 6 | 16 | ≤8 KB | ≥0.98 |
-| `6b_micro_improved.py` | SEABADNet-Micro (v2, multi-seed) | SeparableConv2D + pointwise | 6 | 16 | ≤8 KB | ≥0.98 |
-| `6c_edge_final.py` | SEABADNet-Edge | Conv2D (3-block, 16→32→64) | 64 | 80 | ≤35 KB | ≥0.99 |
+| `6a_micro_final.py` | SEABADNet-Micro (v1, superseded) | SeparableConv2D | 6 | 16 | 5.41 KB | — |
+| `6b_micro_improved.py` | **SEABADNet-Micro (final)** | SeparableConv2D + pointwise | 6 | 16 | 6.56 KB | ≥0.98 |
+| `6c_edge_final.py` | **SEABADNet-Edge (final)** | Conv2D 3-block 16→32→64 | 64 | 80 | 32.82 KB | ≥0.99 |
 
 
 ## Requirements
