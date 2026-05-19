@@ -2,7 +2,7 @@
 """
 6b_micro_final.py: SEABADNet-Micro (final)
 Locked Micro candidate (6.56 KB INT8, 919 params, AUC 0.9741).
-Adds 1×1 pointwise Conv2D over 6a_micro_lean for +0.003 AUC / +0.005 recall.
+Adds 1×1 pointwise Conv2D over 6a_nano_final (SEABADNet-Nano) for +0.003 AUC / +0.005 recall.
 - FrequencyEmphasis → Conv(6) → MaxPool → Conv(12) → Conv(12,1×1) → GAP → Dropout → Dense
 - Focal loss, dropout=0.1, n_mels=16, n_fft=1024
 - Target: ≤8 KB INT8, <1 ms, ≥0.98 recall at optimised threshold
