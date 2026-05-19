@@ -52,6 +52,9 @@ figures_publication/
 deployment/
 deployment.zip
 
+# Shell runners (local only)
+*.sh
+
 # Logs
 *.log
 
@@ -71,6 +74,7 @@ cache_seabad_*/
 
 # Internal project notes
 CLAUDE.md
+THRESHOLD_SWEEP_TODO.md
 
 # Temporary / scratch files
 *.tmp
@@ -88,3 +92,6 @@ fix_output_dirs.py
 auto_create_3j.py
 update_ablation_configs.py
 update_ablations_to_m64.py
+
+# latex
+*.tex
