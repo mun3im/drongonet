@@ -97,11 +97,11 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 
 ### Phase 6 — Final candidates
 
-| Script | Model |
-|---|---|
-| `6a_micro_final.py` | SEABADNet-Micro |
-| `6b_edge_final.py` | SEABADNet-Edge |
-| `6b_micro_improved.py` | Micro with additional pointwise conv (multi-seed validation) |
+| Script | Model | Conv type | Filters | n_mels | Size (INT8) | Target recall |
+|---|---|---|---|---|---|---|
+| `6a_micro_final.py` | SEABADNet-Micro (v1) | SeparableConv2D | 6 | 16 | ≤8 KB | ≥0.98 |
+| `6b_micro_improved.py` | SEABADNet-Micro (v2, multi-seed) | SeparableConv2D + pointwise | 6 | 16 | ≤8 KB | ≥0.98 |
+| `6b_edge_final.py` | SEABADNet-Edge | Conv2D (3-block, 16→32→64) | 64 | 80 | ≤35 KB | ≥0.99 |
 
 
 ## Requirements
