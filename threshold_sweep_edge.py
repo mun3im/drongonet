@@ -205,7 +205,7 @@ def plot_pr_curve(probabilities: np.ndarray, true_labels: np.ndarray,
 def main():
     parser = argparse.ArgumentParser(description='Threshold sweep for SEABADNet-Edge')
     parser.add_argument('--results-dir', type=str,
-                        default='results/6b_edge_final_fft1024_m80_s42',
+                        default='results/6c_edge_final_fft1024_m80_s42',
                         help='Path to the 6b_edge_final result directory')
     parser.add_argument('--cache-dir', type=str,
                         default='/Volumes/Evo/cache_seabad_m80',

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-6b_edge_final.py: SEABADNet-Edge Final Candidate
-Deeper GlobalAveragePooling Architecture for SBC deployment
-- 3 Conv blocks (16→32→64 filters)
-- GlobalAveragePooling2D (efficient, no flatten bottleneck)
-- Target: >95% accuracy, <35 KB model size
+6c_edge_final.py: SEABADNet-Edge (final)
+Locked Edge candidate (32.82 KB INT8, ~25k params, AUC 0.9994).
+3-block Conv2D + BatchNorm + GAP architecture for SBC deployment.
+- Conv(16) → Conv(32) → Conv(64) → GAP → Dense(8)
+- Focal loss, n_mels=80, n_fft=1024
+- Target: ≤35 KB INT8, <2 ms, ≥0.99 recall at optimised threshold
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
@@ -71,7 +72,7 @@ class TrainingConfig:
     early_stopping_patience: int = 15
     random_seed: int = 42
     dataset_path: str = '/Volumes/Evo/seabad'
-    output_dir: str = 'results/6b_edge_final'
+    output_dir: str = 'results/6c_edge_final'
     cache_dir: str = '/Volumes/Evo/cache_seabad_mels'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -612,7 +613,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("="*60 + "\n")
-        f.write("TRAINING CONFIGURATION - DEEPER GAP\n")
+        f.write("SEABADNET-EDGE TRAINING CONFIGURATION\n")
         f.write("="*60 + "\n\n")
 
         f.write("System Information:\n")
@@ -684,7 +685,7 @@ def main():
     config.n_mels = args.n_mels
     config.n_fft = args.n_fft
     config.cache_dir = f'/Volumes/Evo/cache_seabad_m{config.n_mels}'
-    config.output_dir = f'results/6b_edge_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.output_dir = f'results/6c_edge_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
