@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 # Suppress TensorFlow warnings and configure GPU BEFORE importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress INFO and WARNING messages
@@ -73,9 +74,9 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results_baseline'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_mels'
+    cache_dir: str = f'{CACHE_BASE}_fft1024_m64'
     # Train/val/test split ratios
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -86,8 +87,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train SEABAD CNN-Mel model')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad',
-                        help='Path to dataset directory (default: /Volumes/Evo/seabad)')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
+                        help='Path to SEABAD dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -158,7 +159,7 @@ def build_cnn_mel_model_table2(
     # FC + Softmax -> 2
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
 
-    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5a_depthwise_f6_m{input_shape[1]}")
+    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5b_depthwise_f6_m{input_shape[1]}")
 
     return model
 
@@ -786,8 +787,8 @@ def main():
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
     config.n_mels = args.n_mels
-    config.cache_dir = f'/Volumes/Evo/cache_seabad_m{config.n_mels}'
-    config.output_dir = f'results/5a_depthwise_f6_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
+    config.output_dir = f'{RESULTS_BASE}/5a_depthwise_f6_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

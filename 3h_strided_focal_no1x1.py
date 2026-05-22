@@ -28,6 +28,7 @@ from tqdm import tqdm
 
 import os
 import argparse
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 # Set log level early
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -79,22 +80,22 @@ class TrainingConfig:
     lr_reduction_factor: float = 0.5
     min_lr: float = 1e-5
     early_stopping_patience: int = 15
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results/3h_strided_focal_no1x1'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_mels'
+    cache_dir: str = f'{CACHE_BASE}_fft1024_m64'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
     test_ratio: float = 0.1
 
     def update_derived_paths(self):
-        self.cache_dir = f'/Volumes/Evo/cache_seabad_m{self.n_mels}'
-        self.output_dir = f'results/3h_strided_focal_no1x1_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}'
+        self.cache_dir = f'{CACHE_BASE}_fft{self.n_fft}_m{self.n_mels}'
+        self.output_dir = f'{RESULTS_BASE}/3h_strided_focal_no1x1_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}'
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Train SEABAD CNN-Mel model')
     parser.add_argument('--repr_samples', type=int, default=500)
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH)
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument('--force-reprocess', action='store_true')
     parser.add_argument('--use_cache', action='store_true')
@@ -153,7 +154,7 @@ def build_model(input_shape=(184, 64, 1), num_classes=2):
     # Output layer
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    return tf.keras.Model(inputs, outputs, name="XiaoChirp_7f_strided_focal_no1x1")
+    return tf.keras.Model(inputs, outputs, name="SEABADNet_3h")
 
 
 def focal_loss(gamma=1.5, alpha=0.75):  # Tuned for recall: overweight false negatives

@@ -128,11 +128,11 @@ def sweep_thresholds(probabilities: np.ndarray, true_labels: np.ndarray):
 
 
 def find_locked_tau(mean_rows: list):
-    """Lowest τ where mean recall ≥ TARGET_RECALL."""
+    """Highest τ where mean recall ≥ TARGET_RECALL (maximises precision while meeting target)."""
     candidates = [r for r in mean_rows if r['recall'] >= TARGET_RECALL]
     if not candidates:
         return max(mean_rows, key=lambda r: r['recall'])
-    return min(candidates, key=lambda r: r['tau'])
+    return max(candidates, key=lambda r: r['tau'])
 
 
 # ---------------------------------------------------------------------------

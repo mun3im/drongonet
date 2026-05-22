@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 # Suppress TensorFlow warnings and configure GPU BEFORE importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress INFO and WARNING messages
@@ -78,9 +79,9 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results_6b_micro_final'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_mels'
+    cache_dir: str = f'{CACHE_BASE}_fft1024_m64'
     # Train/val/test split ratios
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -95,8 +96,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train SEABAD Low Power models')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad',
-                        help='Path to dataset directory (default: /Volumes/Evo/seabad)')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
+                        help='Path to SEABAD dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -125,14 +126,14 @@ if args.force_cpu:
 
 
 # ============================================================================
-# FREQUENCY EMPHASIS LAYERS (NEW FOR XIAOCHIRP V1.1)
+# FREQUENCY EMPHASIS LAYERS
 # ============================================================================
 
 class FrequencyEmphasis(tf.keras.layers.Layer):
     """
     Learnable frequency weighting for bird sounds
-    XiaoChirp V1.1 enhancement: Teaches model which frequency bands matter
-    Adds only ~16-64 parameters but significantly improves accuracy
+    Learnable frequency weighting: teaches model which frequency bands matter.
+    Adds only ~16-64 parameters but improves accuracy.
     """
 
     def __init__(self, freq_bins=16, init_center=0.4, init_width=0.2, **kwargs):
@@ -336,8 +337,7 @@ def analyze_frequency_weights(model, output_dir: Path):
 
 def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
     """
-    XiaoChirp V1.0: Original ultra-lightweight model
-    ~1,282 parameters for n_mels=16
+    SEABADNet-Micro base: ultra-lightweight Conv2D model (~1,282 params for n_mels=16).
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -355,9 +355,7 @@ def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
     """
-    XiaoChirp V1.1 Simple: Just adds frequency emphasis to V1.0
-    Minimal change: +16 parameters for n_mels=16
-    Expected: ~1,282 + 16 = ~1,298 parameters
+    SEABADNet-Micro with frequency emphasis (+16 params for n_mels=16).
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -379,9 +377,8 @@ def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
     """
-    XiaoChirp V1.1: Enhanced with frequency emphasis and optimized architecture
-    Slightly more parameters but better accuracy
-    Expected: ~1,200-1,400 parameters for n_mels=16
+    SEABADNet-Micro (final): SeparableConv2D + frequency emphasis + GAP + focal loss.
+    Target: ≤8 KB INT8, ≥0.98 recall at optimised threshold.
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -1150,8 +1147,8 @@ def main():
 
     # Update cache and output directories based on version and n_mels
     version_suffix = f"_{args.version}" # if args.version != 'Opt' else ""
-    config.cache_dir = f'/Volumes/Evo/cache_seabad_m{config.n_mels}'
-    config.output_dir = f'results/6b_micro_improved_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
+    config.output_dir = f'{RESULTS_BASE}/6b_micro_improved_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)
@@ -1368,7 +1365,7 @@ def main():
 
         logger.info("=" * 60)
         logger.info("RESULTS SUMMARY:")
-        logger.info(f"  Model: XiaoChirp {args.version}")
+        logger.info(f"  Model: SEABADNet-Micro (version={args.version})")
         logger.info(f"  Float32 AUC: {float_auc:.4f}")
         logger.info(f"  TFLite AUC: {tflite_auc:.4f}")
         logger.info(f"  TFLite Size: {tflite_size_kb:.2f} KB")

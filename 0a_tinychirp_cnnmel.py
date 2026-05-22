@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 # Suppress TensorFlow warnings and configure GPU BEFORE importing TensorFlow
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress INFO and WARNING messages
@@ -72,17 +73,17 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/TinyChirp'
+    dataset_path: str = TINYCHIRP_PATH
     output_dir: str = 'results_0a_tinychirp_cnnmel'
-    cache_dir: str = '/Volumes/Evo/cache_tinychirp_mels'
+    cache_dir: str = f'{CACHE_BASE}_tinychirp_mels'
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Train TinyChirp CNN-Mel model')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/TinyChirp',
-                        help='Path to dataset directory (default: /Volumes/Evo/TinyChirp)')
+    parser.add_argument('--dataset-path', type=str, default=TINYCHIRP_PATH,
+                        help='Path to TinyChirp dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -755,7 +756,7 @@ def main():
     config = TrainingConfig()
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
-    config.output_dir = f'results/0a_tinychirp_cnnmel_r{config.random_seed}_{platform.system().lower()}'
+    config.output_dir = f'{RESULTS_BASE}/0a_tinychirp_cnnmel_r{config.random_seed}_{platform.system().lower()}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

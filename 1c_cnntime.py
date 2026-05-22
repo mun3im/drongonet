@@ -14,14 +14,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Train SEABAD CNN-Time model')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad',
-                        help='Path to dataset directory (default: /Volumes/Evo/seabad)')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
+                        help='Path to SEABAD dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -86,9 +87,9 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results/1c_cnntime'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_waveforms'
+    cache_dir: str = f'{CACHE_BASE}_waveforms'
 
 
 import platform
@@ -769,7 +770,7 @@ def main():
     config = TrainingConfig()
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
-    config.output_dir = f'results/1c_cnntime_r{config.random_seed}_{platform.system().lower()}'
+    config.output_dir = f'{RESULTS_BASE}/1c_cnntime_r{config.random_seed}_{platform.system().lower()}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

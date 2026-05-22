@@ -100,8 +100,8 @@ Results land in `results/{script_name}_fft{n_fft}_m{n_mels}_s{seed}/` and includ
 | Script | Model | Conv type | Filters | n_mels | Size (INT8) | Target recall |
 |---|---|---|---|---|---|---|
 | `6a_nano_final.py` | SEABADNet-Nano (no recall target) | SeparableConv2D | 6 | 16 | 5.41 KB | — |
-| `6b_micro_final.py` | **SEABADNet-Micro (final)** | SeparableConv2D + pointwise | 6 | 16 | 6.56 KB | ≥0.98 |
-| `6c_edge_final.py` | **SEABADNet-Edge (final)** | Conv2D 3-block 16→32→64 | 64 | 80 | 32.82 KB | ≥0.99 |
+| `6b_micro_final.py` | **SEABADNet-Micro (final)** | Conv2D + BN + pointwise | 6→12→12 | 16 | 6.8 KB | ≥0.98 |
+| `6c_edge_final.py` | **SEABADNet-Edge (final)** | Conv2D 3-block + BN | 16→32→64 | 80 | 33 KB | ≥0.99 |
 
 
 ## Requirements

@@ -14,14 +14,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Train TinyChirp CNN-Time Deeper model')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad',
-                        help='Path to dataset directory (default: /Volumes/Evo/seabad)')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
+                        help='Path to SEABAD dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -98,10 +99,10 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results/1f_cnntime_deeper'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_waveforms'
-    # Gatekeeper-specific parameters
+    cache_dir: str = f'{CACHE_BASE}_waveforms'
+    # Model parameters
     target_recall: float = 0.95  # Target recall for gatekeeper
 
 
@@ -189,8 +190,8 @@ def create_dataset_splits(root_dir: str, test_size=0.1, val_size=0.1, seed=42):
     return splits
 
 
-class MyBadDataset:
-    """Dataset class for MyBad that returns file paths only, no file verification during init"""
+class SEABADDataset:
+    """Dataset class for SEABAD that returns file paths only, no file verification during init"""
 
     def __init__(self, root_dir: str, split='training', fraction=1.0, test_size=0.1, val_size=0.1,
                  seed=42):
@@ -297,7 +298,7 @@ def preprocess_and_cache_waveforms(dataset_path: str, config: TrainingConfig, fo
         logger.info(f"Processing {split} split...")
 
         # Get file paths
-        dataset = MyBadDataset(dataset_path, split=split, fraction=config.fraction, seed=config.random_seed)
+        dataset = SEABADDataset(dataset_path, split=split, fraction=config.fraction, seed=config.random_seed)
         file_paths, labels = dataset.get_files_and_labels()
 
         # Create split cache directory
@@ -531,7 +532,7 @@ class ModelEvaluator:
                           label=f'Target Recall ({self.target_recall:.2f})')
         axes[1, 0].set_xlabel('Epoch')
         axes[1, 0].set_ylabel('Recall')
-        axes[1, 0].set_title('Recall (Sensitivity) - Gatekeeper Primary Metric')
+        axes[1, 0].set_title('Recall (Sensitivity) - Primary Metric')
         axes[1, 0].legend()
         axes[1, 0].grid(True, alpha=0.3)
 
@@ -658,7 +659,7 @@ class ModelEvaluator:
 
         plt.xlabel('Recall', fontsize=12)
         plt.ylabel('Precision', fontsize=12)
-        plt.title(f'{prefix}Precision-Recall Curve\n(Higher is Better for Gatekeeper)',
+        plt.title(f'{prefix}Precision-Recall Curve\n(Higher is Better )',
                  fontsize=14)
         plt.legend(loc='best', fontsize=10)
         plt.grid(True, alpha=0.3)
@@ -710,7 +711,7 @@ class ModelEvaluator:
 
         plt.xlabel('Decision Threshold', fontsize=12)
         plt.ylabel('Metric Value', fontsize=12)
-        plt.title(f'{prefix}Threshold Analysis for Gatekeeper Model', fontsize=14)
+        plt.title(f'{prefix}Threshold Analysis for SEABADNet', fontsize=14)
         plt.legend(loc='best', fontsize=10)
         plt.grid(True, alpha=0.3)
         plt.xlim([0.0, 1.0])
@@ -1079,7 +1080,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
         f.write(f"  Dataset Fraction: {config.fraction}\n")
         f.write("\n")
 
-        f.write("Gatekeeper Configuration:\n")
+        f.write("SEABADNet Configuration:\n")
         f.write(f"  Target Recall: {config.target_recall:.2f}\n")
         f.write(f"  Primary Metric: Recall (Sensitivity)\n")
         f.write(f"  Monitoring: val_recall for callbacks\n")
@@ -1122,7 +1123,7 @@ def main():
         arch_suffix += "_RE"
     if args.use_pointwise:
         arch_suffix += "_PW"
-    config.output_dir = f'results/1f_cnntime_deeper{arch_suffix}_r{config.random_seed}'
+    config.output_dir = f'{RESULTS_BASE}/1f_cnntime_deeper{arch_suffix}_r{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -1142,7 +1143,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("MyBad CNN-Time DEEPER Gatekeeper Model Training")
+    logger.info("SEABADNet CNN-Time Deeper Reference Training")
     logger.info("=" * 60)
     logger.info("System Information:")
     logger.info(f"  Platform: {system_info['platform']} {system_info['machine']}")
@@ -1153,7 +1154,7 @@ def main():
     if system_info['gpu_devices']:
         logger.info(f"  GPU Devices: {', '.join(system_info['gpu_devices'])}")
     logger.info("=" * 60)
-    logger.info(f"Gatekeeper Configuration:")
+    logger.info(f"SEABADNet Configuration:")
     logger.info(f"  Target Recall: {config.target_recall:.2f}")
     logger.info(f"  Monitoring Metric: val_recall")
     logger.info("=" * 60)

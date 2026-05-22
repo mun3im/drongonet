@@ -14,14 +14,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+from config import DATASET_PATH, TINYCHIRP_PATH, RESULTS_BASE, CACHE_BASE
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Train SEABAD CNN-1D GAP model')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
-    parser.add_argument('--dataset-path', type=str, default='/Volumes/Evo/seabad',
-                        help='Path to dataset directory (default: /Volumes/Evo/seabad)')
+    parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
+                        help='Path to SEABAD dataset directory')
     parser.add_argument('--random_seed', type=int, default=42,
                         help='Random seed for reproducibility (default: 42)')
     parser.add_argument('--force-reprocess', action='store_true',
@@ -86,9 +87,9 @@ class TrainingConfig:
     early_stopping_patience: int = 15  # Early stopping patience (3x LR patience)
     random_seed: int = 42
     # Path configurations
-    dataset_path: str = '/Volumes/Evo/seabad'
+    dataset_path: str = DATASET_PATH
     output_dir: str = 'results/1d_cnntime_gap'
-    cache_dir: str = '/Volumes/Evo/cache_seabad_waveforms'
+    cache_dir: str = f'{CACHE_BASE}_waveforms'
 
 
 import platform
@@ -234,8 +235,8 @@ def create_dataset_splits(root_dir: str, test_size=0.1, val_size=0.1, seed=42):
     return splits
 
 
-class MyBadDataset:
-    """Dataset class for MyBad that returns file paths only, no file verification during init"""
+class SEABADDataset:
+    """Dataset class for SEABAD that returns file paths only, no file verification during init"""
 
     def __init__(self, root_dir: str, split='training', fraction=1.0, test_size=0.1, val_size=0.1,
                  seed=42):
@@ -342,7 +343,7 @@ def preprocess_and_cache_waveforms(dataset_path: str, config: TrainingConfig, fo
         logger.info(f"Processing {split} split...")
 
         # Get file paths
-        dataset = MyBadDataset(dataset_path, split=split, fraction=config.fraction, seed=config.random_seed)
+        dataset = SEABADDataset(dataset_path, split=split, fraction=config.fraction, seed=config.random_seed)
         file_paths, labels = dataset.get_files_and_labels()
 
         # Create split cache directory
@@ -783,7 +784,7 @@ def main():
     config = TrainingConfig()
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
-    config.output_dir = f'results/1d_cnntime_gap_r{config.random_seed}'
+    config.output_dir = f'{RESULTS_BASE}/1d_cnntime_gap_r{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -803,7 +804,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("MyBad CNN-Time Training")
+    logger.info("SEABADNet CNN-Time Training")
     logger.info("=" * 60)
     logger.info("System Information:")
     logger.info(f"  Platform: {system_info['platform']} {system_info['machine']}")
@@ -982,7 +983,7 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("MyBad CNN-Time Training Results Summary\n")
+            f.write("SEABADNet CNN-Time Training Results Summary\n")
             f.write("=" * 60 + "\n\n")
             f.write(f"Float32 Model AUC: {float_auc:.4f}\n")
             f.write(f"TFLite int8 Model:\n")
