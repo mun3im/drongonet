@@ -22,6 +22,7 @@ saved_model/
 
 # TFLite models (large binaries; tracked per-result dir if needed)
 *.tflite
+!deploy/*.tflite
 
 # Experiment results (regenerable from scripts)
 results/
