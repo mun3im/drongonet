@@ -20,7 +20,7 @@ deploy/     firmware conversion tools (INT8 TFLite → C array)
 
 ## Dataset
 
-**SEABAD** — binary classification (bird active / absent), 16 kHz, 3-second clips, 80/10/10 split.
+**SEABAD** — binary classification (bird active / absent), 16 kHz, 3-second clips, 80/10/10 split. Available at [zenodo.org/records/18290494](https://zenodo.org/records/18290494).
 
 Mel caches are keyed by `(n_mels, n_fft, hop_length)` and stored on an external drive:
 
