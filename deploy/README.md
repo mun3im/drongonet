@@ -6,6 +6,7 @@ End-user artefacts for SEABADNet: pre-trained INT8 TFLite models, training wrapp
 
 SEABAD is hosted on Zenodo at [doi.org/10.5281/zenodo.18290494](https://doi.org/10.5281/zenodo.18290494).
 The archive is approximately 4.2 GB — ensure you have at least 9 GB free (compressed + extracted).
+The file is named `mybad.zip` on Zenodo (development name retained at upload time); rename it to `seabad.zip` as shown below.
 
 ```bash
 # Option A: browser
