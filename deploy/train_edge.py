@@ -9,7 +9,7 @@ Locked configuration (do not change):
   Architecture: Conv(16)+BN → Conv(32)+BN → Conv(64)+BN → GAP → Dense(8)
 
 Usage:
-    python develop/train_edge.py \\
+    python deploy/train_edge.py \\
         --dataset-path /path/to/seabad \\
         --cache-dir    /path/to/cache_fft1024_m80
 

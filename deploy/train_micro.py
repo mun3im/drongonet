@@ -9,7 +9,7 @@ Locked configuration (do not change):
   Architecture: FrequencyEmphasis → Conv(6) → MaxPool → Conv(12) → Conv(12,1×1) → GAP → Dropout → Dense
 
 Usage:
-    python develop/train_micro.py \\
+    python deploy/train_micro.py \\
         --dataset-path /path/to/seabad \\
         --cache-dir    /path/to/cache_fft1024_m16
 

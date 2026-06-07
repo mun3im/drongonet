@@ -9,7 +9,7 @@ Locked configuration (do not change):
   Architecture: FrequencyEmphasis → Conv(6) → MaxPool → Conv(12) → GAP → Dropout → Dense
 
 Usage:
-    python develop/train_nano.py \\
+    python deploy/train_nano.py \\
         --dataset-path /path/to/seabad \\
         --cache-dir    /path/to/cache_fft512_m16
 
