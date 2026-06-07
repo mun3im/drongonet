@@ -683,7 +683,7 @@ def main():
     config.n_mels = args.n_mels
     config.n_fft = args.n_fft
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/6c_edge_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.output_dir = f'results/seabadnet_edge_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -855,7 +855,7 @@ def main():
         if not conversion_success or tflite_model is None:
             raise RuntimeError("All TFLite conversion strategies failed!")
 
-        tflite_path = output_dir / "model_int8.tflite"
+        tflite_path = output_dir / "model.tflite"
         with open(tflite_path, 'wb') as f:
             f.write(tflite_model)
         tflite_size_kb = len(tflite_model) / 1024

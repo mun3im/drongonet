@@ -9,10 +9,7 @@ Adds 1×1 pointwise Conv2D over 6a_nano_final (SEABADNet-Nano) for +0.003 AUC / 
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
-print("🟥"*30)
 import os
-print(os.path.basename(__file__))
-print("🟥"*30)
 import logging
 import time
 import argparse
@@ -80,8 +77,8 @@ class TrainingConfig:
     random_seed: int = 42
     # Path configurations
     dataset_path: str = DATASET_PATH
-    output_dir: str = 'results_6b_micro_final'
-    cache_dir: str = f'{CACHE_BASE}_fft1024_m64'
+    output_dir: str = f'{RESULTS_BASE}/6b_micro_final'
+    cache_dir: str = f'{CACHE_BASE}_fft1024_m16'
     # Train/val/test split ratios
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -1148,7 +1145,7 @@ def main():
     # Update cache and output directories based on version and n_mels
     version_suffix = f"_{args.version}" # if args.version != 'Opt' else ""
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/6b_micro_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.output_dir = f'results/seabadnet_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)
