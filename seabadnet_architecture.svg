@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 800 806"
+     width="800" height="806">
+
+  <defs>
+    <!-- Arrowhead marker -->
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerUnits="strokeWidth" markerWidth="7" markerHeight="7"
+            orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#9CA3AF"/>
+    </marker>
+    <!-- Subtle drop-shadow for column header boxes -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+      <feOffset dx="0" dy="2" result="offsetBlur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.13" result="color"/>
+      <feComposite in="color" in2="offsetBlur" operator="in" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Background ── -->
+  <rect width="800" height="806" fill="white"/>
+
+  <!-- ══════════════════════════════════════════════════════
+       TITLE
+  ══════════════════════════════════════════════════════ -->
+  <text x="400" y="34"
+        text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="17" font-weight="bold" fill="#111827">
+    SEABADNet Architecture
+  </text>
+
+  <!-- ══════════════════════════════════════════════════════
+       COLUMN HEADERS
+  ══════════════════════════════════════════════════════ -->
+
+  <!-- Micro header -->
+  <rect x="96" y="50" width="208" height="58" rx="7"
+        fill="#1E40AF" filter="url(#shadow)"/>
+  <text x="200" y="71" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="13" font-weight="bold" fill="white">SEABADNet-Micro</text>
+  <text x="200" y="86" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="8" fill="#BFDBFE">919 params · 6.56 kB (INT8) · AUC 0.9743 ± 0.0011</text>
+  <text x="200" y="100" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="8" fill="#BFDBFE">n_mels=16 · n_fft=1024 · hop=256 · 0.10 ms (ARM Cortex-M4)</text>
+
+  <!-- Edge header -->
+  <rect x="496" y="50" width="208" height="58" rx="7"
+        fill="#991B1B" filter="url(#shadow)"/>
+  <text x="600" y="71" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="13" font-weight="bold" fill="white">SEABADNet-Edge</text>
+  <text x="600" y="86" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="8" fill="#FECACA">25,890 params · 33.06 kB (INT8) · AUC 0.9992 ± 0.0002</text>
+  <text x="600" y="100" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="8" fill="#FECACA">n_mels=80 · n_fft=1024 · hop=256 · 1.15 ms (Linux SBC)</text>
+
+  <!-- Centre dashed divider -->
+  <line x1="400" y1="50" x2="400" y2="748"
+        stroke="#D1D5DB" stroke-width="1.5" stroke-dasharray="6,5"/>
+
+  <!-- "OR" badge between the two columns -->
+  <circle cx="400" cy="116" r="13" fill="white" stroke="#D1D5DB" stroke-width="1.5"/>
+  <text x="400" y="120" text-anchor="middle"
+        font-family="'Arial', 'Helvetica Neue', sans-serif"
+        font-size="9" font-weight="bold" fill="#6B7280">OR</text>
+
+  <!-- ══════════════════════════════════════════════════════
+       HELPER DEFINITIONS (colours used below)
+
+       INPUT    #DBEAFE / #3B82F6
+       FREQ_EMPH #CCFBF1 / #0D9488
+       CONV      #FED7AA / #EA580C
+       CONV_PW   #FFEDD5 / #C2410C  (dashed border)
+       MAXPOOL   #EDE9FE / #7C3AED
+       GAP       #D1FAE5 / #059669
+       DENSE     #FCE7F3 / #DB2777
+       DROPOUT   #F3F4F6 / #6B7280
+       OUTPUT    #FEF3C7 / #D97706
+  ══════════════════════════════════════════════════════ -->
+
+
+  <!-- ══════════════════════════════════════════════════════
+       MICRO LAYERS  (step=70, x_left=100, w=200, h=44)
+  ══════════════════════════════════════════════════════ -->
+
+  <!-- 0 · Input -->
+  <rect x="100" y="130" width="200" height="44" rx="5"
+        fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="200" y="148" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#1E3A5F">Log-Mel Spectrogram</text>
+  <text x="200" y="163" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">184 × 16 × 1  |  16 kHz, center=False</text>
+  <line x1="200" y1="175" x2="200" y2="197"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 1 · Frequency Emphasis -->
+  <rect x="100" y="200" width="200" height="44" rx="5"
+        fill="#CCFBF1" stroke="#0D9488" stroke-width="1.5"/>
+  <text x="200" y="218" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#134E4A">Frequency Emphasis</text>
+  <text x="200" y="233" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">Learnable per-bin weighting  (+17 params)</text>
+  <line x1="200" y1="245" x2="200" y2="267"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 2 · Conv(6, 3×3) -->
+  <rect x="100" y="270" width="200" height="44" rx="5"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="200" y="288" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(6, 3×3) + ReLU</text>
+  <text x="200" y="303" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 184 × 16 × 6  |  L2 reg (1e-4)</text>
+  <line x1="200" y1="315" x2="200" y2="337"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 3 · MaxPool(2×2) -->
+  <rect x="100" y="340" width="200" height="44" rx="5"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="200" y="358" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#2E1065">MaxPool2D (2×2)</text>
+  <text x="200" y="373" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 92 × 8 × 6</text>
+  <line x1="200" y1="385" x2="200" y2="407"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 4 · Conv(12, 3×3) -->
+  <rect x="100" y="410" width="200" height="44" rx="5"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="200" y="428" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(12, 3×3) + ReLU</text>
+  <text x="200" y="443" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 92 × 8 × 12  |  L2 reg (1e-4)</text>
+  <line x1="200" y1="455" x2="200" y2="477"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 5 · Conv(12, 1×1) pointwise — dashed border to distinguish -->
+  <rect x="100" y="480" width="200" height="44" rx="5"
+        fill="#FFEDD5" stroke="#C2410C" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="200" y="498" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(12, 1×1) + ReLU</text>
+  <text x="200" y="513" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">92 × 8 × 12  |  pointwise channel mix</text>
+  <line x1="200" y1="525" x2="200" y2="547"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 6 · GlobalAveragePooling2D -->
+  <rect x="100" y="550" width="200" height="44" rx="5"
+        fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+  <text x="200" y="568" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#064E3B">GlobalAveragePooling2D</text>
+  <text x="200" y="583" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ (12,)  |  spatial invariance</text>
+  <line x1="200" y1="595" x2="200" y2="617"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 7 · Dropout(0.1) -->
+  <rect x="100" y="620" width="200" height="44" rx="5"
+        fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5"/>
+  <text x="200" y="638" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#111827">Dropout (p = 0.10)</text>
+  <text x="200" y="653" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">regularisation (training only)</text>
+  <line x1="200" y1="665" x2="200" y2="687"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 8 · Output -->
+  <rect x="100" y="690" width="200" height="44" rx="5"
+        fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+  <text x="200" y="708" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#78350F">Dense(2) + Softmax</text>
+  <text x="200" y="723" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">Bird  /  Not Bird   (τ = 0.35)</text>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       EDGE LAYERS  (step=62, x_left=500, w=200, h=44)
+  ══════════════════════════════════════════════════════ -->
+
+  <!-- 0 · Input -->
+  <rect x="500" y="130" width="200" height="44" rx="5"
+        fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="600" y="148" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#1E3A5F">Log-Mel Spectrogram</text>
+  <text x="600" y="163" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">184 × 80 × 1  |  16 kHz, center=False</text>
+  <line x1="600" y1="175" x2="600" y2="189"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 1 · Conv(16, 3×3) + BN -->
+  <rect x="500" y="192" width="200" height="44" rx="5"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="600" y="210" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(16, 3×3) + BN + ReLU</text>
+  <text x="600" y="225" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 184 × 80 × 16</text>
+  <line x1="600" y1="237" x2="600" y2="251"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 2 · MaxPool -->
+  <rect x="500" y="254" width="200" height="44" rx="5"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="600" y="272" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#2E1065">MaxPool2D (2×2)</text>
+  <text x="600" y="287" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 92 × 40 × 16</text>
+  <line x1="600" y1="299" x2="600" y2="313"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 3 · Conv(32, 3×3) + BN -->
+  <rect x="500" y="316" width="200" height="44" rx="5"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="600" y="334" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(32, 3×3) + BN + ReLU</text>
+  <text x="600" y="349" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 92 × 40 × 32</text>
+  <line x1="600" y1="361" x2="600" y2="375"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 4 · MaxPool -->
+  <rect x="500" y="378" width="200" height="44" rx="5"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="600" y="396" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#2E1065">MaxPool2D (2×2)</text>
+  <text x="600" y="411" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 46 × 20 × 32</text>
+  <line x1="600" y1="423" x2="600" y2="437"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 5 · Conv(64, 3×3) + BN -->
+  <rect x="500" y="440" width="200" height="44" rx="5"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="600" y="458" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#431407">Conv2D(64, 3×3) + BN + ReLU</text>
+  <text x="600" y="473" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ 46 × 20 × 64</text>
+  <line x1="600" y1="485" x2="600" y2="499"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 6 · GlobalAveragePooling2D -->
+  <rect x="500" y="502" width="200" height="44" rx="5"
+        fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+  <text x="600" y="520" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#064E3B">GlobalAveragePooling2D</text>
+  <text x="600" y="535" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">→ (64,)  |  spatial invariance</text>
+  <line x1="600" y1="547" x2="600" y2="561"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 7 · Dense(32) + ReLU -->
+  <rect x="500" y="564" width="200" height="44" rx="5"
+        fill="#FCE7F3" stroke="#DB2777" stroke-width="1.5"/>
+  <text x="600" y="582" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#831843">Dense(32) + ReLU</text>
+  <text x="600" y="597" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">feature compression</text>
+  <line x1="600" y1="609" x2="600" y2="623"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 8 · Dropout(0.2) -->
+  <rect x="500" y="626" width="200" height="44" rx="5"
+        fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5"/>
+  <text x="600" y="644" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#111827">Dropout (p = 0.20)</text>
+  <text x="600" y="659" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">regularisation (training only)</text>
+  <line x1="600" y1="671" x2="600" y2="685"
+        stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 9 · Output -->
+  <rect x="500" y="688" width="200" height="44" rx="5"
+        fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+  <text x="600" y="706" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="10" font-weight="bold" fill="#78350F">Dense(2) + Softmax</text>
+  <text x="600" y="721" text-anchor="middle"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8.5" fill="#374151">Bird  /  Not Bird   (τ = 0.40 ± 0.10)</text>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       LEGEND
+  ══════════════════════════════════════════════════════ -->
+  <rect x="40" y="752" width="720" height="42" rx="5"
+        fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1"/>
+
+  <!-- Legend title -->
+  <text x="55" y="768"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" font-weight="bold" fill="#374151">Layer types:</text>
+
+  <!-- Input -->
+  <rect x="122" y="759" width="11" height="11" rx="2"
+        fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="138" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Input</text>
+
+  <!-- Freq Emphasis -->
+  <rect x="172" y="759" width="11" height="11" rx="2"
+        fill="#CCFBF1" stroke="#0D9488" stroke-width="1.5"/>
+  <text x="188" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Freq. Emphasis</text>
+
+  <!-- Conv -->
+  <rect x="280" y="759" width="11" height="11" rx="2"
+        fill="#FED7AA" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="296" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Conv2D (+BN)</text>
+
+  <!-- Pointwise Conv -->
+  <rect x="374" y="759" width="11" height="11" rx="2"
+        fill="#FFEDD5" stroke="#C2410C" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="390" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Pointwise 1×1</text>
+
+  <!-- MaxPool -->
+  <rect x="466" y="759" width="11" height="11" rx="2"
+        fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="482" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">MaxPool</text>
+
+  <!-- GAP -->
+  <rect x="533" y="759" width="11" height="11" rx="2"
+        fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+  <text x="549" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">GAP</text>
+
+  <!-- Dense -->
+  <rect x="576" y="759" width="11" height="11" rx="2"
+        fill="#FCE7F3" stroke="#DB2777" stroke-width="1.5"/>
+  <text x="592" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Dense</text>
+
+  <!-- Dropout -->
+  <rect x="626" y="759" width="11" height="11" rx="2"
+        fill="#F3F4F6" stroke="#6B7280" stroke-width="1.5"/>
+  <text x="642" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Dropout</text>
+
+  <!-- Output -->
+  <rect x="692" y="759" width="11" height="11" rx="2"
+        fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+  <text x="708" y="769"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="8" fill="#374151">Output</text>
+
+  <!-- Legend row 2: preprocessing note -->
+  <text x="55" y="786"
+        font-family="'Arial','Helvetica Neue',sans-serif"
+        font-size="7.5" fill="#6B7280">
+    Shared preprocessing: raw waveform (48,000 samples @ 16 kHz) → librosa.melspectrogram (n_fft=1024, hop=256, center=False) → power_to_db → normalised [0, 1] per clip → (184, n_mels, 1)
+  </text>
+
+</svg>

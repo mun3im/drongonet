@@ -2,6 +2,8 @@
 
 Lean TinyML CNNs for binary bird activity detection on embedded hardware. Derived from the [TinyChirp](https://arxiv.org/abs/2408.01976) CNN-Mel architecture and trained on the **SEABAD** (South-East Asian Bird Activity Detection) dataset.
 
+![SEABADNet Architecture](seabadnet_architecture.svg)
+
 | Variant | Hardware | Size | Recall | AUC |
 |---|---|---|---|---|
 | **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | 6.56 KB INT8 | ≥0.98 @ τ=0.35 | 0.9743 ± 0.0011 |
