@@ -10,17 +10,17 @@ Three wrapper scripts expose the locked final configurations with minimal argume
 
 ```bash
 # SEABADNet-Nano  (5.41 KB, no recall target)
-python develop/train_nano.py \
+python deploy/train_nano.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft512_m16
 
 # SEABADNet-Micro  (6.56 KB, ≥0.98 recall @ τ=0.35)  ← primary model
-python develop/train_micro.py \
+python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 
 # SEABADNet-Edge  (33 KB, ≥0.99 recall @ τ=0.50)
-python develop/train_edge.py \
+python deploy/train_edge.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m80
 ```

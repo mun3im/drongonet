@@ -35,7 +35,7 @@ Pre-trained INT8 TFLite models (seed 42) are in `deploy/` — use them directly 
 To retrain from scratch, two arguments are required — everything else is locked:
 
 ```bash
-python develop/train_micro.py \
+python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 ```
