@@ -28,16 +28,17 @@ Mel caches are keyed by `(n_mels, n_fft, hop_length)` and stored on an external 
 
 ## Quickstart
 
+Pre-trained INT8 TFLite models (seed 42) are in `deploy/` — use them directly with `deploy/convert_xxd.sh` to embed in firmware.
+
+To retrain from scratch, two arguments are required — everything else is locked:
+
 ```bash
-python develop/6b_micro_final.py \
+python develop/train_micro.py \
     --dataset-path /path/to/seabad \
-    --cache-dir    /path/to/cache4arxiv_fft1024_m16 \
-    --n_mels       16 \
-    --n_fft        1024 \
-    --random_seed  42
+    --cache-dir    /path/to/cache_fft1024_m16
 ```
 
-Results land in `results/6b_micro_final_fft1024_m16_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
+Results land in `results/seabadnet_micro_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
 
 ## Requirements
 

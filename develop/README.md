@@ -4,14 +4,40 @@ Training and analysis scripts for the SEABADNet ablation chain.
 
 Each numbered script answers one design question. The winning config carries forward to the next phase; nothing else does. All ablation runs use seed=42 on a Mac Mini. Multi-seed validation (seeds 42/100/786) is reserved for the two final candidates (`6b`, `6c`).
 
-## Running a script
+## Training a model
 
-All scripts share the same CLI:
+Three wrapper scripts expose the locked final configurations with minimal arguments:
+
+```bash
+# SEABADNet-Nano  (5.41 KB, no recall target)
+python develop/train_nano.py \
+    --dataset-path /path/to/seabad \
+    --cache-dir    /path/to/cache_fft512_m16
+
+# SEABADNet-Micro  (6.56 KB, ≥0.98 recall @ τ=0.35)  ← primary model
+python develop/train_micro.py \
+    --dataset-path /path/to/seabad \
+    --cache-dir    /path/to/cache_fft1024_m16
+
+# SEABADNet-Edge  (33 KB, ≥0.99 recall @ τ=0.50)
+python develop/train_edge.py \
+    --dataset-path /path/to/seabad \
+    --cache-dir    /path/to/cache_fft1024_m80
+```
+
+All hyperparameters are locked. The only optional argument is `--random_seed` (default: 42).
+
+Pre-trained INT8 TFLite models (seed 42) are available in `deploy/` — no training required
+if you just want to run inference.
+
+## Running an ablation script directly
+
+Ablation scripts accept the full parameter set:
 
 ```bash
 python develop/6b_micro_final.py \
     --dataset-path /path/to/seabad \
-    --cache-dir    /path/to/cache4arxiv_fft1024_m16 \
+    --cache-dir    /path/to/cache_fft1024_m16 \
     --n_mels       16 \
     --n_fft        1024 \
     --random_seed  42
