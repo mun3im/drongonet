@@ -2,6 +2,38 @@
 
 End-user artefacts for SEABADNet: pre-trained INT8 TFLite models, training wrappers with locked configs, and a firmware conversion tool.
 
+## Dataset
+
+SEABAD is hosted on Zenodo at [doi.org/10.5281/zenodo.18290494](https://doi.org/10.5281/zenodo.18290494).
+The archive is approximately 4.2 GB — ensure you have at least 9 GB free (compressed + extracted).
+
+```bash
+# Option A: browser
+# Go to https://zenodo.org/records/18290494
+# Download mybad.zip (~4.2 GB), then:
+mv mybad.zip seabad.zip && unzip seabad.zip -d seabad/
+
+# Option B: wget
+wget --content-disposition -O seabad.zip \
+     https://zenodo.org/records/18290494/files/mybad.zip
+unzip seabad.zip -d seabad/
+
+# Option C: curl
+curl -L -o seabad.zip \
+     https://zenodo.org/records/18290494/files/mybad.zip
+unzip seabad.zip -d seabad/
+```
+
+Expected layout after extraction:
+
+```
+seabad/
+  positives/      bird vocalisations (~25,000 clips)
+  negatives/      ambient audio — rain, wind, insects, urban (~25,000 clips)
+  metadata.csv    clip id, label, species, source recording
+  README.md
+```
+
 ## Pre-trained models
 
 | File | Model | Size | τ | Recall | Seed |
