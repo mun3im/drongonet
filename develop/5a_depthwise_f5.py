@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-5b_depthwise_f6.py: Depthwise sep, 6 filters — Micro filter count sweep (Phase 5)
-SeparableConv2D, 6 filters, n_mels=16, dropout=0.1, GAP, focal loss.
-Gate 5 winner — 6 filters carried forward into 6a_nano_final (SEABADNet-Nano) and 6b_micro_final.
+5a_depthwise_f5.py: Depthwise sep, 5 filters — Micro filter count sweep (Phase 5)
+SeparableConv2D, 5 filters, n_mels=16, dropout=0.1, GAP, focal loss.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
@@ -65,7 +64,7 @@ class TrainingConfig:
     target_length: int = 16000 * 3  # 3 seconds @ 16kHz = 48000 samples
     # Mel spectrogram parameters
     n_mels: int = 16  # Using n_mels=16 for Micro branch  # Number of mel bands
-    n_fft: int = 1024  # FFT window size
+    n_fft: int = 512  # FFT window size
     hop_length: int = 256  # Hop length for STFT (corrected to 256, crop to 184 frames)  # Hop length for STFT (adjusted to produce 184 time steps)
     # Learning rate schedule parameters
     lr_patience: int = 5  # Patience for learning rate reduction
@@ -97,8 +96,8 @@ def parse_args():
                         help='Use cached mel spectrograms and skip preprocessing (fails if cache does not exist)')
     parser.add_argument('--n_mels', type=int, default=16,
                         help='Number of mel frequency bins (default: 16)')
-    parser.add_argument('--n_fft', type=int, default=1024,
-                        help='FFT window size (default: 1024)')
+    parser.add_argument('--n_fft', type=int, default=512,
+                        help='FFT window size (default: 512)')
     return parser.parse_args()
 
 def get_optimizer(learning_rate: float):
@@ -126,7 +125,7 @@ def get_optimizer(learning_rate: float):
         return tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 def build_cnn_mel_model_table2(
-    input_shape=(184, 64, 1),
+    input_shape=(184, 80, 1),
     num_classes=2
 ):
     """
@@ -137,14 +136,14 @@ def build_cnn_mel_model_table2(
     inputs = tf.keras.layers.Input(shape=input_shape)
 
     # Block 1: 3x3 depthwise separable conv -> ReLU
-    x = tf.keras.layers.SeparableConv2D(filters=6, kernel_size=(3, 3), padding="valid")(inputs)
+    x = tf.keras.layers.SeparableConv2D(filters=5, kernel_size=(3, 3), padding="valid")(inputs)
     x = tf.keras.layers.Activation("relu")(x)
 
     # MaxPool 2x2
     x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
 
     # Block 2: 3x3 depthwise separable conv -> ReLU
-    x = tf.keras.layers.SeparableConv2D(filters=6, kernel_size=(3, 3), padding="valid")(x)
+    x = tf.keras.layers.SeparableConv2D(filters=5, kernel_size=(3, 3), padding="valid")(x)
     x = tf.keras.layers.Activation("relu")(x)
 
     # MaxPool 2x2
@@ -159,7 +158,7 @@ def build_cnn_mel_model_table2(
     # FC + Softmax -> 2
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
 
-    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5b_depthwise_f6_m{input_shape[1]}")
+    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5a_depthwise_f5_m{input_shape[1]}")
 
     return model
 
@@ -597,7 +596,7 @@ class ModelEvaluator:
 
             # Process each sample (TFLite interpreter doesn't support batching)
             for i in range(batch_size):
-                input_data = inputs_quantized[i:i + 1]  # (1, 184, 80, 1)
+                input_data = inputs_quantized[i:i + 1]
 
                 # Measure inference time
                 start_time = time.perf_counter()
@@ -733,7 +732,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
         f.write("Model Architecture:\n")
         f.write(f"  Model: CNN-Mel (Table II)\n")
-        f.write(f"  Input Shape: (184, 80, 1)\n")
+        f.write(f"  Input Shape: (184, {config.n_mels}, 1)\n")
         f.write("\n")
 
         f.write("Training Parameters:\n")
@@ -787,8 +786,9 @@ def main():
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
     config.n_mels = args.n_mels
+    config.n_fft = args.n_fft
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/5a_depthwise_f6_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.output_dir = f'{RESULTS_BASE}/5a_depthwise_f5_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

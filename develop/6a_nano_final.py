@@ -1144,7 +1144,7 @@ def main():
     # Update cache and output directories based on version and n_mels
     version_suffix = f"_{args.version}" # if args.version != 'Opt' else ""
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/6a_micro_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    config.output_dir = f'{RESULTS_BASE}/6a_nano_final_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)

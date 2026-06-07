@@ -52,8 +52,9 @@ figures_publication/
 deployment/
 deployment.zip
 
-# Shell runners (local only)
+# Shell runners (local only — but keep deploy/ tools)
 *.sh
+!deploy/*.sh
 
 # Logs
 *.log
