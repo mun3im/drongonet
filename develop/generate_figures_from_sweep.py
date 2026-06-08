@@ -24,7 +24,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-RESULTS_DIR = Path(__file__).parent.parent / 'Conda' / 'seabadnet' / 'results'
+RESULTS_DIR = Path(__file__).parent.parent / 'results4arxiv'
 IMAGES_DIR  = Path(__file__).parent / 'images'
 
 # Overridden by --results-dir and --out-dir at runtime
@@ -556,8 +556,8 @@ def main():
     if len(edge_sweeps) > 0:
         models['edge'] = {
             'sweeps': edge_sweeps, 'seeds': [42, 100, 786],
-            'tau_op': 0.40,           # mean τ for curve annotations (panels A/B/C)
-            'tau_ops': {42: 0.50, 100: 0.40, 786: 0.30},  # per-seed locked τ
+            'tau_op': 0.55,           # approx mean τ for single-line annotations
+            'tau_ops': {42: 0.60, 100: 0.55, 786: 0.45},  # per-seed locked τ (Linux x86-64)
             'color': COLORS['edge'],
             'label': 'SEABADNet-Edge',
         }
