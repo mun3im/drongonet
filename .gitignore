@@ -26,6 +26,9 @@ saved_model/
 
 # Experiment results (regenerable from scripts)
 results/
+results4arxiv/
+results_int8/
+results4arxiv_edge_control/
 results_tinychirp_tinychirp/
 
 # Aggregated CSVs and analysis outputs (regenerable)
@@ -77,6 +80,17 @@ cache_seabad_*/
 # Internal project notes
 CLAUDE.md
 THRESHOLD_SWEEP_TODO.md
+
+# Archived docs and status markdown files (internal only)
+archived_docs/
+STATUS.md
+
+# Root-level output artefacts
+pareto_1_baseline_analysis.png
+tinychirp_comparison_output.txt
+
+# Stale evaluation runner
+run_seabadnet_evaluation.py
 
 # Temporary / scratch files
 *.tmp

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 train_micro.py — SEABADNet-Micro
-Primary model (6.56 KB INT8, 919 params, AUC 0.9743 ± 0.0011).
+Primary model (6.26 KB INT8, 919 params, AUC 0.9743 ± 0.0011).
 Targets ARM Cortex-M4 (AudioMoth, STM32F4). Meets ≥0.98 recall at τ=0.35.
 
 Locked configuration (do not change):
@@ -29,7 +29,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train SEABADNet-Micro (locked config, 6.56 KB INT8, ≥0.98 recall)"
+        description="Train SEABADNet-Micro (locked config, 6.26 KB INT8, ≥0.98 recall)"
     )
     parser.add_argument('--dataset-path', required=True,
                         help='Path to the SEABAD dataset root')

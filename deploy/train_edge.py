@@ -2,7 +2,9 @@
 """
 train_edge.py — SEABADNet-Edge
 Reference model for SBC deployment (33.06 KB INT8, 25,890 params, AUC 0.9988 ± 0.0001).
-Targets Raspberry Pi, Portenta X8. Meets ≥0.99 recall at τ=0.50.
+Targets Raspberry Pi, Portenta X8. Meets ≥0.99 recall; operating threshold is
+calibrated per seed on the target platform (τ=0.60/s42, τ=0.55/s100, τ=0.45/s786
+on Linux x86-64 INT8; re-calibrate if deploying on ARM).
 
 Locked configuration (do not change):
   n_mels=80, n_fft=1024, focal loss, GAP, BatchNorm

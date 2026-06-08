@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 train_nano.py — SEABADNet-Nano
-Smallest variant (5.41 KB INT8, 763 params). No recall target; use when
+Smallest variant (5.10 KB INT8, 763 params). No recall target; use when
 flash budget is the hard constraint.
 
 Locked configuration (do not change):
