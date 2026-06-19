@@ -299,30 +299,7 @@ Columns:
 - `pred_binary`: Thresholded prediction (1 if pred_prob ≥ τ)
 - `correct`: Whether prediction matches label
 
----
 
-## 📖 Citation
-
-If you use SEABADNet-Edge in your research:
-
-```bibtex
-@article{zabidi2026seabadnet,
-  title={SEABADNet: Efficient Neural Detection of Avian Activity 
-         for Battery-Powered Autonomous Recording Units},
-  author={Zabidi, Mun3im and others},
-  journal={IEEE Internet of Things Journal},
-  year={2026},
-  note={Preprint: https://arxiv.org/abs/your-paper-url}
-}
-```
-
----
-
-## 📞 Support
-
-- **Issues:** https://github.com/yourusername/seabadnet/issues
-- **Paper:** [Link to arxiv/publication]
-- **Dataset:** https://zenodo.org/records/18290494
 
 ---
 
@@ -340,5 +317,5 @@ If you use SEABADNet-Edge in your research:
 ---
 
 **Last updated:** 2026-06-19  
-**Compatible with:** Python 3.7+, Raspberry Pi OS (Bullseye/Bookworm), any ARM Linux SBC  
-**Tested on:** RPi 4B (1.5 GHz), RPi 5 (2.4 GHz), RPi Zero 2 W (1.0 GHz)
+**Compatible with:** Python 3.11+, Raspberry Pi OS (Bullseye/Bookworm), any ARM Linux SBC  
+**Tested on:** 
