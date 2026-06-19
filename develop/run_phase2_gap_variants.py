@@ -51,7 +51,7 @@ def run_script(script_name: str, n_mels: int, seed: int) -> bool:
         "conda", "run", "-n", "tf215_gpu",
         "python", str(script_path),
         "--n_mels", str(n_mels),
-        "--n_fft", str(n_fft),
+        "--n_fft", str(N_FFT),
         "--random_seed", str(seed),
     ]
 
