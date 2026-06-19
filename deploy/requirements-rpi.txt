@@ -1,0 +1,14 @@
+# SEABADNet-Edge Inference on Raspberry Pi
+# Lightweight dependencies for TFLite INT8 inference only
+
+# Audio processing
+librosa>=0.10.0
+numpy>=1.21.0
+scipy>=1.7.0
+audioread
+
+# TensorFlow Lite Runtime (lightweight, no GPU needed)
+tflite-runtime>=2.14.0
+
+# ML metrics and utilities
+scikit-learn>=1.0.0

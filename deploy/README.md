@@ -2,6 +2,9 @@
 
 End-user artefacts for SEABADNet: pre-trained INT8 TFLite models, training wrappers with locked configs, and a firmware conversion tool.
 
+> **🟢 NEW: SEABADNet-Edge on Raspberry Pi!**  
+> For **SBC deployment** (Raspberry Pi 4/5, Pi Zero 2 W), see **[RASPBERRY_PI.md](RASPBERRY_PI.md)** for quick-start setup: download dataset from Zenodo → git clone → run inference.
+
 ## Dataset
 
 SEABAD is hosted on Zenodo at [doi.org/10.5281/zenodo.18290494](https://doi.org/10.5281/zenodo.18290494).
