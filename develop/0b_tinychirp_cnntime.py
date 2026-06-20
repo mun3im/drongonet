@@ -125,15 +125,19 @@ def build_cnn_time_model(
     """
     CNN-Time model for raw waveform input.
 
-    Layers:
+    Layers (faithful to TinyChirp Table II — global average pooling, not Flatten):
       - Conv1D(kernel=3, filters=4, same) + ReLU -> (48000, 4)
       - MaxPooling1D(pool_size=2)                 -> (24000, 4)
       - Conv1D(kernel=3, filters=8, same) + ReLU -> (24000, 8)
       - Dropout(0.25)                             -> (24000, 8)
-      - AveragePooling1D(pool_size=2)             -> (12000, 8)
-      - Flatten                                   -> 96000
+      - GlobalAveragePooling1D                    -> 8
       - Dense(64) + ReLU                          -> 64
       - Dense(2) + Softmax                        -> 2
+
+    Note: Huang et al. apply global average pooling here (Table II: "Average
+    Pooling 8x12000 -> 8x1"), keeping CNN-Time tiny (~0.8K params). Their CNN-Mel
+    instead uses Reshape+Dense over 3168 features (~25.6K params), which is the
+    parameter-heavy classifier SEABADNet replaces with GAP.
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -151,11 +155,8 @@ def build_cnn_time_model(
     # Dropout
     x = tf.keras.layers.Dropout(0.25)(x)  # (24000, 8)
 
-    # AveragePool
-    x = tf.keras.layers.AveragePooling1D(pool_size=2)(x)  # (12000, 8)
-
-    # Flatten -> 96000
-    x = tf.keras.layers.Flatten()(x)  # 12000*8 = 96000
+    # Global Average Pooling -> 8  (Table II: 8x12000 -> 8x1)
+    x = tf.keras.layers.GlobalAveragePooling1D()(x)  # (8,)
 
     # FC + ReLU -> 64
     x = tf.keras.layers.Dense(64, activation="relu")(x)
