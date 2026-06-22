@@ -32,7 +32,11 @@ _RESULTS_DIR_OVERRIDE = None
 
 FIGURE_STYLE = {
     'font.family':     'sans-serif',
-    'font.sans-serif': ['Helvetica', 'Arial', 'DejaVu Sans'],
+    # Real Arial/Helvetica first; metric-compatible FOSS equivalents next
+    # (Liberation Sans = Arial metrics, Nimbus Sans = Helvetica, Arimo = Arial);
+    # DejaVu only as a last resort so a missing font is never silent.
+    'font.sans-serif': ['Arial', 'Helvetica', 'Liberation Sans', 'Nimbus Sans',
+                        'Arimo', 'DejaVu Sans'],
     'font.size':       9,
     'axes.labelsize':  10,
     'axes.titlesize':  10,
@@ -43,6 +47,28 @@ FIGURE_STYLE = {
     'grid.linewidth':  0.4,
     'lines.linewidth': 1.4,
 }
+
+# House style enforcement: Arial/Helvetica metric family, no font larger than 12 pt.
+MAX_FONT_PT = 12
+assert all(v <= MAX_FONT_PT for k, v in FIGURE_STYLE.items()
+           if k.endswith('size')), \
+    f"Figure font sizes must be <= {MAX_FONT_PT} pt: {FIGURE_STYLE}"
+
+
+def assert_arial_metric_font():
+    """Warn loudly if no Arial/Helvetica-metric font is available (would fall back to DejaVu)."""
+    import warnings
+    import matplotlib.font_manager as fm
+    available = {f.name for f in fm.fontManager.ttflist}
+    preferred = [n for n in FIGURE_STYLE['font.sans-serif'] if n != 'DejaVu Sans']
+    if not any(n in available for n in preferred):
+        warnings.warn(
+            "No Arial/Helvetica-metric font found (Arial, Helvetica, Liberation Sans, "
+            "Nimbus Sans, Arimo). Figures would render in DejaVu Sans. Install e.g. "
+            "fonts-liberation / fonts-croscore.", RuntimeWarning)
+
+
+assert_arial_metric_font()  # run the check when this module is imported/executed
 
 COLORS = {
     'nano':  '#1B9E77',

@@ -34,7 +34,8 @@ def run_model_retrain(script_name: str, dataset_path: str, seed: int = 42, force
     Returns:
         True if successful, False otherwise
     """
-    script_path = Path(__file__).parent / f"{script_name}.py"
+    # 0a-0e baselines now live in the sibling pre-ablation/ folder (was develop/).
+    script_path = Path(__file__).parent.parent / "pre-ablation" / f"{script_name}.py"
     if not script_path.exists():
         print(f"❌ Script not found: {script_path}")
         return False
