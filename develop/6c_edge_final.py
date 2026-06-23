@@ -95,6 +95,8 @@ def parse_args():
                         help='FFT window size (default: 1024)')
     parser.add_argument('--force_cpu', action='store_true',
                         help='Force use of CPU instead of GPU')
+    parser.add_argument('--output-dir', type=str, default=None,
+                        help='Override output directory (default: results/seabadnet_edge_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 args = parse_args()
@@ -372,10 +374,27 @@ def create_tf_dataset_from_cache(split: str, config: TrainingConfig,
 
     if augment:
         def augment_mel(mel, label):
-            # Gaussian noise
-            noise = tf.random.normal(tf.shape(mel), mean=0.0, stddev=0.01)
+            """
+            Augmentation harmonised with 6a/6b (Nano/Micro) for consistency
+            across the SEABADNet family.
+            Unbatched tensor shape: (time, freq, channel) = (184, 80, 1).
+            """
+            # Gaussian noise (σ=0.02, matches Nano/Micro; was 0.01 before harmonisation)
+            noise = tf.random.normal(tf.shape(mel), mean=0.0, stddev=0.02)
             mel = mel + noise
             mel = tf.clip_by_value(mel, 0.0, 1.0)
+
+            # Random time shift along axis 0 (time), p=0.5, ±10 frames.
+            should_shift = tf.random.uniform(()) > 0.5
+
+            def time_shift(mel):
+                shift = tf.random.uniform((), minval=-10, maxval=10, dtype=tf.int32)
+                return tf.roll(mel, shift=shift, axis=0)
+
+            mel = tf.cond(should_shift,
+                          lambda: time_shift(mel),
+                          lambda: mel)
+
             return mel, label
 
         dataset = dataset.map(augment_mel, num_parallel_calls=tf.data.AUTOTUNE)
@@ -683,7 +702,10 @@ def main():
     config.n_mels = args.n_mels
     config.n_fft = args.n_fft
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'results/seabadnet_edge_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    if args.output_dir:
+        config.output_dir = args.output_dir
+    else:
+        config.output_dir = f'results/seabadnet_edge_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

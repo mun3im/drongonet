@@ -110,6 +110,8 @@ def parse_args():
     parser.add_argument('--version', type=str, default='Opt',
                         choices=['LP', 'FE', 'Opt'],
                         help='Model version: LP (original), FE (with frequency emphasis), Opt (optimized)')
+    parser.add_argument('--output-dir', type=str, default=None,
+                        help='Override output directory (default: results/seabadnet_micro_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 
@@ -705,19 +707,20 @@ def create_tf_dataset_from_cache(split: str, config: TrainingConfig,
     if augment and split == 'train':
         def augment_mel(mel, label):
             """
-            SIMPLIFIED augmentation - just noise and time shifting
+            SIMPLIFIED augmentation - noise + time shift.
+            Unbatched tensor shape: (time, freq, channel) = (184, 16, 1).
             """
             # Add small Gaussian noise
             noise = tf.random.normal(tf.shape(mel), mean=0.0, stddev=0.02)
             mel = mel + noise
             mel = tf.clip_by_value(mel, 0.0, 1.0)
 
-            # Random time shift (simpler and effective)
+            # Random time shift along axis 0 (time). Previously axis=1 (freq) by mistake.
             should_shift = tf.random.uniform(()) > 0.5
 
             def time_shift(mel):
                 shift = tf.random.uniform((), minval=-10, maxval=10, dtype=tf.int32)
-                return tf.roll(mel, shift=shift, axis=1)
+                return tf.roll(mel, shift=shift, axis=0)
 
             mel = tf.cond(should_shift,
                           lambda: time_shift(mel),
@@ -1145,7 +1148,10 @@ def main():
     # Update cache and output directories based on version and n_mels
     version_suffix = f"_{args.version}" # if args.version != 'Opt' else ""
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'results/seabadnet_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    if args.output_dir:
+        config.output_dir = args.output_dir
+    else:
+        config.output_dir = f'results/seabadnet_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)
