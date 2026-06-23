@@ -1,25 +1,27 @@
 # develop/
 
-Training and analysis scripts for the SEABADNet ablation chain.
+Training scripts for the SEABADNet ablation chain (Phase 1–6) and the three final-candidate trainers (`6a`, `6b`, `6c`).
 
-Each numbered script answers one design question. The winning config carries forward to the next phase; nothing else does. All ablation runs use seed=42 on a Mac Mini. Multi-seed validation (seeds 42/100/786) is reserved for the two final candidates (`6b`, `6c`).
+Each numbered script answers one design question. The winning config carries forward to the next phase; nothing else does. Ablation runs use seed=42; multi-seed validation (seeds 42/100/786) is reserved for the three final candidates.
+
+Post-ablation analysis lives in `analysis/`; pre-ablation TinyChirp baselines live in `pre-ablation/`.
 
 ## Training a model
 
-Three wrapper scripts expose the locked final configurations with minimal arguments:
+Three wrapper scripts in `deploy/` expose the locked final configurations with minimal arguments:
 
 ```bash
-# SEABADNet-Nano  (5.41 KB, no recall target)
+# SEABADNet-Nano  (5.09 KB INT8, no recall target)
 python deploy/train_nano.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft512_m16
 
-# SEABADNet-Micro  (6.56 KB, ≥0.98 recall @ τ=0.35)  ← primary model
+# SEABADNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
 python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 
-# SEABADNet-Edge  (33 KB, ≥0.99 recall @ τ=0.50)
+# SEABADNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
 python deploy/train_edge.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m80
@@ -59,17 +61,7 @@ model.tflite            INT8 quantised
 
 ## Ablation scripts
 
-### Phase 0 — TinyChirp baselines
-
-Run TinyChirp architectures as published on SEABAD to establish the starting point.
-
-| Script | Model |
-|---|---|
-| `0a_tinychirp_cnnmel.py` | CNN-Mel — primary baseline |
-| `0b_tinychirp_cnntime.py` | CNN-Time |
-| `0c_tinychirp_transformer.py` | Transformer |
-| `0d_tinychirp_squeezenettime.py` | SqueezeNet-Time |
-| `0e_tinychirp_squeezenetmel.py` | SqueezeNet-Mel |
+> Phase 0 (TinyChirp baselines + zero-shot SEABAD evaluations) lives in **`pre-ablation/`** — see `pre-ablation/README.md`.
 
 ### Phase 1 — Frequency resolution (n_mels sweep)
 
@@ -133,24 +125,16 @@ Note: `5a` uses `n_fft=512`; all other scripts use `n_fft=1024`. These produce s
 
 | Script | Model | Params | Size (INT8) | Target recall |
 |---|---|---|---|---|
-| `6a_nano_final.py` | SEABADNet-Nano | 763 | 5.41 KB | — |
-| `6b_micro_final.py` | **SEABADNet-Micro** | 919 | 6.56 KB | ≥0.98 |
-| `6c_edge_final.py` | **SEABADNet-Edge** | 25,890 | 33.06 KB | ≥0.99 |
+| `6a_nano_final.py` | SEABADNet-Nano | 763 | 5.09 KB | — |
+| `6b_micro_final.py` | **SEABADNet-Micro** | 919 | 6.23 KB | ≥0.987 @ τ=0.30 |
+| `6c_edge_final.py` | **SEABADNet-Edge** | 25,890 | 33.06 KB | ≥0.99 @ τ=0.50 |
 
-## Analysis and threshold scripts
+## Support files
 
-| Script | Purpose |
+| File | Purpose |
 |---|---|
-| `compile_paper_tables.py` | Aggregate per-seed sweep data into LaTeX-ready rows |
-| `threshold_sweep_micro.py` | Sweep τ for SEABADNet-Micro, lock threshold |
-| `threshold_sweep_edge.py` | Sweep τ for SEABADNet-Edge, lock threshold |
-| `threshold_sweep_nano.py` | Sweep τ for SEABADNet-Nano |
-| `threshold_sweep_edge_control.py` | Edge threshold sweep variant |
-| `generate_int8_models.py` | Batch INT8 quantisation |
-| `generate_figures_from_sweep.py` | Figures from sweep outputs |
-| `generate_fig6_part1_extract.py` | Figure 6 data extraction (Linux: GPU + mel caches) |
-| `generate_fig6_part2_plot.py` | Figure 6 rendering (Mac: Arial fonts, no caches needed) |
-| `extract_paper_numbers.py` | Extract key numbers from results dirs |
-| `ablation_freq_emphasis.py` | Frequency emphasis ablation |
-| `_patch_ablation.py` | One-time patch: inject config imports into scripts |
-| `config.py` | Shared path and hyperparameter constants |
+| `config.py` | Shared path constants (`DATASET_BASE`, `CACHE_BASE`, `RESULTS_BASE`) imported by every script |
+| `ablation_freq_emphasis.py` | Shared `FrequencyEmphasis` layer used by Phase 3/4/5/6 scripts |
+| `_patch_ablation.py` | One-time helper that injected `from config import …` into the ablation scripts |
+
+Post-ablation threshold sweeps, table compilation, and figure generation live in **`analysis/`** — see `analysis/README.md`.

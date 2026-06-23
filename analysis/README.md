@@ -52,6 +52,7 @@ Create plots from training results and threshold sweeps.
 | Script | Purpose | Input | Output |
 |--------|---------|-------|--------|
 | `generate_figures_from_sweep.py` | Plot recall/precision/F1 vs threshold τ | `results/*/threshold_sweep.txt` | `figures_publication/` (PR curves, threshold plots) |
+| `generate_ablation_pipeline.py` | Render the ablation-pipeline flowchart (Fig 2) | — | `analysis/images/fig2_ablation_pipeline.pdf` |
 | `generate_fig6_part1_extract.py` | Fig 6 data extraction (LINUX: has GPU + `/Volumes/Evo` caches, DejaVu fonts only) | TFLite models + mel caches | `analysis/fig6_data.npz` |
 | `generate_fig6_part2_plot.py` | Fig 6 rendering (MAC: has real Arial matching Fig 1-5, no caches needed) | `fig6_data.npz` (copied from Linux) | `analysis/images/fig6_probability_distributions.pdf` |
 | `generate_int8_models.py` | Regenerate all quantised INT8 models | Training results | `results_int8/` (full INT8 models for all seeds) |

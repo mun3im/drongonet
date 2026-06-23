@@ -6,18 +6,23 @@ Lean TinyML CNNs for binary bird activity detection on embedded hardware. Derive
 
 ![SEABADNet Architecture](seabadnet_architecture.svg)
 
-| Variant | Hardware | Size | Recall | AUC |
+| Variant | Hardware | Size | Recall | AUC (INT8, 3 seeds) |
 |---|---|---|---|---|
-| **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | 6.56 KB INT8 | ≥0.98 @ τ=0.35 | 0.9743 ± 0.0011 |
-| **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | 33.06 KB INT8 | ≥0.99 @ τ=0.50 | 0.9988 ± 0.0001 |
+| **SEABADNet-Nano** | ARM Cortex-M4 (AudioMoth, STM32F4) | 5.09 KB INT8 | — | 0.9727 ± 0.0007 |
+| **SEABADNet-Micro** | ARM Cortex-M4 (AudioMoth, STM32F4) | 6.23 KB INT8 | ≥0.987 @ τ=0.30 | 0.9803 ± 0.0012 |
+| **SEABADNet-Edge** | SBC (Raspberry Pi, Portenta X8) | 33.06 KB INT8 | ≥0.99 @ τ=0.50 | 0.9990 ± 0.0002 |
 
 Recall is the primary deployment metric. AUC is reported for comparison.
 
 ## Repository layout
 
 ```
-develop/    training and analysis scripts (ablation chain + threshold sweeps)
-deploy/     firmware conversion tools (INT8 TFLite → C array)
+pre-ablation/   Phase 0 TinyChirp baselines + zero-shot SEABAD evaluations
+develop/        ablation chain (Phase 1–6) and final training scripts
+analysis/       threshold sweeps, table compilation, figure generation
+benchmark/      cross-dataset benchmarks (DCASE-2018 BAD, TinyChirp Corn Bunting)
+deploy/         pre-trained INT8 TFLite models + firmware conversion (deploy/convert_xxd.sh)
+edge_deploy/    Raspberry Pi inference package for SEABADNet-Edge
 ```
 
 ## Dataset
@@ -42,7 +47,7 @@ python deploy/train_micro.py \
     --cache-dir    /path/to/cache_fft1024_m16
 ```
 
-Results land in `results/seabadnet_micro_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
+Results land in `results/seabadnet_micro_fft1024_m16_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
 
 ## Requirements
 
