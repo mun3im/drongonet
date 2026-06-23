@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-dcase_benchmark.py — Retrain SEABADNet under the DCASE-2018 Bird Audio Detection protocol,
-with sliding-window aggregation (the fair way to apply a 3 s model to 10 s clips).
+dcase_benchmark.py — Retrain SEABADNet on the DCASE-2018 Bird Audio Detection data to show
+the architecture is NOT overfit to SEABAD and ADAPTS to a different clip length.
 
-External-dataset benchmark for the "is SEABADNet overfit to SEABAD?" question. Trains the
-SEABADNet architecture from scratch on the DCASE-2018 BAD split and reports clip-level
-ROC-AUC on the held-out BirdVox-DCASE-20k test set (cf. DCASE-2018 leaderboard ~0.85-0.89).
+SEABAD/TinyChirp clips are 3 s; DCASE clips are 10 s. The same SEABADNet 3 s model is applied
+to 10 s clips via sliding-window aggregation, retrained from scratch on a pooled in-domain
+split of all three DCASE corpora, and evaluated on a held-out portion of the same pool.
 
-  train : ff1010bird (7,690) + warblrb10k (8,000) = 15,690 clips
-  test  : BirdVox-DCASE-20k (20,000)
-  metric: clip-level ROC-AUC (binary bird / no-bird)
+  data   : ff1010bird (7,690) + warblrb10k (8,000) + BirdVox-DCASE-20k (20,000) = 35,690 clips
+  split  : stratified clip-level train / val / test (in-domain; all corpora in every split)
+  metric : clip-level ROC-AUC (binary bird / no-bird)
+
+This answers "does SEABADNet generalize beyond SEABAD, including to a different clip length?"
+It is NOT the official DCASE-2018 cross-corpus transfer task (train ff1010+warblr -> test
+BirdVox), which measures zero-adaptation domain transfer and collapses to chance for a small
+from-scratch model (see [[transformer-zeroshot-transfers]] in project memory).
 
 Sliding windows (~50% overlap, full 10 s coverage)
   Each 10 s clip -> 16 kHz -> SIX 3 s windows evenly spaced at starts {0,1.4,2.8,4.2,5.6,7.0}s
@@ -19,8 +24,7 @@ Sliding windows (~50% overlap, full 10 s coverage)
   Test  : the model scores all 6 windows; the clip score is the MAX bird-probability
           ("is there a bird anywhere in the 10 s?").
 
-Window-mels are built in RAM (no large /tmp cache; the host disk is near-full). All seeds for
-a variant are trained in one invocation so the wav decode happens once.
+Window-mels are built once in RAM, then re-split per seed (host disk is near-full).
 
 Usage
   conda run -n tf215_gpu python benchmark/dcase_benchmark.py --variant nano  --seeds 42 100 786
@@ -42,8 +46,7 @@ SOURCES = {
     'warblrb10k': (DATA_ROOT / 'warblr/warblrb10k_public_metadata_2018.csv', DATA_ROOT / 'warblr/wav'),
     'birdvox':    (DATA_ROOT / 'birdvox/BirdVoxDCASE20k_csvpublic.csv',       DATA_ROOT / 'birdvox/wav'),
 }
-TRAIN_SOURCES = ['ff1010bird', 'warblrb10k']
-TEST_SOURCES = ['birdvox']
+ALL_SOURCES = ['ff1010bird', 'warblrb10k', 'birdvox']   # pooled in-domain (different from official cross-corpus task)
 
 SR = 16000
 WIN = SR * 3                 # 3 s analysis window = 48000 samples
@@ -99,15 +102,16 @@ def six_window_mels(wav_path, n_mels):
     return out
 
 
-def build_split(split, sources, n_mels):
-    """Return X (n_clips*6, FRAMES, n_mels, 1), clip_labels (n_clips,). Windows are clip-ordered."""
+def build_all(n_mels, sources):
+    """Pool the given DCASE corpora -> X (n_clips*W, FRAMES, n_mels, 1), clip_labels (n_clips,).
+    Windows are clip-ordered: clip i occupies rows [i*W : (i+1)*W]."""
     items = []
     for s in sources:
         items += read_source(s)
     n = len(items)
     X = np.empty((n * WINDOWS_PER_CLIP, FRAMES, n_mels, 1), dtype=np.float32)
     labels = np.empty(n, dtype=np.int32)
-    print(f'[build] {split}: {n} clips x {WINDOWS_PER_CLIP} windows, n_mels={n_mels}')
+    print(f'[build] DCASE {"+".join(sources)}: {n} clips x {WINDOWS_PER_CLIP} windows, n_mels={n_mels}')
     t0 = time.time()
     for ci, (wav_path, label) in enumerate(items):
         if ci % 2000 == 0:
@@ -115,7 +119,7 @@ def build_split(split, sources, n_mels):
         mels = six_window_mels(wav_path, n_mels)
         X[ci * WINDOWS_PER_CLIP:(ci + 1) * WINDOWS_PER_CLIP, ..., 0] = mels
         labels[ci] = label
-    print(f'[build] {split} done in {time.time()-t0:.0f}s')
+    print(f'[build] pooled DCASE done in {time.time()-t0:.0f}s')
     return X, labels
 
 
@@ -144,40 +148,61 @@ def focal_loss(gamma=2.0, alpha=0.5):
     return loss
 
 
+def windows_for(clip_idx):
+    """Row indices (clip-ordered window layout) for the given clip indices."""
+    clip_idx = np.asarray(clip_idx)
+    base = clip_idx[:, None] * WINDOWS_PER_CLIP + np.arange(WINDOWS_PER_CLIP)[None, :]
+    return base.reshape(-1)
+
+
 def main():
-    ap = argparse.ArgumentParser(description='DCASE-2018 BAD benchmark for SEABADNet (sliding window)')
+    ap = argparse.ArgumentParser(description='In-domain DCASE benchmark for SEABADNet (sliding window)')
     ap.add_argument('--variant', choices=list(VARIANTS), default='micro')
     ap.add_argument('--seeds', type=int, nargs='+', default=[42, 100, 786])
     ap.add_argument('--epochs', type=int, default=50)
     ap.add_argument('--batch_size', type=int, default=128)
-    ap.add_argument('--val_frac', type=float, default=0.1)
+    ap.add_argument('--test_frac', type=float, default=0.2)
+    ap.add_argument('--val_frac', type=float, default=0.1)   # fraction of the train+val pool
+    ap.add_argument('--windows', type=int, default=6,
+                    help='3 s windows per 10 s clip (full coverage at any N>=4; default 6)')
+    ap.add_argument('--sources', nargs='+', default=ALL_SOURCES, choices=ALL_SOURCES,
+                    help='corpora to pool for the in-domain split (default: all three). '
+                         'Use "ff1010bird warblrb10k" to match the bulbul DCASE dev set.')
+    ap.add_argument('--run-tag', default='', dest='run_tag',
+                    help='suffix for output dir / summary tag, e.g. "dev" for the ff1010+warblr protocol')
     args = ap.parse_args()
+
+    # window count is configurable; functions read these module globals at call time
+    global WINDOWS_PER_CLIP, WIN_STARTS
+    WINDOWS_PER_CLIP = args.windows
+    WIN_STARTS = np.linspace(0, CLIP_LEN - WIN, WINDOWS_PER_CLIP).astype(int)
 
     import tensorflow as tf
     from sklearn.metrics import roc_auc_score
+    from sklearn.model_selection import train_test_split
 
     build_fn, n_mels = load_build_fn(args.variant)
 
-    # ---- data (built once; reused across seeds) ----
-    Xtr_w, tr_lab = build_split('train', TRAIN_SOURCES, n_mels)   # window-level X, clip-level labels
-    Xte_w, te_lab = build_split('test', TEST_SOURCES, n_mels)
-    ytr_w = np.repeat(tr_lab, WINDOWS_PER_CLIP)                    # window labels = clip label
-    print(f'train windows={len(Xtr_w)} (clips {len(tr_lab)})  test windows={len(Xte_w)} (clips {len(te_lab)})  '
-          f'train pos {tr_lab.mean():.3f}  test pos {te_lab.mean():.3f}')
+    # ---- data: build pooled mels once; re-split per seed ----
+    X_all, lab_all = build_all(n_mels, args.sources)
+    n_clips = len(lab_all)
+    clip_ids = np.arange(n_clips)
+    print(f'pooled clips={n_clips}  windows={len(X_all)}  pos frac={lab_all.mean():.3f}')
 
     aucs = []
     for seed in args.seeds:
         tf.random.set_seed(seed)
         np.random.seed(seed)
 
-        # clip-level train/val split (keep a clip's 6 windows together)
-        rng = np.random.RandomState(seed)
-        clip_perm = rng.permutation(len(tr_lab))
-        n_val = int(len(clip_perm) * args.val_frac)
-        val_clips, tr_clips = set(clip_perm[:n_val]), set(clip_perm[n_val:])
-        wmask_tr = np.array([ (i // WINDOWS_PER_CLIP) in tr_clips for i in range(len(Xtr_w)) ])
-        Xtr, ytr = Xtr_w[wmask_tr], ytr_w[wmask_tr]
-        Xva, yva = Xtr_w[~wmask_tr], ytr_w[~wmask_tr]
+        # stratified clip-level split: test held out; remainder -> train/val
+        trv_ids, te_ids = train_test_split(clip_ids, test_size=args.test_frac,
+                                           stratify=lab_all, random_state=seed)
+        tr_ids, va_ids = train_test_split(trv_ids, test_size=args.val_frac,
+                                          stratify=lab_all[trv_ids], random_state=seed)
+
+        wtr, wva = windows_for(tr_ids), windows_for(va_ids)
+        Xtr, ytr = X_all[wtr], np.repeat(lab_all[tr_ids], WINDOWS_PER_CLIP)
+        Xva, yva = X_all[wva], np.repeat(lab_all[va_ids], WINDOWS_PER_CLIP)
 
         model = build_fn(input_shape=(FRAMES, n_mels, 1), num_classes=2)
         model.compile(optimizer=tf.keras.optimizers.AdamW(learning_rate=3e-4, weight_decay=1e-4),
@@ -190,27 +215,34 @@ def main():
                              tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                                                   patience=5, verbose=0)])
 
-        # ---- sliding-window MAX aggregation on the test clips ----
-        win_probs = model.predict(Xte_w, batch_size=512, verbose=0)[:, 1]
+        # ---- sliding-window MAX aggregation on the held-out test clips ----
+        wte = windows_for(te_ids)
+        te_lab = lab_all[te_ids]
+        win_probs = model.predict(X_all[wte], batch_size=512, verbose=0)[:, 1]
         clip_probs = win_probs.reshape(len(te_lab), WINDOWS_PER_CLIP).max(axis=1)
         auc = float(roc_auc_score(te_lab, clip_probs))
         aucs.append(auc)
 
-        out_dir = Path(f'results4arxiv/dcase_benchmark_{args.variant}_r{seed}')
+        # dir name: optional _<run_tag> (protocol), then _w{N} for non-canonical window counts
+        rtag = f'_{args.run_tag}' if args.run_tag else ''
+        wtag = '' if args.windows == 6 else f'_w{args.windows}'
+        out_dir = Path(f'results4arxiv/dcase_benchmark_{args.variant}{rtag}{wtag}_r{seed}')
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / 'summary.json').write_text(json.dumps({
-            'tag': f'SEABADNet-{args.variant}_DCASE2018_slidingwin',
-            'protocol': 'train=ff1010bird+warblrb10k, test=BirdVox-DCASE-20k, 6x3s windows (max-agg)',
+            'tag': f'SEABADNet-{args.variant}_DCASE2018_indomain_{args.run_tag or "pool"}_w{args.windows}',
+            'protocol': f'in-domain split of [{"+".join(args.sources)}], {args.windows}x3s windows (max-agg); '
+                        'demonstrates cross-dataset + different-clip-length (10s) adaptation',
             'variant': args.variant, 'n_mels': n_mels, 'seed': seed,
-            'windows_per_clip': WINDOWS_PER_CLIP, 'test_auc': auc,
-            'params': int(model.count_params()),
+            'windows_per_clip': WINDOWS_PER_CLIP,
+            'n_train_clips': int(len(tr_ids)), 'n_val_clips': int(len(va_ids)), 'n_test_clips': int(len(te_ids)),
+            'test_auc': auc, 'params': int(model.count_params()),
         }, indent=2))
-        print(f'  [seed {seed}] clip-level test AUC = {auc:.4f}')
+        print(f'  [seed {seed}] in-domain clip-level test AUC = {auc:.4f}')
 
     print('\n' + '=' * 64)
-    print(f'SEABADNet-{args.variant} | DCASE-2018 BAD | 6x3s sliding-window (max-agg)')
+    print(f'SEABADNet-{args.variant} | DCASE-2018 (in-domain pool) | 6x3s sliding-window (max-agg)')
     print(f'  test AUC = {np.mean(aucs):.4f} +/- {np.std(aucs):.4f}   per-seed {[round(a,4) for a in aucs]}')
-    print(f'  (cf. DCASE-2018 leaderboard ~0.85-0.89)')
+    print(f'  (3 s model applied to 10 s clips; trained from scratch on DCASE, not SEABAD)')
     print('=' * 64)
 
 

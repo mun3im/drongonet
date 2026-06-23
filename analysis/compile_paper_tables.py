@@ -16,12 +16,13 @@ MICRO_DIR = "6b_micro_final_fft1024_m16_s{seed}"
 EDGE_DIR  = "6c_edge_final_fft1024_m80_s{seed}"
 
 MICRO_THRESHOLDS = [0.05, 0.10, 0.20, 0.30, 0.35, 0.40, 0.50]
-# 0.45/0.55/0.60 are the per-seed operating thresholds (s786/s100/s42)
+# Post-timeshift-fix retrain: locked thresholds re-derived 2026-06-23.
+# Edge now locks to a single tau=0.50 across all seeds (was per-seed 0.45/0.55/0.60).
 EDGE_THRESHOLDS  = [0.05, 0.10, 0.20, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
-MICRO_OP_TAU = 0.35
-# Edge operating tau is per-seed; use None to suppress bold formatting
-EDGE_OP_TAU  = None
-EDGE_OP_TAUS = {42: 0.60, 100: 0.55, 786: 0.45}  # per-seed operating thresholds
+MICRO_OP_TAU = 0.30
+# Edge operating tau is now uniform across seeds; use None to suppress bold formatting
+EDGE_OP_TAU  = 0.50
+EDGE_OP_TAUS = {42: 0.50, 100: 0.50, 786: 0.50}  # uniform post-fix operating threshold
 
 
 def parse_sweep(path: Path):

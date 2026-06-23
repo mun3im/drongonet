@@ -4,8 +4,8 @@ generate_figures_from_sweep.py — Generate all publication figures from thresho
 
 Does NOT require mel caches or TFLite runtime — reads pre-saved sweep data.
 Generates (filenames match PDF figure numbers):
-  fig3_pareto.pdf              — Pareto front: AUC vs model size (Nano/Micro/Edge + baselines)
-  fig4_threshold_analysis.pdf  — Recall/Precision/F1/Specificity vs tau + per-seed bars
+  fig4_pareto.pdf              — Pareto front: AUC vs model size (Nano/Micro/Edge + baselines)
+  fig3_threshold_analysis.pdf  — Recall/Precision/F1/Specificity vs tau + per-seed bars
   fig5_roc_pr_curves.pdf       — ROC (FPR/TPR) and PR curves from sweep data
   fig6_probability_distributions.pdf — NOTE: requires TFLite run, skipped here
   fig7_confusion_matrices.pdf  — Confusion matrices at τ/2, τ, 2τ for each model
@@ -238,18 +238,30 @@ def fig1_threshold_analysis(models: dict, out: Path, dpi: int):
         ax_bar.set_xticks(xs)
         ax_bar.set_xticklabels(xtick_labels, fontsize=7)
 
-        # Add model group labels
+        # Add model group labels at same height (max recall across all models + offset)
+        # First pass: find global max recall
+        global_max_recall = 0
+        for mname, md in models.items():
+            for i, seed in enumerate(md['seeds']):
+                tau_ops = md.get('tau_ops', None)
+                t = tau_ops[seed] if tau_ops else md['tau_op']
+                idx = np.argmin(np.abs(md['sweeps'][i]['tau'] - t))
+                global_max_recall = max(global_max_recall, md['sweeps'][i]['recall'][idx])
+        label_y = global_max_recall + 0.002
+
+        # Second pass: place all labels at same height
         pos = 0
         for mname, md in models.items():
             n = len(md['seeds'])
-            ax_bar.annotate(md['label'], xy=(pos + n/2 - 0.5, 0.952),
-                            fontsize=7, ha='center', color=md['color'])
+            ax_bar.annotate(md['label'], xy=(pos + n/2 - 0.5, label_y),
+                            fontsize=7, ha='center', va='bottom',
+                            color='black', fontweight='bold')
             pos += n
 
         ax_bar.set_ylabel('Recall')
         ax_bar.set_title('D  Per-seed recall at operating threshold', loc='left', fontweight='bold')
-        ax_bar.set_ylim(0.95, 1.007)
-        ax_bar.legend(fontsize=7, ncol=2)
+        ax_bar.set_ylim(0.95, 1.005)
+        ax_bar.legend(fontsize=7, ncol=2, loc='lower right')
         ax_bar.grid(True, alpha=0.25, ls=':', axis='y')
 
         fig.savefig(out, dpi=dpi, bbox_inches='tight')
@@ -422,16 +434,16 @@ def fig4_confusion_matrices(models: dict, out: Path, dpi: int):
 def fig_pareto(out: Path, dpi: int):
     """Pareto plot: model size (kB) vs AUC. Shows SEABADNet family vs reference points."""
 
-    # SEABADNet family (3-seed mean±std, INT8)
+    # SEABADNet family (3-seed mean±std, INT8) — post-timeshift-fix retrain (2026-06-23)
     seabadnet = [
-        {'name': 'SEABADNet-Nano\n(512-FFT)',  'size': 5.41,  'auc': 0.9715, 'auc_std': 0.0013, 'color': COLORS['nano'],  'marker': 'o'},
-        {'name': 'SEABADNet-Micro\n(1024-FFT)', 'size': 6.56,  'auc': 0.9743, 'auc_std': 0.0011, 'color': COLORS['micro'], 'marker': 'o'},
-        {'name': 'SEABADNet-Edge\n(1024-FFT)', 'size': 33.06, 'auc': 0.9992, 'auc_std': 0.0002, 'color': COLORS['edge'],  'marker': 'o'},
+        {'name': 'SEABADNet-Nano\n(512-FFT)',  'size': 5.09,  'auc': 0.9727, 'auc_std': 0.0007, 'color': COLORS['nano'],  'marker': 'o'},
+        {'name': 'SEABADNet-Micro\n(1024-FFT)', 'size': 6.23,  'auc': 0.9803, 'auc_std': 0.0012, 'color': COLORS['micro'], 'marker': 'o'},
+        {'name': 'SEABADNet-Edge\n(1024-FFT)', 'size': 33.06, 'auc': 0.9990, 'auc_std': 0.0002, 'color': COLORS['edge'],  'marker': 'o'},
     ]
 
     # Baseline TinyChirp (3-seed mean, from paper Table 1)
     baseline = [
-        {'name': 'TinyChirp\n(Baseline)',   'size': 7.30,   'auc': 0.9706, 'auc_std': 0.0011, 'color': COLORS['base'], 'marker': 's'},
+        {'name': 'TinyChirp\n(Baseline)',   'size': 28.61,  'auc': 0.9706, 'auc_std': 0.0011, 'color': COLORS['base'], 'marker': 's'},
     ]
 
     # Standard CNNs fine-tuned on SEABAD (224x224 mel input, 3-seed mean±std from validation/results)
@@ -446,8 +458,9 @@ def fig_pareto(out: Path, dpi: int):
         fig, ax = plt.subplots(figsize=(6.5, 4.0))
 
         # Plot standard CNNs first (background)
-        std_offsets = [(0, 6), (5, -10), (0, 6), (-5, 6)]
-        std_haligns = ['center', 'left', 'center', 'right']
+        # EfficientNet-B0: below (centered), VGG-16: above (centered), ResNet-50: below (centered), MobileNetV3: skip label
+        std_offsets = [(0, -12), (0, 8), (-8, -12), (0, 8)]
+        std_haligns = ['center', 'center', 'center', 'center']
         for pt, off, ha in zip(standard, std_offsets, std_haligns):
             ax.scatter(pt['size'], pt['auc'], s=70, color=pt['color'],
                        marker=pt['marker'], zorder=3, alpha=0.7,
@@ -459,7 +472,7 @@ def fig_pareto(out: Path, dpi: int):
                         textcoords='offset points', xytext=off,
                         fontsize=6.5, ha=ha, color=pt['color'])
 
-        # Plot baseline
+        # Plot baseline (TinyChirp east of dot)
         for pt in baseline:
             ax.scatter(pt['size'], pt['auc'],
                        s=90, color=pt['color'], marker=pt['marker'],
@@ -468,7 +481,7 @@ def fig_pareto(out: Path, dpi: int):
                 ax.errorbar(pt['size'], pt['auc'], yerr=pt['auc_std'],
                             fmt='none', color=pt['color'], capsize=3, lw=0.8, zorder=3)
             ax.annotate(pt['name'], (pt['size'], pt['auc']),
-                        textcoords='offset points', xytext=(5, -10),
+                        textcoords='offset points', xytext=(10, -5), ######
                         fontsize=6.5, ha='left', color=pt['color'])
 
         # Plot SEABADNet family with Pareto front
@@ -485,9 +498,9 @@ def fig_pareto(out: Path, dpi: int):
                 ax.errorbar(pt['size'], pt['auc'], yerr=pt['auc_std'],
                             fmt='none', color=pt['color'], capsize=3, lw=1.0, zorder=4)
 
-        # Offset labels for SEABADNet
-        offsets = [(-5, 8), (5, 8), (0, 8)]
-        haligns = ['right', 'left', 'center']
+        # Offset labels for SEABADNet (Edge east of dot, Nano/Micro above) ######
+        offsets = [(-12, -20), (10, -5), (10, -5)]
+        haligns = ['left', 'left', 'left']
         for pt, off, ha in zip(seabadnet, offsets, haligns):
             ax.annotate(pt['name'], (pt['size'], pt['auc']),
                         textcoords='offset points', xytext=off,
@@ -576,15 +589,13 @@ def main():
     if len(micro_sweeps) > 0:
         models['micro'] = {
             'sweeps': micro_sweeps, 'seeds': [42, 100, 786],
-            'tau_op': 0.35, 'color': COLORS['micro'],
+            'tau_op': 0.30, 'color': COLORS['micro'],
             'label': 'SEABADNet-Micro',
         }
     if len(edge_sweeps) > 0:
         models['edge'] = {
             'sweeps': edge_sweeps, 'seeds': [42, 100, 786],
-            'tau_op': 0.55,           # approx mean τ for single-line annotations
-            'tau_ops': {42: 0.60, 100: 0.55, 786: 0.45},  # per-seed locked τ (Linux x86-64)
-            'color': COLORS['edge'],
+            'tau_op': 0.50, 'color': COLORS['edge'],
             'label': 'SEABADNet-Edge',
         }
     if len(nano_sweeps) > 0:
@@ -603,10 +614,10 @@ def main():
 
     ext = args.fmt
     print("\nGenerating figures...")
-    fig1_threshold_analysis(models, out_dir / f'fig4_threshold_analysis.{ext}', args.dpi)
+    fig1_threshold_analysis(models, out_dir / f'fig3_threshold_analysis.{ext}', args.dpi)
     fig2_roc_pr(            models, out_dir / f'fig5_roc_pr_curves.{ext}',      args.dpi)
     fig4_confusion_matrices(models, out_dir / f'fig7_confusion_matrices.{ext}', args.dpi)
-    fig_pareto(                     out_dir / f'fig3_pareto.{ext}',             args.dpi)
+    fig_pareto(                     out_dir / f'fig4_pareto.{ext}',             args.dpi)
     print("\nDone.")
     print(f"Figures written to: {out_dir}")
     print("\nNote: fig3_probability_distributions.pdf requires TFLite inference + mel caches.")

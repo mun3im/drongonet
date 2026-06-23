@@ -21,7 +21,6 @@ Find the optimal decision threshold τ that maximizes precision while meeting th
 | `threshold_sweep_micro.py` | Micro model threshold sweep (τ ∈ {0.25–0.50}) | `results4arxiv/6b_micro_final_fft1024_m16_s{42,100,786}/` | `results/micro_threshold_sweep/threshold_locked.txt` |
 | `threshold_sweep_edge.py` | Edge model per-seed threshold sweep | `results4arxiv/6c_edge_final_fft1024_m80_s{42,100,786}/` | `results/6c_edge_final_fft1024_m80_s*/threshold_locked.txt` |
 | `threshold_sweep_nano.py` | Nano model threshold sweep (AUC-only, no recall target) | `results4arxiv/6a_nano_final_fft1024_m16_s{42,100,786}/` | `results/nano_threshold_sweep/threshold_locked.txt` |
-| `threshold_sweep_edge_control.py` | Edge XNNPACK control experiment | `results4arxiv_edge_control/` | Control experiment results |
 
 **Key Design:**
 - Sweeps select the **highest** τ that meets the recall target (maximizes precision)
@@ -53,14 +52,27 @@ Create plots from training results and threshold sweeps.
 | Script | Purpose | Input | Output |
 |--------|---------|-------|--------|
 | `generate_figures_from_sweep.py` | Plot recall/precision/F1 vs threshold τ | `results/*/threshold_sweep.txt` | `figures_publication/` (PR curves, threshold plots) |
-| `generate_fig6_prob_dist.py` | Probability distribution histogram | Model predictions | `figures_publication/fig6_prob_dist.png` |
+| `generate_fig6_part1_extract.py` | Fig 6 data extraction (LINUX: has GPU + `/Volumes/Evo` caches, DejaVu fonts only) | TFLite models + mel caches | `analysis/fig6_data.npz` |
+| `generate_fig6_part2_plot.py` | Fig 6 rendering (MAC: has real Arial matching Fig 1-5, no caches needed) | `fig6_data.npz` (copied from Linux) | `analysis/images/fig6_probability_distributions.pdf` |
 | `generate_int8_models.py` | Regenerate all quantised INT8 models | Training results | `results_int8/` (full INT8 models for all seeds) |
+
+Fig 6 is split into two parts: this Linux machine has the GPU and mel caches but only
+DejaVu-fallback fonts, while the Mac has real Arial but no GPU/caches. Part 1 runs here and
+writes a small `.npz`; copy that file to the Mac and run part 2 there to get the Arial-accurate render.
 
 **Usage:**
 ```bash
 # Generate all figures after threshold sweeps complete
 conda run -n tf215_gpu python analysis/generate_figures_from_sweep.py
-conda run -n tf215_gpu python analysis/generate_fig6_prob_dist.py
+
+# Fig 6, part 1 (Linux): extract probabilities to .npz
+conda run -n tf215_gpu python analysis/generate_fig6_part1_extract.py \
+    --micro-cache /Volumes/Evo/cache4arxiv_fft1024_m16 \
+    --edge-cache  /Volumes/Evo/cache4arxiv_fft1024_m80 \
+    --results-dir results4arxiv
+# then copy analysis/fig6_data.npz to the Mac and run there:
+#   python analysis/generate_fig6_part2_plot.py --data fig6_data.npz
+
 conda run -n tf215_gpu python analysis/generate_int8_models.py
 ```
 
@@ -83,7 +95,11 @@ python analysis/extract_paper_numbers.py
 
 # Step 5: Generate publication figures
 conda run -n tf215_gpu python analysis/generate_figures_from_sweep.py
-conda run -n tf215_gpu python analysis/generate_fig6_prob_dist.py
+conda run -n tf215_gpu python analysis/generate_fig6_part1_extract.py \
+    --micro-cache /Volumes/Evo/cache4arxiv_fft1024_m16 \
+    --edge-cache  /Volumes/Evo/cache4arxiv_fft1024_m80 \
+    --results-dir results4arxiv
+# copy analysis/fig6_data.npz to the Mac, then there: python analysis/generate_fig6_part2_plot.py --data fig6_data.npz
 conda run -n tf215_gpu python analysis/generate_int8_models.py
 ```
 

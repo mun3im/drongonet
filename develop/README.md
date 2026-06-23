@@ -148,7 +148,8 @@ Note: `5a` uses `n_fft=512`; all other scripts use `n_fft=1024`. These produce s
 | `threshold_sweep_edge_control.py` | Edge threshold sweep variant |
 | `generate_int8_models.py` | Batch INT8 quantisation |
 | `generate_figures_from_sweep.py` | Figures from sweep outputs |
-| `generate_fig6_prob_dist.py` | Figure 6 probability distribution plot |
+| `generate_fig6_part1_extract.py` | Figure 6 data extraction (Linux: GPU + mel caches) |
+| `generate_fig6_part2_plot.py` | Figure 6 rendering (Mac: Arial fonts, no caches needed) |
 | `extract_paper_numbers.py` | Extract key numbers from results dirs |
 | `ablation_freq_emphasis.py` | Frequency emphasis ablation |
 | `_patch_ablation.py` | One-time patch: inject config imports into scripts |

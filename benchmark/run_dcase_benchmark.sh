@@ -8,10 +8,10 @@ ENV=tf215_gpu
 LOG="benchmark_dcase_$(date +%Y%m%d_%H%M%S).log"
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 
-log "=== SEABADNet on DCASE-2018 BAD benchmark: nano+micro+edge, seeds 42/100/786 ==="
+log "=== SEABADNet on DCASE-2018 (in-domain pool): nano+micro+edge, seeds 123/456/789 ==="
 for v in nano micro edge; do
-  log "[run] $v seeds 42 100 786"
-  if conda run -n $ENV python benchmark/dcase_benchmark.py --variant "$v" --seeds 42 100 786 >> "$LOG" 2>&1; then
+  log "[run] $v seeds 123 456 789"
+  if conda run -n $ENV python benchmark/dcase_benchmark.py --variant "$v" --seeds 123 456 789 >> "$LOG" 2>&1; then
     log "  ok: $v"
   else
     log "  FAIL: $v"
@@ -21,11 +21,11 @@ done
 log "=== Results ==="
 conda run -n $ENV python -c "
 import json, numpy as np
-print('\nSEABADNet on DCASE-2018 BAD (BirdVox-20k, 6x3s sliding-window, clip-level MAX aggregation)')
+print('\nSEABADNet on DCASE-2018 (in-domain pool, 10s clips, 6x3s sliding-window, clip-level MAX aggregation)')
 print('variant      test AUC (mean ± std)    per-seed')
 for v in ['nano','micro','edge']:
     aucs=[]
-    for s in [42,100,786]:
+    for s in [123,456,789]:
         try: aucs.append(json.load(open(f'results4arxiv/dcase_benchmark_{v}_r{s}/summary.json'))['test_auc'])
         except Exception: pass
     if aucs:
