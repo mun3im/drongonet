@@ -73,8 +73,7 @@ class SEABADNetInference:
         return mel_spec
 
     def predict(self, mel_spec: np.ndarray) -> float:
-        """Run inference on mel spectrogram."""
-        # Add batch dimension
+        """Run inference on mel spectrogram; returns bird-positive probability in [0, 1]."""
         input_data = np.expand_dims(mel_spec, axis=0).astype(
             self.input_details[0]['dtype']
         )
@@ -82,9 +81,11 @@ class SEABADNetInference:
         self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
         self.interpreter.invoke()
 
+        # Output is [batch_size, 2] int8 (2-class softmax: [no_bird, bird]).
+        # Dequantize column 1 (bird class) using the model's output scale/zero-point.
         output_data = self.interpreter.get_tensor(self.output_details[0]['index'])
-        # Output is [batch_size, 1], extract probability for positive class
-        return float(output_data[0, 0])
+        scale, zero_point = self.output_details[0]['quantization']
+        return float(scale * (int(output_data[0, 1]) - zero_point))
 
 
 def load_seabad_test_set(dataset_path: str) -> Tuple[List[np.ndarray], List[int], List[str]]:

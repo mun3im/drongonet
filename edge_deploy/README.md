@@ -4,7 +4,8 @@ Self-contained package for **SEABADNet-Edge** inference on Raspberry Pi and Linu
 
 - **Model:** 33.06 KB INT8 (full integer quantization)
 - **Parameters:** 25,890
-- **Recall:** ≥99% at optimized threshold τ=0.60
+- **Recall:** ≥99% at optimized threshold τ=0.50
+- **AUC (INT8, 3 seeds):** 0.9990 ± 0.0002
 - **Latency:** ~88 ms end-to-end (RPi 4B)
 - **Power:** <1 W average (with duty cycling)
 
@@ -58,7 +59,7 @@ pip install -r requirements-rpi.txt
 # Run inference
 python infer_edge_rpi.py \
     --dataset-path ~/seabad_data \
-    --threshold 0.60 \
+    --threshold 0.50 \
     --output results.csv
 ```
 
@@ -67,17 +68,17 @@ python infer_edge_rpi.py \
 ======================================================================
 SEABADNet-Edge Evaluation Results
 ======================================================================
-Model:          seabadnet_edge_int8.tflite
+Model:          seabadnet_edge_int8.tflite  (post-timeshift-fix, seed 42)
 Dataset:        SEABAD test set (5000 samples)
-Threshold (τ):  0.60
+Threshold (τ):  0.50
 ----------------------------------------------------------------------
-AUC:            0.9992 ± 0.0002
-Accuracy:       0.9980
+AUC:            0.9987   (INT8, seed 42; 0.9990 ± 0.0002 across 3 seeds)
+Accuracy:       0.9822
 Recall:         0.9900
-Precision:      0.9841
-F1 Score:       0.9870
-Specificity:    0.9960
-FPR:            0.0040
+Precision:      0.9748
+F1 Score:       0.9823
+Specificity:    0.9744
+FPR:            0.0256
 ======================================================================
 ```
 
@@ -98,31 +99,32 @@ FPR:            0.0040
 ## ⚙️ Configuration & Thresholds
 
 ### Default Operating Point
-- **Threshold τ = 0.60**
+- **Threshold τ = 0.50** (single value, identical across seeds 42 / 100 / 786)
 - **Recall = 99.0%** (minimizes missed bird events)
-- **Precision = 98.4%**
-- **FPR = 0.4%**
+- **Precision = 97.5%**
+- **FPR = 2.6%**
 
 ### Tuning for Your Use Case
 
 ```bash
-# Higher precision (fewer false positives)
-python infer_edge_rpi.py --dataset-path ~/seabad_data --threshold 0.70
-
-# Higher recall (fewer missed events)
+# Default (≥99% recall)
 python infer_edge_rpi.py --dataset-path ~/seabad_data --threshold 0.50
 
-# Maximum specificity (minimal false positives)
-python infer_edge_rpi.py --dataset-path ~/seabad_data --threshold 0.80
+# Higher precision (fewer false positives, slightly fewer recalls)
+python infer_edge_rpi.py --dataset-path ~/seabad_data --threshold 0.70
+
+# Highest precision (rare-event monitoring; recall drops to ~97%)
+python infer_edge_rpi.py --dataset-path ~/seabad_data --threshold 0.85
 ```
 
-Recommended thresholds:
-| Use Case | τ | Recall | Precision | Notes |
-|----------|---|--------|-----------|-------|
-| Minimize missed events | 0.50 | 95% | 91% | Maximum sensitivity |
-| Balanced (default) | 0.60 | 99% | 98% | **Recommended** |
-| Reduce false positives | 0.70 | 97% | 99% | Higher specificity |
-| Maximum specificity | 0.80 | 92% | 99.8% | Rare events only |
+Recommended thresholds (from the seed-42 post-fix sweep on the SEABAD test set):
+
+| Use Case | τ | Recall | Precision | F1 | FPR | Notes |
+|----------|---|--------|-----------|----|-----|-------|
+| Maximum sensitivity | 0.30 | 99.48% | 96.47% | 0.980 | 3.64% | Catches near-everything |
+| **Default (target recall)** | **0.50** | **99.00%** | **97.48%** | **0.982** | **2.56%** | **Single τ that meets ≥0.99 recall across all 3 seeds** |
+| Higher precision | 0.70 | 98.28% | 98.56% | 0.984 | 1.44% | Fewer false alarms |
+| Rare-event monitoring | 0.85 | 97.12% | 99.06% | 0.981 | 0.92% | Maximum precision |
 
 ---
 
@@ -155,9 +157,9 @@ Measured with INA219 power monitor (typical):
 
 | Model | Size (KB) | Params | τ | Recall | Target |
 |-------|-----------|--------|---|--------|--------|
-| Nano (ref) | 5.1 | 763 | — | — | MCU |
-| **Micro** | 6.3 | 919 | 0.35 | 98% | **MCU (AudioMoth)** |
-| **Edge** | 33.1 | 25,890 | 0.60 | 99% | **SBC (RPi)** ← You are here |
+| Nano (ref) | 5.09 | 763 | — | — | MCU |
+| **Micro** | 6.23 | 919 | 0.30 | 98.7% | **MCU (AudioMoth)** |
+| **Edge** | 33.06 | 25,890 | 0.50 | 99.0% | **SBC (RPi)** ← You are here |
 
 ---
 
@@ -240,44 +242,48 @@ Results land in `results/seabadnet_edge_s{seed}/`.
 
 **SEABADNet-Edge Architecture:**
 ```
-Input: Mel spectrogram (80 mels × 184 frames × 1 channel)
-  ↓
-Conv2D(16, 3×3) + BatchNorm + ReLU → (16, ~91, ~92)
-  ↓
-Conv2D(32, 3×3) + BatchNorm + ReLU → (32, ~45, ~46)
-  ↓
-Conv2D(64, 3×3) + BatchNorm + ReLU → (64, ~22, ~23)
-  ↓
-GlobalAveragePooling2D() → (64,)
-  ↓
-Dense(8) + ReLU
-  ↓
-Dense(1) + Sigmoid → Probability [0, 1]
+Input: Mel spectrogram (184 frames × 80 mels × 1 channel), int8
+
+  Conv2D(16, 3×3, stride=2) + BatchNorm + ReLU
+  Conv2D(32, 3×3, stride=2) + BatchNorm + ReLU
+  Conv2D(64, 3×3, stride=2) + BatchNorm + ReLU
+  GlobalAveragePooling2D
+  Dense(32) + ReLU
+  Dense(8)  + ReLU
+  Dense(2)  + Softmax       → [no_bird, bird], int8
 ```
+
+Output is a 2-class softmax (column 0 = no-bird, column 1 = bird), quantized to int8.
+Dequantize column 1 with the model's output `scale` and `zero_point` to recover the
+bird-positive probability in [0, 1] before thresholding. `infer_edge_rpi.py:predict()` does
+this automatically.
 
 **Quantization:** Full INT8 (int8 input → int8 output)
 - Representative dataset: 500 SEABAD validation samples
-- Quantization-aware training: Focal Loss (γ=2.0, α=0.25)
 - Post-training INT8: Symmetric, per-axis (where supported)
+- Trained with Focal Loss (γ=2.0, α=0.25)
 
 ---
 
 ## 📚 Model Details & Metrics
 
-### Per-Seed Operating Thresholds (x86-64 INT8 calibration)
+### Operating Threshold (x86-64 INT8 calibration)
+
+A single τ=0.50 meets the ≥0.99 recall target for all three training seeds. Per-seed
+metrics at τ=0.50 on the SEABAD test set:
 
 | Seed | τ | Recall | Precision | F1 | FPR | Notes |
 |------|---|--------|-----------|----|----|-------|
-| 42 (provided) | 0.60 | 0.9900 | 0.9841 | 0.9870 | 0.0040 | **Default** |
-| 100 | 0.55 | 0.9916 | 0.9880 | 0.9898 | 0.0120 | Higher recall |
-| 786 | 0.45 | 0.9900 | 0.9872 | 0.9886 | 0.0128 | Lower threshold |
+| 42 (provided) | 0.50 | 0.9900 | 0.9748 | 0.9823 | 0.0256 | **Default — shipped model** |
+| 100 | 0.50 | 0.9912 | 0.9888 | 0.9900 | 0.0112 | — |
+| 786 | 0.50 | 0.9900 | 0.9884 | 0.9892 | 0.0116 | — |
 
 > ℹ️ Re-calibration is recommended if deploying on different hardware (ARM SBC, TPU, etc.).
 > Threshold should be tuned on your specific platform.
 
-### AUC (Test Set, 5000 SEABAD clips)
+### AUC (Test Set, ~5000 SEABAD clips)
 - **Float32:** 0.9992 ± 0.0002 (mean ± std, 3 seeds)
-- **INT8:** 0.9987 ± 0.0005 (quantization degradation < 0.1%)
+- **INT8:** 0.9990 ± 0.0002 (quantization degradation < 0.05%)
 
 ---
 
@@ -316,6 +322,5 @@ Columns:
 
 ---
 
-**Last updated:** 2026-06-19  
-**Compatible with:** Python 3.11+, Raspberry Pi OS (Bullseye/Bookworm), any ARM Linux SBC  
-**Tested on:** 
+**Last updated:** 2026-06-24  
+**Compatible with:** Python 3.11+, Raspberry Pi OS (Bullseye/Bookworm), any ARM Linux SBC

@@ -45,13 +45,15 @@ TensorFlow Lite Micro and CMSIS-NN deployment on ARM Cortex-M.
 
 | File | Model | Size | τ | Recall | Seed |
 |---|---|---|---|---|---|
-| `seabadnet_nano_int8.tflite` | SEABADNet-Nano | 5.10 KB | — | — | 42 |
-| `seabadnet_micro_int8.tflite` | **SEABADNet-Micro** | 6.26 KB | 0.35 | ≥0.98 | 42 |
-| `seabadnet_edge_int8.tflite` | SEABADNet-Edge | 33.06 KB | per-seed¹ | ≥0.99 | 42 |
+| `seabadnet_nano_int8.tflite` | SEABADNet-Nano | 5.09 KB | — | — | 42 |
+| `seabadnet_micro_int8.tflite` | **SEABADNet-Micro** | 6.23 KB | 0.30 | ≥0.987 | 42 |
+| `seabadnet_edge_int8.tflite` | SEABADNet-Edge | 33.06 KB | 0.50 | ≥0.99 | 42 |
 
-> ¹ Edge operating threshold is calibrated per seed on x86-64 INT8 inference: τ=0.60 (seed 42),
-> τ=0.55 (seed 100), τ=0.45 (seed 786). Re-calibration is recommended for ARM deployment.
-> The seed-42 model provided here uses τ=0.60.
+> **Output:** all three models emit a 2-class softmax (`[no_bird, bird]`) as int8.
+> Dequantize column 1 with the model's output `scale` and `zero_point`
+> (e.g. `prob_bird = scale * (raw_int8 - zero_point)`) to recover the bird-positive
+> probability in [0, 1] before applying τ. Re-calibration of τ is recommended for
+> ARM deployment.
 
 > **Tensor arena requirements (TFLite Micro, Cortex-M7):** Nano/Micro ≈23 kB (minimum viable
 > 25.8 kB); Edge ≈290 kB (minimum viable 325 kB — requires external SDRAM on MCUs).
@@ -61,17 +63,17 @@ TensorFlow Lite Micro and CMSIS-NN deployment on ARM Cortex-M.
 To retrain a model from scratch, only two arguments are required — all hyperparameters are locked:
 
 ```bash
-# SEABADNet-Nano  (5.10 KB, no recall target)
+# SEABADNet-Nano  (5.09 KB INT8, no recall target)
 python deploy/train_nano.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft512_m16
 
-# SEABADNet-Micro  (6.26 KB, ≥0.98 recall @ τ=0.35)  ← primary model
+# SEABADNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
 python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 
-# SEABADNet-Edge  (33.06 KB, ≥0.99 recall @ per-seed τ)
+# SEABADNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
 python deploy/train_edge.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m80
