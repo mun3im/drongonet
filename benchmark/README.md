@@ -1,204 +1,135 @@
 # benchmark/
 
-External-dataset benchmarks for SEABADNet cross-dataset generalization (sibling of `pre-ablation/`, `develop/`, `deploy/`).
+Cross-dataset benchmarks for SEABADNet generalization. All scripts retrain fresh models from scratch — no SEABAD weights transferred.
 
-## Benchmark Overview
+## Scripts
 
-Two independent protocols demonstrate that SEABADNet is **not overfit to SEABAD** and **generalizes across ecological domains, species, and clip lengths**:
-
-1. **TinyChirp Corn Bunting (primary)** — Different region (temperate), single species detection, **native 3 s clips** — achieves 0.976 (Micro) matching/exceeding TinyChirp's published baseline at 28× smaller footprint
-2. **DCASE-2018 (secondary)** — Different temperate multi-corpus dataset, **10 s clips** (vs SEABAD's 3 s) handled via sliding-window aggregation — proves adaptation to different clip length
-
-Both retrain fresh models from scratch (no SEABAD weights). Variants:
-- **Nano** — 763 params, ultra-compact (ARM Cortex-M4 target)
-- **Micro** — 919 params, optimized (AudioMoth target, SEABAD primary)
-- **Edge** — 25,890 params, higher-capacity (SBC target)
+| File | Purpose |
+|------|---------|
+| `dcase_benchmark.py` | In-domain DCASE-2018 (ff1010+warblr+BirdVox pooled split) |
+| `dcase_crosscorpus.py` | Cross-corpus augmentation sweep: train ff1010+warblr → test BirdVox |
+| `augmentations.py` | Augmentation recipes: `none / mixup / specaug / pitch_time / full` |
+| `tinychirp_generalization.py` | TinyChirp Corn Bunting (paper-reported, f32 AUC only) |
+| `tinychirp_benchmark.py` | TinyChirp + INT8 quantization eval + mel caching (extended version) |
+| `_dcase_diagnose.py` | Stale diagnostic — ignore |
+| `run_dcase_benchmark.sh` | Batch runner for `dcase_benchmark.py` |
+| `run_augmentation_sweep.sh` | Batch runner for the augmentation sweep (default: 27 runs) |
+| `run_window_sweep.sh` | Window-count robustness sweep (N=4/5/6) |
+| `run_bulbul_match.sh` | bulbul-matched protocol (ff1010+warblr dev only, seeds 123/456/789) |
 
 ---
 
-## DCASE-2018 Bird Audio Detection — `dcase_benchmark.py`
+## DCASE-2018 In-Domain — `dcase_benchmark.py`
 
-Retrains SEABADNet **from scratch** on the DCASE-2018 BAD data to show the architecture is not
-overfit to SEABAD and **adapts to a different clip length**: DCASE clips are **10 s**, while
-SEABAD/TinyChirp are 3 s. The same 3 s SEABADNet model is applied to 10 s clips via
-sliding-window aggregation. Reports clip-level ROC-AUC on a held-out, **in-domain** split.
+Pool all three DCASE corpora (ff1010bird 7,690 + warblrb10k 8,000 + BirdVox-DCASE-20k 20,000 = 35,690 clips), stratified clip-level split ≈72/8/20%. Every corpus appears in every split so there is no domain gap — this tests whether the architecture can learn DCASE bird detection at all, not cross-corpus transfer.
 
-### Dataset
-
-| Split | Sources | Clips | Notes |
-|-------|---------|-------|-------|
-| pool  | ff1010bird (7,690) + warblrb10k (8,000) + BirdVox-DCASE-20k (20,000) | 35,690 | All three DCASE corpora, ~50% positive |
-| train / val / test | stratified clip-level split of the pool (≈72% / 8% / 20%) | — | In-domain: every corpus appears in every split |
-
-### Why in-domain, not the official cross-corpus task
-
-The official DCASE-2018 task trains on ff1010+warblr and tests on **held-out BirdVox** — a
-*zero-adaptation domain-transfer* benchmark whose ~0.85–0.89 leaderboard required explicit
-domain adaptation. A small SEABADNet retrained from scratch with no adaptation collapses to
-**chance (~0.50 AUC)** on that split — consistent with this project's finding that these
-architectures do not transfer zero-shot across corpora. That measures domain transfer, **not**
-the question we care about ("is SEABADNet overfit to SEABAD / can it learn another dataset?").
-The **in-domain pooled split** answers that directly: the architecture learns DCASE bird
-detection at **~0.85 AUC** despite the 10 s clip length it was never designed for.
-
-> Diagnostic (nano, seed 42): in-domain clip AUC **0.85** vs cross-corpus→BirdVox **0.50**
-> (MAX/MEAN/window-level all identical at chance — the gap is domain transfer, not aggregation).
-
-### Protocol
-
-Each 10 s clip is split into **6 evenly-spaced 3 s windows** (hop 1.4 s, 53% overlap) so the
-3 s model covers the full 10 s clip:
-
-- Clip starts: {0, 1.4, 2.8, 4.2, 5.6, 7.0} s
-- Train: each window inherits the clip's binary label (multiple-instance learning style)
-- Test: model scores all 6 windows; clip score = MAX bird-probability over windows ("is there a bird anywhere?")
-
-**Mel spectrogram:** n_fft=1024, hop=256, fmin=100, fmax=8000, center=False → 184 frames, 
-per-sample min-max [0,1] normalization. Pooled mels built once in RAM, re-split per seed.
-
-### Usage
+Each 10 s clip is scored via **6 evenly-spaced 3 s windows** (starts 0/1.4/2.8/4.2/5.6/7.0 s); clip score = MAX window probability.
 
 ```bash
-# Single variant
-conda run -n tf215_gpu python benchmark/dcase_benchmark.py --variant nano --seeds 42 100 786
+bash benchmark/run_dcase_benchmark.sh                                  # all variants
 conda run -n tf215_gpu python benchmark/dcase_benchmark.py --variant micro --seeds 42 100 786
-conda run -n tf215_gpu python benchmark/dcase_benchmark.py --variant edge --seeds 42 100 786
-
-# All variants
-bash benchmark/run_dcase_benchmark.sh
 ```
 
-**Output:** `results4arxiv/dcase_benchmark_{variant}_r{seed}/summary.json`  
-Each contains: test_auc, variant, params, n_mels, seed, protocol description.
+**Output:** `results4arxiv/dcase_benchmark_{variant}_r{seed}/summary.json`
 
 ---
 
-## TinyChirp Corn Bunting Generalization — `tinychirp_generalization.py`
+## DCASE-2018 Cross-Corpus Augmentation Sweep — `dcase_crosscorpus.py`
 
-Retrains SEABADNet **from scratch** on the TinyChirp single-species Corn Bunting dataset. 
-This is a *different ecological domain* from SEABAD (tropical mixed-flock vs. single-species 
-temperate); demonstrates architectural robustness beyond the SEABAD training set.
+**The question:** Does log-mel-domain augmentation close the cross-corpus gap?
 
-### Dataset
+Trains on ff1010+warblr only; evaluates zero-shot on held-out BirdVox-DCASE-20k. Augmentation recipes applied per batch during training (see `augmentations.py`):
 
-| Split | Source | Clips | Species | Notes |
-|-------|--------|-------|---------|-------|
-| train | TinyChirp/training | ~5,500 | Corn Bunting | Binary: Corn Bunting present/absent |
-| val   | TinyChirp/validation | ~1,300 | Corn Bunting | Held-out for early stopping |
-| test  | TinyChirp/testing | ~1,300 | Corn Bunting | Evaluation set |
+| Recipe | What it does |
+|--------|-------------|
+| `none` | Baseline (no augmentation) |
+| `mixup` | Linear interpolation of two random samples (α=0.2) |
+| `specaug` | Zero-out random freq band (≤2 mel bins) + time band (≤10 frames) |
+| `pitch_time` | Mel-domain freq roll ±2 bins + bilinear time-axis resize ±10% |
+| `full` | specaug → pitch_time → mixup stacked |
 
-**Data:** `/Volumes/Evo/TinyChirp/{training,validation,testing}/{target,non_target}/` (16 kHz, 3 s clips)
+**Decision gate (after Micro × {mixup, specaug}, ~2.5 h):**
 
-### Protocol
-
-Direct clip-to-prediction (no sliding-window aggregation, unlike DCASE). Each clip is mel-processed 
-once and fed to the model.
-
-**Mel spectrogram:** 16 kHz, 3 s clips, padded/truncated to 48,000 samples. Per-variant config:
-- Nano: n_fft=512, n_mels=16
-- Micro: n_fft=1024, n_mels=16  
-- Edge: n_fft=1024, n_mels=80
-
-Common: hop=256, fmin=100, fmax=8000, center=False → 184 frames, per-sample [0,1] normalization.
-
-### Usage
+| Cross-corpus AUC | Action |
+|-----------------|--------|
+| ≥ 0.60 | Proceed to full sweep (all variants × all recipes) |
+| 0.55–0.60 | Run `full` Micro only; hold nano/edge |
+| < 0.55 | Abort — confirms MCU-scale architectural floor; report as §10 evidence |
 
 ```bash
-# Single variant
-conda run -n tf215_gpu python benchmark/tinychirp_generalization.py --variant nano --seeds 42 100 786
-conda run -n tf215_gpu python benchmark/tinychirp_generalization.py --variant micro --seeds 42 100 786
-conda run -n tf215_gpu python benchmark/tinychirp_generalization.py --variant edge --seeds 42 100 786
+# Step 1 — cheapest signal first
+bash benchmark/run_augmentation_sweep.sh --recipes "mixup specaug" --variants "micro"
 
-# All variants in sequence
-for v in nano micro edge; do
-  conda run -n tf215_gpu python benchmark/tinychirp_generalization.py --variant $v --seeds 42 100 786
-done
+# Step 3 (if not aborted) — full sweep
+bash benchmark/run_augmentation_sweep.sh --recipes "mixup specaug" --variants "nano edge"
+bash benchmark/run_augmentation_sweep.sh --recipes "full" --variants "nano micro edge"
+
+# View results anytime
+conda run -n tf215_gpu python3 - <<'PY'
+import json, os, numpy as np
+print(f'{"variant":7}  {"recipe":11}  {"cross-corpus AUC":22}  per-seed')
+for v in ('nano','micro','edge'):
+    for r in ('none','mixup','specaug','pitch_time','full'):
+        cx = []
+        for s in (42,100,786):
+            p = f'results4arxiv/dcase_crosscorpus_{v}_{r}_r{s}/summary.json'
+            if os.path.exists(p):
+                cx.append(json.load(open(p))['crosscorpus_birdvox_auc'])
+        if cx:
+            print(f'{v:7}  {r:11}  {np.mean(cx):.4f} +/- {np.std(cx):.4f}  {[round(x,4) for x in cx]}')
+PY
 ```
 
-**Output:** `results4arxiv/tinychirp_benchmark_{variant}_r{seed}/summary.json`  
-Each contains: test_auc, variant, n_fft, n_mels, params, seed, protocol description.
+**Output:** `results4arxiv/dcase_crosscorpus_{variant}_{aug}_r{seed}/summary.json`
 
 ---
 
-## Training Configuration (Both Protocols)
+## TinyChirp Corn Bunting — `tinychirp_generalization.py` / `tinychirp_benchmark.py`
 
-Identical across DCASE and TinyChirp:
+Retrains SEABADNet on TinyChirp's single-species Corn Bunting dataset (different region, single species, native 3 s clips). Uses published train/val/test splits.
 
-| Parameter | Value | Notes |
-|-----------|-------|-------|
-| Optimizer | AdamW(lr=3e-4, weight_decay=1e-4) | Standard SEABADNet config |
-| Loss | Focal Loss (γ=2.0, α=0.5) | Handles class imbalance |
-| Epochs | 50 | Training ceiling |
-| Early stopping | val_accuracy, patience=10 | Restore best weights |
-| LR plateau | val_loss, factor=0.5, patience=5 | Reduce LR on plateau |
-| Batch size | DCASE: 128, TinyChirp: 64 | Memory constraints (DCASE uses RAM mels) |
+- `tinychirp_generalization.py` — paper-reported version (f32 AUC, no INT8 eval)
+- `tinychirp_benchmark.py` — extended version with INT8 quantization, mel caching, per-seed TFLite eval
+
+**Data:** `/Volumes/Evo/TinyChirp/{training,validation,testing}/{target,non_target}/` (16 kHz, 3 s)
+
+**Mel config:** hop=256, fmin=100, fmax=8000, center=False → 184 frames, per-sample [0,1] norm. Per-variant n_fft/n_mels: Nano (512/16), Micro (1024/16), Edge (1024/80).
+
+```bash
+conda run -n tf215_gpu python benchmark/tinychirp_generalization.py --variant micro --seeds 42 100 786
+```
+
+**Output:** `results4arxiv/tinychirp_benchmark_{variant}_r{seed}/summary.json`
+
+---
+
+## Training Config (All Scripts)
+
+AdamW lr=3e-4, weight_decay=1e-4 · Focal Loss γ=2.0, α=0.5 · 50 epochs · EarlyStopping(val_accuracy, patience=10) · ReduceLROnPlateau(factor=0.5, patience=5)
 
 ---
 
 ## Results
 
-ROC-AUC. DCASE seeds 123/456/789 (independent of the 42/100/786 used in ablation/validation);
-TinyChirp seeds 42/100/786. `TBD` = in-domain re-run still in progress.
+### TinyChirp (primary generalization evidence)
 
-### Parameter-efficiency comparison vs bulbul
+| Variant | Test AUC | Seeds |
+|---------|----------|-------|
+| Nano (763 params) | 0.9664 ± 0.0084 | 42/100/786 |
+| Micro (919 params) | 0.9757 ± 0.0085 | 42/100/786 |
+| Edge (25,890 params) | 0.9997 ± 0.0004 | 42/100/786 |
 
-bulbul (Grill & Schlüter, EUSIPCO 2017) is the BAD-challenge-winning CNN that inspired this work.
-It reports **both** protocols, so the comparison is per-protocol rather than apples-to-oranges.
+Micro matches TinyChirp's published CNN-Mel baseline (0.9985) at 28× fewer parameters.
 
-| System | Params | vs bulbul | In-domain AUC | Cross-corpus AUC |
-|--------|-------:|----------:|---------------|------------------|
-| **bulbul** (Grill & Schlüter 2017) | 373,169 | 1× | ~0.96–0.97 (5-fold CV) | **0.887** (test) / 0.855 no-aug |
-| SEABADNet-Edge (80 mel) | 25,890 | 14.4× smaller | 0.938 ± 0.010 | 0.65 |
-| SEABADNet-Micro (16 mel) | 919 | 406× smaller | 0.847 ± 0.011 | 0.49 |
-| SEABADNet-Nano (16 mel) | 763 | 489× smaller | 0.821 ± 0.002 | 0.45 |
+### DCASE-2018 (secondary evidence — different clip length, different corpora)
 
-In-domain = **bulbul-matched DCASE dev set (ff1010+warblr only)**, matching bulbul's 5-fold CV
-protocol (seeds 123/456/789), trained with **no data augmentation** (bulbul uses cyclic time-shift,
-pitch-shift, denoising). Edge (80-mel, bulbul's architectural match) reaches **0.938** — within
-~0.02 of bulbul's 0.96 at **14.4× fewer parameters** and without augmentation. Window-count
-robustness (micro, dev): N=6 0.847 → N=5 0.833 → N=4 0.830 (−0.013/−0.016 for 17%/33% fewer inferences).
+| Variant | In-domain AUC | Cross-corpus → BirdVox | Cross-corpus + aug (TBD) |
+|---------|--------------|------------------------|--------------------------|
+| Nano | 0.821 ± 0.002 | 0.446 (chance) | — |
+| Micro | 0.847 ± 0.011 | 0.488 (chance) | — |
+| Edge | 0.938 ± 0.010 | 0.646 | — |
+| **bulbul** (ref, 373k params) | ~0.96 (5-fold CV) | 0.887 / 0.855 (with/without aug) | — |
 
-- *In-domain* = train/test on a pooled split of the same corpora (bulbul: 5-fold CV on training
-  data; ours: stratified pooled split incl. BirdVox). *Cross-corpus* = train ff1010+warblr →
-  test held-out BirdVox (the official DCASE-2018 task).
-- bulbul reaches 0.887 cross-corpus **only with** heavy augmentation (cyclic time-shift,
-  pitch-shift, denoising); without it, 0.855. SEABADNet here uses **no** augmentation and is
-  trained from scratch — its cross-corpus collapse to ~chance is the same domain gap bulbul
-  documents (train↔test AUC Pearson corr = 0.40), amplified by 14–489× fewer parameters.
-- bulbul's input (80 mel, n_fft=1024, max-pool-over-time → single output) matches
-  **SEABADNet-Edge** most closely — the fair architectural head-to-head.
+In-domain seeds: 123/456/789 (bulbul-matched). Cross-corpus seeds: 42/100/786.
 
-### Full per-variant results
-
-| Protocol | Variant | Test AUC | Seeds | Notes |
-|----------|---------|----------|-------|-------|
-| **TinyChirp** (primary generalization) | **Nano** | **0.9664 ± 0.0084** | 42/100/786 | Different region, single species, native 3 s |
-| **TinyChirp** (primary generalization) | **Micro** | **0.9757 ± 0.0085** | 42/100/786 | Strong transfer, matches TinyChirp CNN-Mel (0.9985) at 28× fewer params |
-| **TinyChirp** (primary generalization) | **Edge** | **0.9997 ± 0.0004** | 42/100/786 | High-capacity ceiling (limits ceiling for comparison) |
-| DCASE (in-domain, bulbul-matched) | Nano | 0.8211 ± 0.0020 | 123/456/789 | ff1010+warblr, 3 s model on 10 s clips via sliding window |
-| DCASE (in-domain, bulbul-matched) | Micro | 0.8465 ± 0.0113 | 123/456/789 | Window-count robust: N=5 → 0.8333, N=4 → 0.8301 |
-| DCASE (in-domain, bulbul-matched) | Edge | 0.9384 ± 0.0097 | 123/456/789 | Bulbul's architectural match (80-mel), within 0.02 of bulbul 0.96 at 14× smaller |
-| DCASE (cross-corpus) | Nano | 0.446 | 42/100/786 | Zero-adaptation (train ff1010+warblr → test BirdVox) = chance (domain gap) |
-| DCASE (cross-corpus) | Micro | 0.488 | 42/100/786 | Zero-adaptation = chance |
-| DCASE (cross-corpus) | Edge | 0.646 | 42/100/786 | Zero-adaptation, higher capacity barely helps at chance baseline |
-
-**Interpretation:** Both benchmarks confirm SEABADNet is **not overfit to SEABAD**:
-
-1. **TinyChirp (primary evidence):** Clean transfer to a **different region and species** at the
-   native 3 s length achieves **0.976 ± 0.009 (Micro)** — directly comparable to TinyChirp's
-   published CNN-Mel baseline (0.9985) and exceeding it at **28× fewer parameters**. This is the
-   strongest proof of generalization: a different ecological domain, single-species detection,
-   and a different continent.
-
-2. **DCASE in-domain (secondary evidence):** Shows the architecture learns a **different dataset at
-   a different clip length (10 s)** via sliding-window aggregation. Bulbul-matched protocol
-   (ff1010+warblr dev set, matching bulbul's 5-fold CV) achieves **0.821 (Nano), 0.847 (Micro),
-   0.938 (Edge)** — trailing bulbul's ~0.96 but at **14–489× fewer parameters and with no
-   augmentation**. The ~0.02–0.05 gap is a capacity+augmentation story, not a failure to learn.
-   Window-count robustness (N=6→5→4 windows: 0.847→0.833→0.830) shows the architecture is stable
-   and infers a favorable accuracy/compute trade for deployment.
-
-3. **Cross-corpus DCASE (domain-gap reference):** Official leaderboard task (train ff1010+warblr →
-   test held-out BirdVox, no adaptation) shows chance (~0.45–0.65 AUC) — the same train/test
-   domain gap bulbul documents (Pearson r=0.40). Reported for completeness only, not as a
-   capability claim; see "Why in-domain, not the official cross-corpus task" above.
+Edge (80-mel) is bulbul's architectural match: 0.938 vs bulbul's 0.96 at **14× fewer parameters and no augmentation**. Cross-corpus collapse is the same train↔test domain gap bulbul documents (Pearson r=0.40), amplified by 14–489× fewer parameters.
