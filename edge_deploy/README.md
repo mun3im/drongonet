@@ -1,6 +1,6 @@
-# SEABADNet-Edge: Raspberry Pi Deployment
+# DrongoNet-Edge: Raspberry Pi Deployment
 
-Self-contained package for **SEABADNet-Edge** inference on Raspberry Pi and Linux SBCs.
+Self-contained package for **DrongoNet-Edge** inference on Raspberry Pi and Linux SBCs.
 
 - **Model:** 33.06 KB INT8 (full integer quantization)
 - **Parameters:** 25,890
@@ -34,8 +34,8 @@ Expected structure:
 ### Step 2: Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/seabadnet.git
-cd seabadnet/edge_deploy
+git clone https://github.com/mun3im/drongonet.git
+cd drongonet/edge_deploy
 ```
 
 ### Step 3: Install & Run
@@ -66,9 +66,9 @@ python infer_edge_rpi.py \
 **Expected output (on RPi 4B, ~5-10 minutes for 5000 samples):**
 ```
 ======================================================================
-SEABADNet-Edge Evaluation Results
+DrongoNet-Edge Evaluation Results
 ======================================================================
-Model:          seabadnet_edge_int8.tflite  (post-timeshift-fix, seed 42)
+Model:          drongonet_edge_int8.tflite  (post-timeshift-fix, seed 42)
 Dataset:        SEABAD test set (5000 samples)
 Threshold (τ):  0.50
 ----------------------------------------------------------------------
@@ -89,7 +89,7 @@ FPR:            0.0256
 | File | Purpose |
 |------|---------|
 | `infer_edge_rpi.py` | Lightweight TFLite inference engine (no TensorFlow needed) |
-| `seabadnet_edge_int8.tflite` | Pre-trained INT8 model (33.06 KB) |
+| `drongonet_edge_int8.tflite` | Pre-trained INT8 model (33.06 KB) |
 | `requirements-rpi.txt` | Minimal dependencies (librosa, tflite-runtime, scikit-learn) |
 | `train_edge.py` | Retraining script (for advanced users) |
 | `README.md` | This file |
@@ -208,7 +208,7 @@ This is expected due to CPU speed. Options:
 
 ## 🎓 Advanced: Retraining
 
-To **retrain SEABADNet-Edge** from scratch:
+To **retrain DrongoNet-Edge** from scratch:
 
 ```bash
 # Install full training deps (GPU highly recommended)
@@ -240,7 +240,7 @@ Results land in `results/seabadnet_edge_s{seed}/`.
 
 ## 📋 Architecture Details
 
-**SEABADNet-Edge Architecture:**
+**DrongoNet-Edge Architecture:**
 ```
 Input: Mel spectrogram (184 frames × 80 mels × 1 channel), int8
 
@@ -282,8 +282,8 @@ metrics at τ=0.50 on the SEABAD test set:
 > Threshold should be tuned on your specific platform.
 
 ### AUC (Test Set, ~5000 SEABAD clips)
-- **Float32:** 0.9992 ± 0.0002 (mean ± std, 3 seeds)
-- **INT8:** 0.9990 ± 0.0002 (quantization degradation < 0.05%)
+- **Float32:** 0.9990 ± 0.0002 (mean ± std, 3 seeds)
+- **INT8:** 0.9985 ± 0.0001 (quantization degradation < 0.05%)
 
 ---
 

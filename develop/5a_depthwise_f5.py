@@ -158,7 +158,7 @@ def build_cnn_mel_model_table2(
     # FC + Softmax -> 2
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
 
-    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5a_depthwise_f5_m{input_shape[1]}")
+    model = tf.keras.models.Model(inputs, outputs, name=f"DrongoNet_5a_depthwise_f5_m{input_shape[1]}")
 
     return model
 
@@ -788,7 +788,9 @@ def main():
     config.n_mels = args.n_mels
     config.n_fft = args.n_fft
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/5a_depthwise_f5_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/5a_depthwise_f5_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

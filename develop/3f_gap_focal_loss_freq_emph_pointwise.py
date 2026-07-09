@@ -89,7 +89,7 @@ class TrainingConfig:
 
     def update_derived_paths(self):
         self.cache_dir = f'{CACHE_BASE}_fft{self.n_fft}_m{self.n_mels}'
-        self.output_dir = f'{RESULTS_BASE}/3f_gap_focal_loss_freq_emph_pointwise_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}'
+        self.output_dir = f'{RESULTS_BASE}/3f_gap_focal_loss_freq_emph_pointwise_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}_{self.platform_tag}'
 
 
 def parse_arguments():
@@ -158,7 +158,7 @@ def build_model(input_shape=(184, 64, 1), num_classes=2):
     # Output layer
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    return tf.keras.Model(inputs, outputs, name="SEABADNet_3f")
+    return tf.keras.Model(inputs, outputs, name="DrongoNet_3f")
 
 
 def focal_loss(gamma=2.0, alpha=0.5):  # Use 0.5 for balanced datasets, 0.75 for imbalanced

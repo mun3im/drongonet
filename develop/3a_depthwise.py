@@ -725,7 +725,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("="*60 + "\n")
-        f.write("TRAINING CONFIGURATION - SEABADNet-3a (Depthwise)\n")
+        f.write("TRAINING CONFIGURATION - DrongoNet-3a (Depthwise)\n")
         f.write("="*60 + "\n\n")
 
         f.write("System Information:\n")
@@ -796,7 +796,9 @@ def main():
     config.n_mels = args.n_mels
     config.n_fft = args.n_fft
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/3a_depthwise_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/3a_depthwise_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

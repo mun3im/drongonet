@@ -2,7 +2,7 @@
 """
 5b_depthwise_f6.py: Depthwise sep, 6 filters — Micro filter count sweep (Phase 5)
 SeparableConv2D, 6 filters, n_mels=16, dropout=0.1, GAP, focal loss.
-Gate 5 winner — 6 filters carried forward into 6a_nano_final (SEABADNet-Nano) and 6b_micro_final.
+Gate 5 winner — 6 filters carried forward into 6a_nano_final (DrongoNet-Nano) and 6b_micro_final.
 Compatible with both macOS (Metal) and Linux (CUDA)
 """
 
@@ -159,7 +159,7 @@ def build_cnn_mel_model_table2(
     # FC + Softmax -> 2
     outputs = tf.keras.layers.Dense(num_classes, activation="softmax")(x)
 
-    model = tf.keras.models.Model(inputs, outputs, name=f"SEABADNet_5b_depthwise_f6_m{input_shape[1]}")
+    model = tf.keras.models.Model(inputs, outputs, name=f"DrongoNet_5b_depthwise_f6_m{input_shape[1]}")
 
     return model
 
@@ -788,7 +788,9 @@ def main():
     config.dataset_path = args.dataset_path
     config.n_mels = args.n_mels
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/5b_depthwise_f6_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/5b_depthwise_f6_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

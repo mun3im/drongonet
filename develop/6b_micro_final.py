@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-6b_micro_final.py: SEABADNet-Micro (final)
+6b_micro_final.py: DrongoNet-Micro (final)
 Locked Micro candidate (6.56 KB INT8, 919 params, AUC 0.9741).
-Adds 1×1 pointwise Conv2D over 6a_nano_final (SEABADNet-Nano) for +0.003 AUC / +0.005 recall.
+Adds 1×1 pointwise Conv2D over 6a_nano_final (DrongoNet-Nano) for +0.003 AUC / +0.005 recall.
 - FrequencyEmphasis → Conv(6) → MaxPool → Conv(12) → Conv(12,1×1) → GAP → Dropout → Dense
 - Focal loss, dropout=0.1, n_mels=16, n_fft=1024
 - Target: ≤8 KB INT8, <1 ms, ≥0.98 recall at optimised threshold
@@ -111,7 +111,7 @@ def parse_args():
                         choices=['LP', 'FE', 'Opt'],
                         help='Model version: LP (original), FE (with frequency emphasis), Opt (optimized)')
     parser.add_argument('--output-dir', type=str, default=None,
-                        help='Override output directory (default: results/seabadnet_micro_fft{n_fft}_m{n_mels}_s{seed})')
+                        help='Override output directory (default: results/drongonet_micro_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 
@@ -336,7 +336,7 @@ def analyze_frequency_weights(model, output_dir: Path):
 
 def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Micro base: ultra-lightweight Conv2D model (~1,282 params for n_mels=16).
+    DrongoNet-Micro base: ultra-lightweight Conv2D model (~1,282 params for n_mels=16).
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -354,7 +354,7 @@ def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Micro with frequency emphasis (+16 params for n_mels=16).
+    DrongoNet-Micro with frequency emphasis (+16 params for n_mels=16).
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -376,7 +376,7 @@ def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Micro (final): SeparableConv2D + frequency emphasis + GAP + focal loss.
+    DrongoNet-Micro (final): SeparableConv2D + frequency emphasis + GAP + focal loss.
     Target: ≤8 KB INT8, ≥0.98 recall at optimised threshold.
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
@@ -419,7 +419,7 @@ def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
     # 6. Final classification
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs, outputs, name="SEABADNet_Micro_Improved")
+    model = tf.keras.Model(inputs, outputs, name="DrongoNet_Micro_Improved")
     return model
 
 
@@ -1060,7 +1060,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("SEABADNET-MICRO TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-MICRO TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
 
         f.write("Model Information:\n")
@@ -1148,10 +1148,11 @@ def main():
     # Update cache and output directories based on version and n_mels
     version_suffix = f"_{args.version}" # if args.version != 'Opt' else ""
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
     if args.output_dir:
         config.output_dir = args.output_dir
     else:
-        config.output_dir = f'results/seabadnet_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+        config.output_dir = f'results/drongonet_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)
@@ -1336,7 +1337,7 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("SEABADNET-MICRO RESULTS SUMMARY\n")
+            f.write("DRONGONET-MICRO RESULTS SUMMARY\n")
             f.write("=" * 60 + "\n\n")
             f.write(f"Model Version: {args.version}\n")
             f.write(f"n_mels: {config.n_mels}\n")
@@ -1368,7 +1369,7 @@ def main():
 
         logger.info("=" * 60)
         logger.info("RESULTS SUMMARY:")
-        logger.info(f"  Model: SEABADNet-Micro (version={args.version})")
+        logger.info(f"  Model: DrongoNet-Micro (version={args.version})")
         logger.info(f"  Float32 AUC: {float_auc:.4f}")
         logger.info(f"  TFLite AUC: {tflite_auc:.4f}")
         logger.info(f"  TFLite Size: {tflite_size_kb:.2f} KB")

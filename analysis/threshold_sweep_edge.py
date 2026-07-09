@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-threshold_sweep_edge.py: Threshold sweep for SEABADNet-Edge
+threshold_sweep_edge.py: Threshold sweep for DrongoNet-Edge
 
 Loads the saved INT8 TFLite model from 6b_edge_final_fft1024_m80_s42,
 runs inference on the test set, sweeps thresholds, and locks the lowest
@@ -137,7 +137,7 @@ def find_locked_tau(rows: list):
 
 def write_sweep_table(rows: list, locked: dict, out_path: Path, auc: float):
     lines = [
-        "SEABADNet-Edge — Threshold Sweep",
+        "DrongoNet-Edge — Threshold Sweep",
         f"Target recall : ≥{TARGET_RECALL}",
         f"AUC           : {auc:.4f}",
         "",
@@ -157,7 +157,7 @@ def write_sweep_table(rows: list, locked: dict, out_path: Path, auc: float):
 
 def write_locked(locked: dict, out_path: Path, auc: float, avg_ms: float, size_kb: float):
     lines = [
-        "SEABADNet-Edge — Locked Threshold",
+        "DrongoNet-Edge — Locked Threshold",
         "=" * 40,
         f"tau       = {locked['tau']:.2f}",
         f"recall    = {locked['recall']:.4f}",
@@ -190,7 +190,7 @@ def plot_pr_curve(probabilities: np.ndarray, true_labels: np.ndarray,
                 label=f'Target recall ≥{TARGET_RECALL}')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('SEABADNet-Edge — Precision-Recall curve (INT8 TFLite)')
+    plt.title('DrongoNet-Edge — Precision-Recall curve (INT8 TFLite)')
     plt.legend(fontsize=8)
     plt.tight_layout()
     plt.savefig(out_path, dpi=150)
@@ -203,7 +203,7 @@ def plot_pr_curve(probabilities: np.ndarray, true_labels: np.ndarray,
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description='Threshold sweep for SEABADNet-Edge')
+    parser = argparse.ArgumentParser(description='Threshold sweep for DrongoNet-Edge')
     parser.add_argument('--results-dir', type=str,
                         default='results/6c_edge_final_fft1024_m80_s42',
                         help='Path to the 6b_edge_final result directory')
@@ -244,7 +244,7 @@ def main():
 
     print()
     print("=" * 50)
-    print("SEABADNet-Edge — locked values")
+    print("DrongoNet-Edge — locked values")
     print("=" * 50)
     print(f"  τ         = {locked['tau']:.2f}")
     print(f"  recall    = {locked['recall']:.4f}")

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-dcase_benchmark.py — Retrain SEABADNet on the DCASE-2018 Bird Audio Detection data to show
+dcase_benchmark.py — Retrain DrongoNet on the DCASE-2018 Bird Audio Detection data to show
 the architecture is NOT overfit to SEABAD and ADAPTS to a different clip length.
 
-SEABAD/TinyChirp clips are 3 s; DCASE clips are 10 s. The same SEABADNet 3 s model is applied
+SEABAD/TinyChirp clips are 3 s; DCASE clips are 10 s. The same DrongoNet 3 s model is applied
 to 10 s clips via sliding-window aggregation, retrained from scratch on a pooled in-domain
 split of all three DCASE corpora, and evaluated on a held-out portion of the same pool.
 
@@ -11,14 +11,14 @@ split of all three DCASE corpora, and evaluated on a held-out portion of the sam
   split  : stratified clip-level train / val / test (in-domain; all corpora in every split)
   metric : clip-level ROC-AUC (binary bird / no-bird)
 
-This answers "does SEABADNet generalize beyond SEABAD, including to a different clip length?"
+This answers "does DrongoNet generalize beyond SEABAD, including to a different clip length?"
 It is NOT the official DCASE-2018 cross-corpus transfer task (train ff1010+warblr -> test
 BirdVox), which measures zero-adaptation domain transfer and collapses to chance for a small
 from-scratch model (see [[transformer-zeroshot-transfers]] in project memory).
 
 Sliding windows (~50% overlap, full 10 s coverage)
   Each 10 s clip -> 16 kHz -> SIX 3 s windows evenly spaced at starts {0,1.4,2.8,4.2,5.6,7.0}s
-  (hop 1.4 s, 53% overlap) -> SEABADNet log-mel (n_fft=1024, hop=256, fmin=100, fmax=8000,
+  (hop 1.4 s, 53% overlap) -> DrongoNet log-mel (n_fft=1024, hop=256, fmin=100, fmax=8000,
   center=False, 184 frames, per-sample [0,1]).
   Train : every window inherits the clip label (multiple-instance style).
   Test  : the model scores all 6 windows; the clip score is the MAX bird-probability
@@ -56,7 +56,7 @@ WIN_STARTS = np.linspace(0, CLIP_LEN - WIN, WINDOWS_PER_CLIP).astype(int)
 N_FFT, HOP, FRAMES = 1024, 256, 184
 FMIN, FMAX = 100.0, 8000.0
 
-SEABADNET_DIR = Path(__file__).resolve().parent.parent / 'develop'
+DRONGONET_DIR = Path(__file__).resolve().parent.parent / 'develop'
 VARIANTS = {
     'nano':  ('6a_nano_final.py',  'build_cnn_mel_low_power_optimized', 16),
     'micro': ('6b_micro_final.py', 'build_cnn_mel_low_power_optimized', 16),
@@ -126,9 +126,9 @@ def build_all(n_mels, sources):
 def load_build_fn(variant):
     import sys
     script, fn_name, n_mels = VARIANTS[variant]
-    if str(SEABADNET_DIR) not in sys.path:
-        sys.path.insert(0, str(SEABADNET_DIR))
-    spec = importlib.util.spec_from_file_location(f'seabadnet_{variant}', SEABADNET_DIR / script)
+    if str(DRONGONET_DIR) not in sys.path:
+        sys.path.insert(0, str(DRONGONET_DIR))
+    spec = importlib.util.spec_from_file_location(f'drongonet_{variant}', DRONGONET_DIR / script)
     mod = importlib.util.module_from_spec(spec)
     saved_argv = sys.argv
     sys.argv = [sys.argv[0]]            # the dev scripts early-parse sys.argv at import
@@ -156,7 +156,7 @@ def windows_for(clip_idx):
 
 
 def main():
-    ap = argparse.ArgumentParser(description='In-domain DCASE benchmark for SEABADNet (sliding window)')
+    ap = argparse.ArgumentParser(description='In-domain DCASE benchmark for DrongoNet (sliding window)')
     ap.add_argument('--variant', choices=list(VARIANTS), default='micro')
     ap.add_argument('--seeds', type=int, nargs='+', default=[42, 100, 786])
     ap.add_argument('--epochs', type=int, default=50)
@@ -229,7 +229,7 @@ def main():
         out_dir = Path(f'results4arxiv/dcase_benchmark_{args.variant}{rtag}{wtag}_r{seed}')
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / 'summary.json').write_text(json.dumps({
-            'tag': f'SEABADNet-{args.variant}_DCASE2018_indomain_{args.run_tag or "pool"}_w{args.windows}',
+            'tag': f'DrongoNet-{args.variant}_DCASE2018_indomain_{args.run_tag or "pool"}_w{args.windows}',
             'protocol': f'in-domain split of [{"+".join(args.sources)}], {args.windows}x3s windows (max-agg); '
                         'demonstrates cross-dataset + different-clip-length (10s) adaptation',
             'variant': args.variant, 'n_mels': n_mels, 'seed': seed,
@@ -240,7 +240,7 @@ def main():
         print(f'  [seed {seed}] in-domain clip-level test AUC = {auc:.4f}')
 
     print('\n' + '=' * 64)
-    print(f'SEABADNet-{args.variant} | DCASE-2018 (in-domain pool) | 6x3s sliding-window (max-agg)')
+    print(f'DrongoNet-{args.variant} | DCASE-2018 (in-domain pool) | 6x3s sliding-window (max-agg)')
     print(f'  test AUC = {np.mean(aucs):.4f} +/- {np.std(aucs):.4f}   per-seed {[round(a,4) for a in aucs]}')
     print(f'  (3 s model applied to 10 s clips; trained from scratch on DCASE, not SEABAD)')
     print('=' * 64)

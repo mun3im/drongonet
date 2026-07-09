@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-augmentations.py -- log-mel-domain augmentations for SEABADNet cross-corpus experiments.
+augmentations.py -- log-mel-domain augmentations for DrongoNet cross-corpus experiments.
 
 All ops operate on already-computed log-mel spectrograms of shape (B, FRAMES, n_mels, 1)
 in [0, 1] (per-sample normalised), to match the existing dcase_benchmark pipeline. This keeps
@@ -92,6 +92,7 @@ def _pitch_time(x: tf.Tensor, max_freq_roll: int = 2, max_time_scale: float = 0.
     time :  rescale along time axis by 1 +/- max_time_scale, then crop/pad back to T
     Both applied per-batch (one random transform shared across the batch for speed).
     """
+    static_shape = x.shape  # (B, T, F, 1) with T, F statically known; restored at the end
     shape = tf.shape(x)
     t, f = shape[1], shape[2]
 
@@ -115,7 +116,10 @@ def _pitch_time(x: tf.Tensor, max_freq_roll: int = 2, max_time_scale: float = 0.
         pad_right = pad_total - pad_left
         return tf.pad(x_resized, [[0, 0], [pad_left, pad_right], [0, 0], [0, 0]])
     x = tf.cond(new_t >= t, crop, pad)
-    x = tf.ensure_shape(x, [None, None, None, 1])
+    # crop/pad restore the original time length T (and the freq axis is never resized),
+    # but tf can't infer that statically -> recover the input's static shape so downstream
+    # fixed-shape layers (e.g. BatchNormalization built on (1000, 80, 1)) keep defined dims.
+    x = tf.ensure_shape(x, static_shape)
     return x
 
 

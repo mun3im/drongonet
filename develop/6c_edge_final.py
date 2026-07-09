@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-6c_edge_final.py: SEABADNet-Edge (final)
+6c_edge_final.py: DrongoNet-Edge (final)
 Locked Edge candidate (32.82 KB INT8, ~25k params, AUC 0.9994).
 3-block Conv2D + BatchNorm + GAP architecture for SBC deployment.
 - Conv(16) → Conv(32) → Conv(64) → GAP → Dense(8)
@@ -96,7 +96,7 @@ def parse_args():
     parser.add_argument('--force_cpu', action='store_true',
                         help='Force use of CPU instead of GPU')
     parser.add_argument('--output-dir', type=str, default=None,
-                        help='Override output directory (default: results/seabadnet_edge_fft{n_fft}_m{n_mels}_s{seed})')
+                        help='Override output directory (default: results/drongonet_edge_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 args = parse_args()
@@ -158,7 +158,7 @@ def build_deeper_gap(input_shape=(184, 80, 1), num_classes=2):
 
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    return tf.keras.Model(inputs, outputs, name="SEABADNet_Edge")
+    return tf.keras.Model(inputs, outputs, name="DrongoNet_Edge")
 
 
 class SEABADDataset:
@@ -376,7 +376,7 @@ def create_tf_dataset_from_cache(split: str, config: TrainingConfig,
         def augment_mel(mel, label):
             """
             Augmentation harmonised with 6a/6b (Nano/Micro) for consistency
-            across the SEABADNet family.
+            across the DrongoNet family.
             Unbatched tensor shape: (time, freq, channel) = (184, 80, 1).
             """
             # Gaussian noise (σ=0.02, matches Nano/Micro; was 0.01 before harmonisation)
@@ -630,7 +630,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("="*60 + "\n")
-        f.write("SEABADNET-EDGE TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-EDGE TRAINING CONFIGURATION\n")
         f.write("="*60 + "\n\n")
 
         f.write("System Information:\n")
@@ -705,7 +705,9 @@ def main():
     if args.output_dir:
         config.output_dir = args.output_dir
     else:
-        config.output_dir = f'results/seabadnet_edge_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+        platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+        config.output_dir = f'results/drongonet_edge_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

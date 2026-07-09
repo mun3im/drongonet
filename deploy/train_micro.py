@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-train_micro.py — SEABADNet-Micro
-Primary model (6.26 KB INT8, 919 params, AUC 0.9743 ± 0.0011).
-Targets ARM Cortex-M4 (AudioMoth, STM32F4). Meets ≥0.98 recall at τ=0.35.
+train_micro.py — DrongoNet-Micro
+Primary model (6.23 KB INT8, 919 params, AUC 0.9803 ± 0.0012).
+Targets ARM Cortex-M4 (AudioMoth, STM32F4). Meets ≥0.98 recall at τ=0.30.
 
 Locked configuration (do not change):
   n_mels=16, n_fft=1024, dropout=0.1, focal loss, GAP
@@ -16,7 +16,7 @@ Usage:
 Optional:
     --random_seed  INT   (default 42)
 
-Results land in results/seabadnet_micro_s{seed}/ (set by the underlying script).
+Results land in results/drongonet_micro_s{seed}/ (set by the underlying script).
 """
 
 import sys
@@ -29,7 +29,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train SEABADNet-Micro (locked config, 6.26 KB INT8, ≥0.98 recall)"
+        description="Train DrongoNet-Micro (locked config, 6.23 KB INT8, ≥0.98 recall)"
     )
     parser.add_argument('--dataset-path', required=True,
                         help='Path to the SEABAD dataset root')

@@ -84,14 +84,14 @@ def load_data(npz_path: Path):
             'mean_probs': d['micro_probs'],
             'labels':     d['micro_labels'],
             'tau':        float(d['micro_tau']),
-            'label':      'SEABADNet-Micro',
+            'label':      'DrongoNet-Micro',
             'color':      COLORS['micro'],
         },
         'edge': {
             'mean_probs': d['edge_probs'],
             'labels':     d['edge_labels'],
             'tau':        float(d['edge_tau']),
-            'label':      'SEABADNet-Edge',
+            'label':      'DrongoNet-Edge',
             'color':      COLORS['edge'],
         },
     }

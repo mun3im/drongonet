@@ -711,7 +711,7 @@ class ModelEvaluator:
 
         plt.xlabel('Decision Threshold', fontsize=12)
         plt.ylabel('Metric Value', fontsize=12)
-        plt.title(f'{prefix}Threshold Analysis for SEABADNet', fontsize=14)
+        plt.title(f'{prefix}Threshold Analysis for DrongoNet', fontsize=14)
         plt.legend(loc='best', fontsize=10)
         plt.grid(True, alpha=0.3)
         plt.xlim([0.0, 1.0])
@@ -1080,7 +1080,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
         f.write(f"  Dataset Fraction: {config.fraction}\n")
         f.write("\n")
 
-        f.write("SEABADNet Configuration:\n")
+        f.write("DrongoNet Configuration:\n")
         f.write(f"  Target Recall: {config.target_recall:.2f}\n")
         f.write(f"  Primary Metric: Recall (Sensitivity)\n")
         f.write(f"  Monitoring: val_recall for callbacks\n")
@@ -1123,7 +1123,9 @@ def main():
         arch_suffix += "_RE"
     if args.use_pointwise:
         arch_suffix += "_PW"
-    config.output_dir = f'{RESULTS_BASE}/1f_cnntime_deeper{arch_suffix}_r{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/1f_cnntime_deeper{arch_suffix}_r{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -1143,7 +1145,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("SEABADNet CNN-Time Deeper Reference Training")
+    logger.info("DrongoNet CNN-Time Deeper Reference Training")
     logger.info("=" * 60)
     logger.info("System Information:")
     logger.info(f"  Platform: {system_info['platform']} {system_info['machine']}")
@@ -1154,7 +1156,7 @@ def main():
     if system_info['gpu_devices']:
         logger.info(f"  GPU Devices: {', '.join(system_info['gpu_devices'])}")
     logger.info("=" * 60)
-    logger.info(f"SEABADNet Configuration:")
+    logger.info(f"DrongoNet Configuration:")
     logger.info(f"  Target Recall: {config.target_recall:.2f}")
     logger.info(f"  Monitoring Metric: val_recall")
     logger.info("=" * 60)

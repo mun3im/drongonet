@@ -1,6 +1,6 @@
 # develop/
 
-Training scripts for the SEABADNet ablation chain (Phase 1–6) and the three final-candidate trainers (`6a`, `6b`, `6c`).
+Training scripts for the DrongoNet ablation chain (Phase 1–6) and the three final-candidate trainers (`6a`, `6b`, `6c`).
 
 Each numbered script answers one design question. The winning config carries forward to the next phase; nothing else does. Ablation runs use seed=42; multi-seed validation (seeds 42/100/786) is reserved for the three final candidates.
 
@@ -11,17 +11,17 @@ Post-ablation analysis lives in `analysis/`; pre-ablation TinyChirp baselines li
 Three wrapper scripts in `deploy/` expose the locked final configurations with minimal arguments:
 
 ```bash
-# SEABADNet-Nano  (5.09 KB INT8, no recall target)
+# DrongoNet-Nano  (5.09 KB INT8, no recall target)
 python deploy/train_nano.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft512_m16
 
-# SEABADNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
+# DrongoNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
 python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 
-# SEABADNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
+# DrongoNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
 python deploy/train_edge.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m80
@@ -125,9 +125,9 @@ Note: `5a` uses `n_fft=512`; all other scripts use `n_fft=1024`. These produce s
 
 | Script | Model | Params | Size (INT8) | Target recall |
 |---|---|---|---|---|
-| `6a_nano_final.py` | SEABADNet-Nano | 763 | 5.09 KB | — |
-| `6b_micro_final.py` | **SEABADNet-Micro** | 919 | 6.23 KB | ≥0.987 @ τ=0.30 |
-| `6c_edge_final.py` | **SEABADNet-Edge** | 25,890 | 33.06 KB | ≥0.99 @ τ=0.50 |
+| `6a_nano_final.py` | DrongoNet-Nano | 763 | 5.09 KB | — |
+| `6b_micro_final.py` | **DrongoNet-Micro** | 919 | 6.23 KB | ≥0.987 @ τ=0.30 |
+| `6c_edge_final.py` | **DrongoNet-Edge** | 25,890 | 33.06 KB | ≥0.99 @ τ=0.50 |
 
 ## Support files
 

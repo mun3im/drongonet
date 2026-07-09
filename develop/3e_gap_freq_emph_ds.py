@@ -191,7 +191,7 @@ class FrequencyEmphasis(tf.keras.layers.Layer):
 
 def build_cnn_gap_freq_emphasis_ds(input_shape=(184, 64, 1), num_classes=2):
     """
-    SEABADNet-3e: Frequency Emphasis + Depthwise Separable Convs (~900-1000 params).
+    DrongoNet-3e: Frequency Emphasis + Depthwise Separable Convs (~900-1000 params).
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -228,7 +228,7 @@ def build_cnn_gap_freq_emphasis_ds(input_shape=(184, 64, 1), num_classes=2):
     # Final
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs, outputs, name="SEABADNet_3e")
+    model = tf.keras.Model(inputs, outputs, name="DrongoNet_3e")
     return model
 
 class SEABADDataset:
@@ -856,7 +856,9 @@ def main():
     config.n_fft = args.n_fft
     config.n_mels = args.n_mels
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/3e_gap_freq_emph_ds_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/3e_gap_freq_emph_ds_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

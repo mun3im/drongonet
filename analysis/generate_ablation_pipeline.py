@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-generate_ablation_pipeline.py — Ablation pipeline figure for SEABADNet paper
+generate_ablation_pipeline.py — Ablation pipeline figure for DrongoNet paper
 
-Horizontal flowchart, left-to-right: TinyChirp -> Ph1 -> ... -> SEABADNet-Micro
+Horizontal flowchart, left-to-right: TinyChirp -> Ph1 -> ... -> DrongoNet-Micro
 Edge branch drops DOWN from Ph.3 node.
 Wide figure to fill \textwidth in the paper.
 
@@ -52,7 +52,7 @@ N      = 7
 X_L    = 1.2    # leftmost node centre
 X_R    = 19.0   # rightmost node centre
 XS     = [X_L + i * (X_R - X_L) / (N - 1) for i in range(N)]
-# XS[0]=TinyChirp, XS[3]=Ph.3 (branch point), XS[6]=SEABADNet-Micro
+# XS[0]=TinyChirp, XS[3]=Ph.3 (branch point), XS[6]=DrongoNet-Micro
 
 Y_MAIN = 2.8    # y of main chain
 Y_EDGE = 0.9    # y of Edge box (below main chain)
@@ -76,8 +76,8 @@ MAIN_CHAIN = [
     ('+ Focal loss\n+ Freq. emphasis',   'Loss & preprocessing',    C_PHASE),
     ('+ Dropout = 0.1',                  'Regularisation',          C_PHASE),
     ('+ 6 filters\n+ 1×1 conv',          'Capacity tuning',         C_PHASE),
-    ('SEABADNet-Micro',
-     '919 params · 6.56 kB\nτ=0.35 · recall ≥98.1%',      C_MICRO),
+    ('DrongoNet-Micro',
+     '919 params · 6.56 kB\nτ=0.30 · recall ≥98.8%',      C_MICRO),
 ]
 
 EDGE_X = XS[3]   # same x as Ph.3
@@ -139,7 +139,7 @@ def main():
             (EDGE_X - BWE, Y_EDGE - BHE), 2*BWE, 2*BHE,
             boxstyle='round,pad=0.04',
             linewidth=0.7, edgecolor=C_BORDER, facecolor=C_EDGE, zorder=2))
-        ax.text(EDGE_X, Y_EDGE + BHE * 0.48, 'SEABADNet-Edge',
+        ax.text(EDGE_X, Y_EDGE + BHE * 0.48, 'DrongoNet-Edge',
                 ha='center', va='center', fontsize=7.5,
                 fontweight='bold', zorder=3)
         ax.text(EDGE_X, Y_EDGE + BHE * 0.05,
@@ -181,9 +181,9 @@ def main():
             mpatches.Patch(facecolor=C_PHASE,    edgecolor=C_BORDER,
                            label='Ablation step'),
             mpatches.Patch(facecolor=C_MICRO,    edgecolor=C_BORDER,
-                           label='SEABADNet-Micro (primary)'),
+                           label='DrongoNet-Micro (primary)'),
             mpatches.Patch(facecolor=C_EDGE,     edgecolor=C_BORDER,
-                           label='SEABADNet-Edge (reference)'),
+                           label='DrongoNet-Edge (reference)'),
         ]
         ax.legend(handles=handles, loc='lower right',
                   bbox_to_anchor=(1.0, 0.0), ncol=1,

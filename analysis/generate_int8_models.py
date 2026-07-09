@@ -20,7 +20,7 @@ from sklearn.metrics import roc_auc_score
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-BASE = Path('/home/muneim/Dropbox/Conda/seabadnet')
+BASE = Path('/home/muneim/Dropbox/Conda/drongonet')
 CACHE_BASE = '/Volumes/Evo/cache4arxiv'
 RESULTS_INT8 = BASE / 'results_int8'
 RESULTS_INT8.mkdir(exist_ok=True)

@@ -89,7 +89,7 @@ class TrainingConfig:
 
     def update_derived_paths(self):
         self.cache_dir = f'{CACHE_BASE}_fft{self.n_fft}_m{self.n_mels}'
-        self.output_dir = f'{RESULTS_BASE}/3g_strided_focal_tuned_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}'
+        self.output_dir = f'{RESULTS_BASE}/3g_strided_focal_tuned_fft{self.n_fft}_m{self.n_mels}_s{self.random_seed}_{self.platform_tag}'
 
 
 def parse_arguments():
@@ -157,7 +157,7 @@ def build_model(input_shape=(184, 80, 1), num_classes=2):
     # Output layer
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    return tf.keras.Model(inputs, outputs, name="SEABADNet_3g")
+    return tf.keras.Model(inputs, outputs, name="DrongoNet_3g")
 
 
 def focal_loss(gamma=1.5, alpha=0.75):  # Tuned for recall: overweight false negatives

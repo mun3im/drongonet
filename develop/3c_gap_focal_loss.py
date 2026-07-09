@@ -151,7 +151,7 @@ def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
     x = tf.keras.layers.GlobalAveragePooling2D()(x)  # → (16,)
 
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
-    return tf.keras.Model(inputs, outputs, name="SEABADNet_3c_gap_focal_loss")
+    return tf.keras.Model(inputs, outputs, name="DrongoNet_3c_gap_focal_loss")
 
 class SEABADDataset:
     """Dataset class for SEABAD that returns file paths only, splits data 80:10:10"""
@@ -794,7 +794,9 @@ def main():
         config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
     else:  # Linux or other
         config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
-    config.output_dir = f'{RESULTS_BASE}/3c_gap_focal_loss_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/3c_gap_focal_loss_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)

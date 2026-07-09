@@ -1,6 +1,6 @@
-# SEABADNet-Edge on Raspberry Pi
+# DrongoNet-Edge on Raspberry Pi
 
-**SEABADNet-Edge** is a 33.06 KB INT8 neural network for bird activity detection on **Raspberry Pi and other SBCs** (Single-Board Computers).
+**DrongoNet-Edge** is a 33.06 KB INT8 neural network for bird activity detection on **Raspberry Pi and other SBCs** (Single-Board Computers).
 
 - **Model size:** 33.06 KB (INT8 quantized)
 - **Parameters:** 25,890
@@ -17,7 +17,7 @@
 Download from Zenodo and extract to your Raspberry Pi:
 
 ```bash
-# From Zenodo: https://zenodo.org/records/YOUR_ZENODO_ID
+# From Zenodo: https://zenodo.org/records/18290494
 # Extract: seabad_data/ will contain positive/ and negative/ subdirectories
 unzip seabad_data.zip -d ~/seabad_data
 ```
@@ -38,8 +38,8 @@ unzip seabad_data.zip -d ~/seabad_data
 ### 2. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/seabadnet.git
-cd seabadnet
+git clone https://github.com/mun3im/drongonet.git
+cd drongonet
 ```
 
 ### 3. Install Dependencies
@@ -68,8 +68,8 @@ sudo apt-get install -y \
     libatlas-base-dev
 
 # Create virtual environment (recommended)
-python3 -m venv seabadnet_env
-source seabadnet_env/bin/activate
+python3 -m venv drongonet_env
+source drongonet_env/bin/activate
 
 # Install Python packages
 pip install --upgrade pip
@@ -83,35 +83,35 @@ pip install -r deploy/requirements-rpi.txt
 Evaluate the pre-trained model on SEABAD test set:
 
 ```bash
-cd seabadnet
+cd drongonet
 
 python3 deploy/infer_edge_rpi.py \
     --dataset-path ~/seabad_data \
-    --model deploy/seabadnet_edge_int8.tflite \
-    --threshold 0.60 \
+    --model deploy/drongonet_edge_int8.tflite \
+    --threshold 0.50 \
     --output results.csv
 ```
 
 **Expected output:**
 ```
 ======================================================================
-SEABADNet-Edge Evaluation Results
+DrongoNet-Edge Evaluation Results
 ======================================================================
-Model:          seabadnet_edge_int8.tflite
-Dataset:        SEABAD test set (500 samples)
-Threshold (τ):  0.60
+Model:          drongonet_edge_int8.tflite
+Dataset:        SEABAD test set (5,000 samples)
+Threshold (τ):  0.50
 ----------------------------------------------------------------------
-AUC:            0.9992
-Accuracy:       0.9980
+AUC:            0.9987
+Accuracy:       0.9822
 Recall:         0.9900
-Precision:      0.9841
-F1 Score:       0.9870
-Specificity:    0.9960
-FPR:            0.0040
+Precision:      0.9748
+F1 Score:       0.9823
+Specificity:    0.9744
+FPR:            0.0256
 ----------------------------------------------------------------------
 Confusion Matrix:
-  TP=2475  FP=6
-  FN=25   TN=494
+  TP=2475  FP=64
+  FN=25   TN=2436
 ======================================================================
 ```
 
@@ -119,7 +119,8 @@ Confusion Matrix:
 
 ## Threshold Tuning
 
-The default threshold (τ=0.60) is calibrated for **99% recall**.
+The default threshold (τ=0.50) is locked post-timeshift-fix retrain, uniform across all three
+seeds (previously per-seed τ∈{0.45,0.55,0.60}), and is calibrated for **99% recall**.
 
 To adjust recall/precision trade-off:
 
@@ -132,11 +133,11 @@ python3 deploy/infer_edge_rpi.py \
 # Lower threshold → higher recall, lower precision
 python3 deploy/infer_edge_rpi.py \
     --dataset-path ~/seabad_data \
-    --threshold 0.50
+    --threshold 0.30
 ```
 
 Recommended operating points:
-- **99% Recall (default, τ=0.60):** Minimizes missed bird events
+- **99% Recall (default, τ=0.50):** Minimizes missed bird events
 - **95% Recall (τ=0.70):** Reduces false positives
 - **85% Recall (τ=0.80):** Maximum specificity (minimal false positives)
 
@@ -204,7 +205,7 @@ The Mel computation is RAM-intensive. Workarounds:
 
 ## Advanced: Training on RPi
 
-To **retrain** SEABADNet-Edge from scratch on a Raspberry Pi 4+:
+To **retrain** DrongoNet-Edge from scratch on a Raspberry Pi 4+:
 
 ```bash
 # Install full training dependencies (add to requirements-rpi.txt)
@@ -222,21 +223,21 @@ python3 deploy/train_edge.py \
 
 ## Model Details
 
-**SEABADNet-Edge Architecture:**
+**DrongoNet-Edge Architecture:**
 - Input: Mel spectrogram (80 mels, 184 frames)
 - Conv2D(16) + BatchNorm → Conv2D(32) + BatchNorm → Conv2D(64) + BatchNorm → GlobalAveragePooling → Dense(8)
 - INT8 quantization (full precision → 8-bit integer)
 - Focal loss (α=0.25, γ=2.0) for class imbalance
 
 **Pre-trained weights:**
-- Seed 42 (main): `deploy/seabadnet_edge_int8.tflite` (33.06 KB)
+- Seed 42 (main): `deploy/drongonet_edge_int8.tflite` (33.06 KB)
 - Full precision model available at: [Zenodo link]
 
 ---
 
 ## Citation
 
-If you use SEABADNet-Edge in your research, please cite:
+If you use DrongoNet-Edge in your research, please cite:
 
 ```bibtex
 @article{zabidi2026seabadnet,
@@ -252,7 +253,7 @@ If you use SEABADNet-Edge in your research, please cite:
 ## Support
 
 For issues or questions:
-- **GitHub Issues:** https://github.com/yourusername/seabadnet/issues
+- **GitHub Issues:** https://github.com/mun3im/drongonet/issues
 - **Paper:** [Link to arxiv or published version]
 
 ---

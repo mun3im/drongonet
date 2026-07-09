@@ -33,7 +33,7 @@
         text-anchor="middle"
         font-family="'Arial', 'Helvetica Neue', sans-serif"
         font-size="17" font-weight="bold" fill="#111827">
-    SEABADNet Architecture
+    DrongoNet Architecture
   </text>
 
   <!-- ══════════════════════════════════════════════════════
@@ -45,7 +45,7 @@
         fill="#1E40AF" filter="url(#shadow)"/>
   <text x="200" y="71" text-anchor="middle"
         font-family="'Arial', 'Helvetica Neue', sans-serif"
-        font-size="13" font-weight="bold" fill="white">SEABADNet-Micro</text>
+        font-size="13" font-weight="bold" fill="white">DrongoNet-Micro</text>
   <text x="200" y="86" text-anchor="middle"
         font-family="'Arial', 'Helvetica Neue', sans-serif"
         font-size="8" fill="#BFDBFE">919 params · 6.56 kB (INT8) · AUC 0.9743 ± 0.0011</text>
@@ -58,7 +58,7 @@
         fill="#991B1B" filter="url(#shadow)"/>
   <text x="600" y="71" text-anchor="middle"
         font-family="'Arial', 'Helvetica Neue', sans-serif"
-        font-size="13" font-weight="bold" fill="white">SEABADNet-Edge</text>
+        font-size="13" font-weight="bold" fill="white">DrongoNet-Edge</text>
   <text x="600" y="86" text-anchor="middle"
         font-family="'Arial', 'Helvetica Neue', sans-serif"
         font-size="8" fill="#FECACA">25,890 params · 33.06 kB (INT8) · AUC 0.9992 ± 0.0002</text>

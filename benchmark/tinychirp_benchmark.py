@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-tinychirp_benchmark.py — Retrain the SEABADNet variants from scratch on the
+tinychirp_benchmark.py — Retrain the DrongoNet variants from scratch on the
 TinyChirp dataset and report test-set ROC-AUC, parameter count, and INT8 size.
 
-Counterpart of dcase_benchmark.py — the "is SEABADNet overfit to SEABAD?"
+Counterpart of dcase_benchmark.py — the "is DrongoNet overfit to SEABAD?"
 question, this time against TinyChirp's published train/val/test splits.
 
   train : TinyChirp/training
@@ -44,7 +44,7 @@ TARGET_LEN = SR * 3                       # 3 s @ 16 kHz = 48000 samples
 HOP, FRAMES = 256, 184
 FMIN, FMAX = 0.0, SR / 2.0                # TinyChirp config: full band, fmin=0
 
-SEABADNET_DIR = Path(__file__).resolve().parent.parent / 'develop'
+DRONGONET_DIR = Path(__file__).resolve().parent.parent / 'develop'
 
 # (script, build_fn, n_mels, n_fft)
 VARIANTS = {
@@ -124,10 +124,10 @@ def load_build_fn(variant):
 
     The dev scripts early-parse sys.argv at import time, so we stub argv first."""
     script, fn_name, _, _ = VARIANTS[variant]
-    if str(SEABADNET_DIR) not in sys.path:
-        sys.path.insert(0, str(SEABADNET_DIR))
-    spec = importlib.util.spec_from_file_location(f'seabadnet_{variant}',
-                                                  SEABADNET_DIR / script)
+    if str(DRONGONET_DIR) not in sys.path:
+        sys.path.insert(0, str(DRONGONET_DIR))
+    spec = importlib.util.spec_from_file_location(f'drongonet_{variant}',
+                                                  DRONGONET_DIR / script)
     mod = importlib.util.module_from_spec(spec)
     saved_argv = sys.argv
     sys.argv = [sys.argv[0]]
@@ -202,7 +202,7 @@ def tflite_eval(tflite_bytes, X, y):
 
 def main():
     ap = argparse.ArgumentParser(
-        description='TinyChirp benchmark for SEABADNet variants (nano/micro/edge)')
+        description='TinyChirp benchmark for DrongoNet variants (nano/micro/edge)')
     ap.add_argument('--variant', choices=list(VARIANTS), default='micro')
     ap.add_argument('--seeds', type=int, nargs='+', default=[42, 100, 786])
     ap.add_argument('--epochs', type=int, default=50)
@@ -277,7 +277,7 @@ def main():
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / 'model_int8.tflite').write_bytes(tflite_bytes)
         (out_dir / 'summary.json').write_text(json.dumps({
-            'tag': f'SEABADNet-{args.variant}_TinyChirp',
+            'tag': f'DrongoNet-{args.variant}_TinyChirp',
             'protocol': 'train=TinyChirp/training, val=TinyChirp/validation, test=TinyChirp/testing',
             'variant': args.variant,
             'arch_fn': fn_name,
@@ -295,7 +295,7 @@ def main():
               f'acc={acc_int8:.4f}  size={size_kb:.2f}KB  lat={lat_ms:.3f}ms')
 
     print('\n' + '=' * 72)
-    print(f'SEABADNet-{args.variant} | TinyChirp | {len(args.seeds)} seed(s)')
+    print(f'DrongoNet-{args.variant} | TinyChirp | {len(args.seeds)} seed(s)')
     print(f'  params           = {params}')
     print(f'  test AUC f32     = {np.mean(aucs_f32):.4f} +/- {np.std(aucs_f32):.4f}   '
           f'per-seed {[round(a, 4) for a in aucs_f32]}')

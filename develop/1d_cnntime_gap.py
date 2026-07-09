@@ -784,7 +784,9 @@ def main():
     config = TrainingConfig()
     config.random_seed = args.random_seed
     config.dataset_path = args.dataset_path
-    config.output_dir = f'{RESULTS_BASE}/1d_cnntime_gap_r{config.random_seed}'
+    platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+    config.output_dir = f'{RESULTS_BASE}/1d_cnntime_gap_r{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -804,7 +806,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("SEABADNet CNN-Time Training")
+    logger.info("DrongoNet CNN-Time Training")
     logger.info("=" * 60)
     logger.info("System Information:")
     logger.info(f"  Platform: {system_info['platform']} {system_info['machine']}")
@@ -983,7 +985,7 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("SEABADNet CNN-Time Training Results Summary\n")
+            f.write("DrongoNet CNN-Time Training Results Summary\n")
             f.write("=" * 60 + "\n\n")
             f.write(f"Float32 Model AUC: {float_auc:.4f}\n")
             f.write(f"TFLite int8 Model:\n")

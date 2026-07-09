@@ -2,7 +2,7 @@
 """
 compile_paper_tables.py
 Reads all per-seed threshold sweep tables and outputs ready-to-paste LaTeX rows
-and narrative values for zabidi2026seabadnet_model.tex.
+and narrative values for zabidi2026drongonet_model.tex.
 """
 import numpy as np
 from pathlib import Path

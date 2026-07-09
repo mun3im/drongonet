@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-train_edge.py — SEABADNet-Edge
-Reference model for SBC deployment (33.06 KB INT8, 25,890 params, AUC 0.9988 ± 0.0001).
-Targets Raspberry Pi, Portenta X8. Meets ≥0.99 recall; operating threshold is
-calibrated per seed on the target platform (τ=0.60/s42, τ=0.55/s100, τ=0.45/s786
-on Linux x86-64 INT8; re-calibrate if deploying on ARM).
+train_edge.py — DrongoNet-Edge
+Reference model for SBC deployment (33.06 KB INT8, 25,890 params, AUC 0.9990 ± 0.0002).
+Targets Raspberry Pi, Portenta X8. Meets ≥0.99 recall at a single τ=0.50,
+uniform across all three seeds on Linux x86-64 INT8.
 
 Locked configuration (do not change):
   n_mels=80, n_fft=1024, focal loss, GAP, BatchNorm
@@ -18,7 +17,7 @@ Usage:
 Optional:
     --random_seed  INT   (default 42)
 
-Results land in results/seabadnet_edge_s{seed}/ (set by the underlying script).
+Results land in results/drongonet_edge_s{seed}/ (set by the underlying script).
 """
 
 import sys
@@ -31,7 +30,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train SEABADNet-Edge (locked config, 33.06 KB INT8, ≥0.99 recall)"
+        description="Train DrongoNet-Edge (locked config, 33.06 KB INT8, ≥0.99 recall)"
     )
     parser.add_argument('--dataset-path', required=True,
                         help='Path to the SEABAD dataset root')

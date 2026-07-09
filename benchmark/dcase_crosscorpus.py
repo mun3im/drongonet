@@ -2,7 +2,7 @@
 """
 dcase_crosscorpus.py -- official DCASE-2018 cross-corpus task with optional augmentation.
 
-Trains SEABADNet on ff1010bird + warblrb10k (the DCASE-2018 dev set, ~15.7k clips), then
+Trains DrongoNet on ff1010bird + warblrb10k (the DCASE-2018 dev set, ~15.7k clips), then
 evaluates ZERO-SHOT on the held-out BirdVox-DCASE-20k corpus (20k clips), with NO domain
 adaptation. Reports clip-level AUC for both the in-domain val split (sanity check) and
 the cross-corpus BirdVox test.
@@ -35,6 +35,17 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dcase_benchmark as D
 from augmentations import make_augmenter
+
+
+def predict_pos(model, X, batch=512):
+    """Positive-class prob over X, fed in small CPU->GPU batches.
+
+    Avoids copying the full window array (≈7 GB at n_mels=80) to the GPU in one
+    EagerConst, which OOMs an 11 GB card; also dodges tf.data's 2 GB constant limit."""
+    out = np.empty(len(X), dtype=np.float32)
+    for i in range(0, len(X), batch):
+        out[i:i + batch] = model.predict_on_batch(X[i:i + batch])[:, 1]
+    return out
 
 
 def build_disjoint(n_mels):
@@ -112,12 +123,12 @@ def main():
 
         # ---- in-domain val sanity (clip-level MAX agg over windows) ----
         # all val windows -> probs -> per-clip max
-        va_win_probs = model.predict(Xva, batch_size=512, verbose=0)[:, 1]
+        va_win_probs = predict_pos(model, Xva)
         va_clip_probs = va_win_probs.reshape(len(va_ids), D.WINDOWS_PER_CLIP).max(axis=1)
         in_auc = float(roc_auc_score(ytr_all[va_ids], va_clip_probs))
 
         # ---- cross-corpus zero-shot on BirdVox ----
-        te_win_probs = model.predict(Xte_all, batch_size=512, verbose=0)[:, 1]
+        te_win_probs = predict_pos(model, Xte_all)
         te_clip_probs = te_win_probs.reshape(n_test_clips, D.WINDOWS_PER_CLIP).max(axis=1)
         cx_auc = float(roc_auc_score(yte_all, te_clip_probs))
 
@@ -128,7 +139,7 @@ def main():
         out_dir = Path(f'results4arxiv/dcase_crosscorpus_{args.variant}_{args.aug}_r{seed}')
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / 'summary.json').write_text(json.dumps({
-            'tag': f'SEABADNet-{args.variant}_DCASE2018_crosscorpus_{args.aug}',
+            'tag': f'DrongoNet-{args.variant}_DCASE2018_crosscorpus_{args.aug}',
             'protocol': 'train ff1010bird+warblrb10k -> test BirdVox-DCASE-20k (zero-shot)',
             'variant': args.variant, 'n_mels': n_mels, 'seed': seed, 'aug': args.aug,
             'windows_per_clip': D.WINDOWS_PER_CLIP,
@@ -142,7 +153,7 @@ def main():
     print('\n' + '=' * 72)
     cx = np.array([r[2] for r in results])
     ind = np.array([r[1] for r in results])
-    print(f'SEABADNet-{args.variant} | aug={args.aug} | DCASE-2018 cross-corpus (train dev -> test BirdVox)')
+    print(f'DrongoNet-{args.variant} | aug={args.aug} | DCASE-2018 cross-corpus (train dev -> test BirdVox)')
     print(f'  in-domain val   AUC = {ind.mean():.4f} +/- {ind.std():.4f}   per-seed {[round(x,4) for x in ind]}')
     print(f'  cross-corpus    AUC = {cx.mean():.4f} +/- {cx.std():.4f}   per-seed {[round(x,4) for x in cx]}')
     print('=' * 72)

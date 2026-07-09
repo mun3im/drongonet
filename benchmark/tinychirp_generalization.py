@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-tinychirp_generalization.py — Train SEABADNet FROM SCRATCH on the TinyChirp single-species
+tinychirp_generalization.py — Train DrongoNet FROM SCRATCH on the TinyChirp single-species
 Corn Bunting dataset to demonstrate cross-dataset generalization (not overfit to SEABAD).
 
   dataset : /Volumes/Evo/TinyChirp/{training,validation,testing}/{target,non_target}
@@ -12,7 +12,7 @@ Each variant uses its deployed architecture + mel config:
   Micro : 6b_micro_final, build_cnn_mel_low_power_optimized (919 params),  n_fft=1024, n_mels=16
   Edge  : 6c_edge_final, build_deeper_gap (25,890 params),                n_fft=1024, n_mels=80
 
-SEABADNet mel preprocessing: n_fft, n_mels as per config above; fmin=100, fmax=8000,
+DrongoNet mel preprocessing: n_fft, n_mels as per config above; fmin=100, fmax=8000,
 center=False, 184 frames, per-sample [0,1] normalization.
 
 Results -> results4arxiv/tinychirp_benchmark_{variant}_r{seed}/summary.json
@@ -36,7 +36,7 @@ TINYCHIRP = Path('/Volumes/Evo/TinyChirp')
 SR, CLIP, HOP, FRAMES = 16000, 48000, 256, 184
 FMIN, FMAX = 100.0, 8000.0
 
-SEABADNET_DIR = Path(__file__).resolve().parent.parent / 'develop'
+DRONGONET_DIR = Path(__file__).resolve().parent.parent / 'develop'
 VARIANTS = {
     # variant : (script, build_fn, n_fft, n_mels)
     'nano':  ('6a_nano_final.py',  'build_cnn_mel_low_power_optimized', 512,  16),
@@ -82,9 +82,9 @@ def build_split_mels(split, n_fft, n_mels):
 
 
 def load_build_fn(script, fn_name):
-    if str(SEABADNET_DIR) not in sys.path:
-        sys.path.insert(0, str(SEABADNET_DIR))
-    spec = importlib.util.spec_from_file_location('seabadnet_mod', SEABADNET_DIR / script)
+    if str(DRONGONET_DIR) not in sys.path:
+        sys.path.insert(0, str(DRONGONET_DIR))
+    spec = importlib.util.spec_from_file_location('drongonet_mod', DRONGONET_DIR / script)
     mod = importlib.util.module_from_spec(spec)
     saved = sys.argv
     sys.argv = [saved[0]]                 # dev scripts early-parse sys.argv at import
@@ -138,7 +138,7 @@ def run_variant(variant, seeds, epochs, batch_size):
         out_dir = Path(f'results4arxiv/tinychirp_benchmark_{variant}_r{seed}')
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / 'summary.json').write_text(json.dumps({
-            'tag': f'SEABADNet-{variant}_TinyChirp_Corn-Bunting',
+            'tag': f'DrongoNet-{variant}_TinyChirp_Corn-Bunting',
             'protocol': 'train=TinyChirp/training, test=TinyChirp/testing (Corn Bunting)',
             'variant': variant, 'n_fft': n_fft, 'n_mels': n_mels, 'seed': seed,
             'test_auc': auc, 'params': params,
@@ -152,7 +152,7 @@ def run_variant(variant, seeds, epochs, batch_size):
 
 
 def main():
-    ap = argparse.ArgumentParser(description='SEABADNet generalization on TinyChirp')
+    ap = argparse.ArgumentParser(description='DrongoNet generalization on TinyChirp')
     ap.add_argument('--variant', choices=list(VARIANTS), default='micro')
     ap.add_argument('--seeds', type=int, nargs='+', default=[42, 100, 786])
     ap.add_argument('--epochs', type=int, default=50)
@@ -160,13 +160,13 @@ def main():
     args = ap.parse_args()
 
     print('\n' + '=' * 64)
-    print(f'SEABADNet-{args.variant} | TinyChirp Corn Bunting | seeds {args.seeds}')
+    print(f'DrongoNet-{args.variant} | TinyChirp Corn Bunting | seeds {args.seeds}')
     print('=' * 64)
 
     result = run_variant(args.variant, args.seeds, args.epochs, args.batch_size)
 
     print('\n' + '=' * 64)
-    print(f'SEABADNet-{args.variant} | TinyChirp Corn Bunting | test AUC (seeds {args.seeds})')
+    print(f'DrongoNet-{args.variant} | TinyChirp Corn Bunting | test AUC (seeds {args.seeds})')
     print(f"  {result['variant']:6} ({result['params']:6} params): {result['auc_mean']:.4f} +/- {result['auc_std']:.4f}"
           f"   {[round(a,4) for a in result['seed_aucs']]}")
     print(f'  saved -> results4arxiv/tinychirp_benchmark_{result["variant"]}_r*/summary.json')

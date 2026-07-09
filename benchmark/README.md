@@ -1,6 +1,6 @@
 # benchmark/
 
-Cross-dataset benchmarks for SEABADNet generalization. All scripts retrain fresh models from scratch — no SEABAD weights transferred.
+Cross-dataset benchmarks for DrongoNet generalization. All scripts retrain fresh models from scratch — no SEABAD weights transferred.
 
 ## Scripts
 
@@ -86,7 +86,7 @@ PY
 
 ## TinyChirp Corn Bunting — `tinychirp_generalization.py` / `tinychirp_benchmark.py`
 
-Retrains SEABADNet on TinyChirp's single-species Corn Bunting dataset (different region, single species, native 3 s clips). Uses published train/val/test splits.
+Retrains DrongoNet on TinyChirp's single-species Corn Bunting dataset (different region, single species, native 3 s clips). Uses published train/val/test splits.
 
 - `tinychirp_generalization.py` — paper-reported version (f32 AUC, no INT8 eval)
 - `tinychirp_benchmark.py` — extended version with INT8 quantization, mel caching, per-seed TFLite eval
@@ -123,13 +123,49 @@ Micro matches TinyChirp's published CNN-Mel baseline (0.9985) at 28× fewer para
 
 ### DCASE-2018 (secondary evidence — different clip length, different corpora)
 
-| Variant | In-domain AUC | Cross-corpus → BirdVox | Cross-corpus + aug (TBD) |
-|---------|--------------|------------------------|--------------------------|
-| Nano | 0.821 ± 0.002 | 0.446 (chance) | — |
-| Micro | 0.847 ± 0.011 | 0.488 (chance) | — |
-| Edge | 0.938 ± 0.010 | 0.646 | — |
-| **bulbul** (ref, 373k params) | ~0.96 (5-fold CV) | 0.887 / 0.855 (with/without aug) | — |
+| Variant | In-domain AUC | Cross-corpus → BirdVox (no aug) |
+|---------|--------------|---------------------------------|
+| Nano | 0.821 ± 0.002 | 0.446 (chance) |
+| Micro | 0.847 ± 0.011 | 0.488 (chance) |
+| Edge | 0.938 ± 0.010 | 0.646 |
+| **bulbul** (ref, 373k params) | ~0.96 (5-fold CV) | 0.887 / 0.855 (with/without aug) |
 
 In-domain seeds: 123/456/789 (bulbul-matched). Cross-corpus seeds: 42/100/786.
 
 Edge (80-mel) is bulbul's architectural match: 0.938 vs bulbul's 0.96 at **14× fewer parameters and no augmentation**. Cross-corpus collapse is the same train↔test domain gap bulbul documents (Pearson r=0.40), amplified by 14–489× fewer parameters.
+
+### Cross-corpus augmentation sweep (does aug close the gap at MCU scale?)
+
+**Single protocol** (`dcase_crosscorpus.py`): train ff1010+warblr → zero-shot test on
+BirdVox-DCASE-20k, 10% held-out val, 50 epochs, 6-window MAX aggregation, seeds 42/100/786.
+All numbers below are *within this protocol* — do **not** compare against the bulbul-match
+DCASE table above (different split/seeds/training config; e.g. that table's Micro no-aug=0.488,
+this protocol's Micro no-aug=0.527).
+
+Micro has the full augmentation ladder; Edge/Nano have the no-aug baseline and the strongest
+(`full`) recipe, so per-variant deltas are now valid within this protocol (P0 baselines completed
+2026-06-29).
+
+| Variant | Params | none | mixup | specaug | full | Δ(full−none) |
+|---------|--------|------|-------|---------|------|--------------|
+| Nano  | 763    | 0.4904 ± 0.0485 | 0.4809 ± 0.0207 | 0.4476 ± 0.0340 | 0.5622 ± 0.0399 | **+7.2 pp** |
+| Micro | 919    | 0.5271 ± 0.0193 | 0.5250 ± 0.0317 | 0.4855 ± 0.0370 | 0.4587 ± 0.0341 | **−6.8 pp** |
+| Edge  | 25,890 | **0.6799 ± 0.0158** | 0.6513 ± 0.0168 | 0.6516 ± 0.0225 | 0.5909 ± 0.0346 | **−8.9 pp** |
+
+Full ladder now complete for all three (P0 mixup/specaug cells for Nano/Edge done 2026-06-30).
+For Edge **every** rung is below the no-aug baseline (0.680) — the regression is recipe-robust,
+not a `full`-stack artefact.
+
+**Verdict (H3):** Augmentation helps **only the smallest model** (Nano +7.2 pp) and *regresses*
+both Micro (−6.8 pp) and Edge (−8.9 pp). For Micro, no recipe beats the no-aug baseline (0.527):
+mixup is flat (0.525), specaug and full are below (0.486, 0.459), and in-domain val AUC drops
+0.865→0.811 under `full` — the 919-param model trades training-fit for augmentation it cannot
+exploit. Without augmentation, cross-corpus transfer rises monotonically with capacity
+(Nano 0.490 < Micro 0.527 < **Edge 0.680**): the un-augmented Edge is the best transfer model and
+comes closest to the ≥0.70 "gap closed" threshold, and `full` *erodes* it. **Capacity, not
+augmentation, is the operative variable.** In contrast to bulbul (augmentation +3 pp at 373k
+params), across our tested range — an order of magnitude below that capacity — stacked mel-domain
+augmentation regresses every model above the smallest. This *strengthens* the in-region deployment
+scope: at sub-1 kB budgets, target-domain retraining (not augmentation) is the remedy. Written up
+in paper §discussion (`tab:aug_sweep`). See
+`DCASE_AUGMENTATION_PLAN.md` (Paper3_SEABADnet_ApplAcoust) for full hypotheses.

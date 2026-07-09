@@ -1,13 +1,13 @@
 # pre-ablation/
 
-Phase 0 scripts: the **starting point** for the SEABADNet ablation chain. Two related but
+Phase 0 scripts: the **starting point** for the DrongoNet ablation chain. Two related but
 distinct experiments live here.
 
 1. **Native TinyChirp baselines** (`0a`–`0e`) — Reproduce the five published TinyChirp
    architectures on the TinyChirp Corn-Bunting dataset to anchor "where we started from".
 2. **Zero-shot SEABAD** (`0f`–`0j`) — Take each of those Corn-Bunting-trained models *as-is*
    (no retraining, no fine-tuning) and evaluate on the SEABAD test set. This quantifies the
-   train-test domain gap that motivates SEABADNet.
+   train-test domain gap that motivates DrongoNet.
 
 Phase 1 onwards lives in **`develop/`** — see `develop/README.md`.
 
@@ -18,7 +18,7 @@ and writes the float32 + INT8 metrics to `results4arxiv/{script}_s{seed}/`.
 
 | Script | Architecture |
 |---|---|
-| `0a_tinychirp_cnnmel.py` | CNN-Mel — primary baseline (the architecture SEABADNet derives from) |
+| `0a_tinychirp_cnnmel.py` | CNN-Mel — primary baseline (the architecture DrongoNet derives from) |
 | `0b_tinychirp_cnntime.py` | CNN-Time (raw waveform 1D conv) |
 | `0c_tinychirp_transformer.py` | Transformer-Time |
 | `0d_tinychirp_squeezenettime.py` | SqueezeNet-Time |

@@ -29,13 +29,13 @@ import numpy as np
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
 
-MICRO_TAU   = 0.30   # post-timeshift-fix locked threshold (was 0.35)
-EDGE_TAU    = 0.50   # post-timeshift-fix: single threshold, uniform across all 3 seeds (was per-seed mean 0.40)
-MICRO_SEEDS = [42, 100, 786]
+MICRO_TAU   = 0.35   # 5-seed mean-basis operating threshold
+EDGE_TAU    = 0.425  # 5-seed mean-basis: single threshold clearing >=0.99 mean recall
+MICRO_SEEDS = [42, 100, 786, 7, 1234]
 EDGE_SEED   = 42
 
-SEABADNET_DIR = Path(__file__).parent.parent
-RESULTS_DIR   = SEABADNET_DIR / 'results4arxiv'
+DRONGONET_DIR = Path(__file__).parent.parent
+RESULTS_DIR   = DRONGONET_DIR / 'results4arxiv'
 OUT_DEFAULT   = Path(__file__).parent / 'fig6_data.npz'
 
 
@@ -85,7 +85,7 @@ def extract(micro_cache: Path, edge_cache: Path, results_dir: Path):
 
     micro_probs_per_seed = []
     for seed in MICRO_SEEDS:
-        path = results_dir / f'6b_micro_final_fft1024_m16_s{seed}' / 'model.tflite'
+        path = results_dir / f'6b_micro_final_fft1024_m16_s{seed}' / 'model_int8.tflite'
         log.info(f"Running Micro seed {seed}: {path}")
         probs, ms = run_tflite_inference(path, micro_mels)
         micro_probs_per_seed.append(probs)

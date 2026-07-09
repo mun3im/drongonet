@@ -1,4 +1,4 @@
-# SEABADNet-Edge Inference on Raspberry Pi
+# DrongoNet-Edge Inference on Raspberry Pi
 # Lightweight dependencies for TFLite INT8 inference only
 
 # Audio processing

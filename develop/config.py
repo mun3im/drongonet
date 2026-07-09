@@ -1,5 +1,5 @@
 """
-config.py — canonical path configuration for SEABADNet experiments.
+config.py — canonical path configuration for DrongoNet experiments.
 All ablation scripts import from here. Edit this file to change locations.
 """
 

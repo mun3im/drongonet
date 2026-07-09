@@ -137,7 +137,7 @@ def build_cnn_time_model(
     Note: Huang et al. apply global average pooling here (Table II: "Average
     Pooling 8x12000 -> 8x1"), keeping CNN-Time tiny (~0.8K params). Their CNN-Mel
     instead uses Reshape+Dense over 3168 features (~25.6K params), which is the
-    parameter-heavy classifier SEABADNet replaces with GAP.
+    parameter-heavy classifier DrongoNet replaces with GAP.
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 

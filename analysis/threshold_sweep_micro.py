@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-threshold_sweep_micro.py: Threshold sweep for SEABADNet-Micro
+threshold_sweep_micro.py: Threshold sweep for DrongoNet-Micro
 
 Loads the saved INT8 TFLite model from each of the three validation seeds
 (42, 100, 786) of 6b_micro_improved_fft1024_m16, runs inference on the
@@ -141,7 +141,7 @@ def find_locked_tau(mean_rows: list):
 
 def write_per_seed_table(rows: list, out_path: Path, auc: float, seed: int):
     lines = [
-        f"SEABADNet-Micro — Threshold Sweep  (seed={seed})",
+        f"DrongoNet-Micro — Threshold Sweep  (seed={seed})",
         f"Target recall : ≥{TARGET_RECALL}",
         f"AUC           : {auc:.4f}",
         "",
@@ -161,7 +161,7 @@ def write_per_seed_table(rows: list, out_path: Path, auc: float, seed: int):
 def write_combined_table(all_rows: dict, mean_rows: list, std_rows: list,
                          locked: dict, out_path: Path, aucs: list):
     lines = [
-        "SEABADNet-Micro — Combined Threshold Sweep (seeds 42 / 100 / 786)",
+        "DrongoNet-Micro — Combined Threshold Sweep (seeds 42 / 100 / 786)",
         f"Target recall : ≥{TARGET_RECALL}",
         f"AUC           : {np.mean(aucs):.4f} ± {np.std(aucs):.4f}",
         "",
@@ -193,7 +193,7 @@ def write_combined_table(all_rows: dict, mean_rows: list, std_rows: list,
 def write_locked(locked: dict, locked_std: dict, out_path: Path,
                  aucs: list, avg_ms_list: list, size_kb: float):
     lines = [
-        "SEABADNet-Micro — Locked Threshold",
+        "DrongoNet-Micro — Locked Threshold",
         "=" * 40,
         f"tau           = {locked['tau']:.2f}",
         f"recall        = {locked['recall']:.4f} ± {locked_std['recall']:.4f}",
@@ -229,7 +229,7 @@ def plot_per_seed_pr(probabilities: np.ndarray, true_labels: np.ndarray,
                 label=f'Target recall ≥{TARGET_RECALL}')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(f'SEABADNet-Micro — PR curve (INT8, seed={seed})')
+    plt.title(f'DrongoNet-Micro — PR curve (INT8, seed={seed})')
     plt.legend(fontsize=8)
     plt.tight_layout()
     plt.savefig(out_path, dpi=150)
@@ -251,7 +251,7 @@ def plot_combined_pr(all_probs: dict, true_labels: np.ndarray,
                 label=f'Target recall ≥{TARGET_RECALL}')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('SEABADNet-Micro — PR curves across seeds (INT8 TFLite)')
+    plt.title('DrongoNet-Micro — PR curves across seeds (INT8 TFLite)')
     plt.legend(fontsize=8)
     plt.tight_layout()
     plt.savefig(out_path, dpi=150)
@@ -264,7 +264,7 @@ def plot_combined_pr(all_probs: dict, true_labels: np.ndarray,
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description='Threshold sweep for SEABADNet-Micro (3 seeds)')
+    parser = argparse.ArgumentParser(description='Threshold sweep for DrongoNet-Micro (3 seeds)')
     parser.add_argument('--results-base', type=str, default='results',
                         help='Parent directory containing 6b_micro_improved_fft1024_m16_s* dirs')
     parser.add_argument('--cache-dir', type=str, default='/Volumes/Evo/cache_seabad_m16',
@@ -347,7 +347,7 @@ def main():
 
     print()
     print("=" * 55)
-    print("SEABADNet-Micro — locked values (mean ± std, 3 seeds)")
+    print("DrongoNet-Micro — locked values (mean ± std, 3 seeds)")
     print("=" * 55)
     print(f"  τ         = {locked['tau']:.2f}")
     print(f"  recall    = {locked['recall']:.4f} ± {locked_std['recall']:.4f}")

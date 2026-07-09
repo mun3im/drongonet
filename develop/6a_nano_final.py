@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-6a_nano_final.py: SEABADNet-Nano
+6a_nano_final.py: DrongoNet-Nano
 Smallest Micro variant (5.41 KB INT8, 763 params). Use when size matters
 more than hitting the 0.98 recall target. Superseded by 6b_micro_final
 for deployments that require ≥0.98 recall.
@@ -111,7 +111,7 @@ def parse_args():
                         choices=['LP', 'FE', 'Opt'],
                         help='Model version: LP (original), FE (with frequency emphasis), Opt (optimized)')
     parser.add_argument('--output-dir', type=str, default=None,
-                        help='Override output directory (default: results/seabadnet_nano_fft{n_fft}_m{n_mels}_s{seed})')
+                        help='Override output directory (default: results/drongonet_nano_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 
@@ -336,7 +336,7 @@ def analyze_frequency_weights(model, output_dir: Path):
 
 def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Nano base: ultra-lightweight Conv2D model.
+    DrongoNet-Nano base: ultra-lightweight Conv2D model.
     
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
@@ -355,7 +355,7 @@ def build_cnn_mel_low_power(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Nano with frequency emphasis.
+    DrongoNet-Nano with frequency emphasis.
     
     
     """
@@ -379,7 +379,7 @@ def build_cnn_mel_low_power_freq_emph(input_shape=(184, 16, 1), num_classes=2):
 
 def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
     """
-    SEABADNet-Nano (final): SeparableConv2D + frequency emphasis + GAP + focal loss.
+    DrongoNet-Nano (final): SeparableConv2D + frequency emphasis + GAP + focal loss.
     
     
     """
@@ -1056,7 +1056,7 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("SEABADNET-NANO TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-NANO TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
 
         f.write("Model Information:\n")
@@ -1147,7 +1147,9 @@ def main():
     if args.output_dir:
         config.output_dir = args.output_dir
     else:
-        config.output_dir = f'results/seabadnet_nano_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}'
+        platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
+
+        config.output_dir = f'results/drongonet_nano_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     # Set random seeds
     tf.random.set_seed(config.random_seed)
@@ -1332,7 +1334,7 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("SEABADNET-NANO RESULTS SUMMARY\n")
+            f.write("DRONGONET-NANO RESULTS SUMMARY\n")
             f.write("=" * 60 + "\n\n")
             f.write(f"Model Version: {args.version}\n")
             f.write(f"n_mels: {config.n_mels}\n")
@@ -1364,7 +1366,7 @@ def main():
 
         logger.info("=" * 60)
         logger.info("RESULTS SUMMARY:")
-        logger.info(f"  Model: SEABADNet-Nano (version={args.version})")
+        logger.info(f"  Model: DrongoNet-Nano (version={args.version})")
         logger.info(f"  Float32 AUC: {float_auc:.4f}")
         logger.info(f"  TFLite AUC: {tflite_auc:.4f}")
         logger.info(f"  TFLite Size: {tflite_size_kb:.2f} KB")

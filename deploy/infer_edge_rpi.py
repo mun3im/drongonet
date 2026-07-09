@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-infer_edge_rpi.py — SEABADNet-Edge inference on Raspberry Pi.
+infer_edge_rpi.py — DrongoNet-Edge inference on Raspberry Pi.
 
-Evaluates pre-trained SEABADNet-Edge (33.06 KB INT8) on SEABAD test set.
+Evaluates pre-trained DrongoNet-Edge (33.06 KB INT8) on SEABAD test set.
 Lightweight deployment: loads TFLite model and SEABAD dataset only.
 
 Usage:
     python deploy/infer_edge_rpi.py \\
         --dataset-path /path/to/seabad \\
-        --model seabadnet_edge_int8.tflite \\
-        --threshold 0.60
+        --model drongonet_edge_int8.tflite \\
+        --threshold 0.50
 
 Output:
     Prints AUC, accuracy, recall, precision, F1, and per-sample predictions.
@@ -32,8 +32,8 @@ from sklearn.metrics import (
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class SEABADNetInference:
-    """TFLite inference engine for SEABADNet-Edge."""
+class DrongoNetInference:
+    """TFLite inference engine for DrongoNet-Edge."""
 
     def __init__(self, model_path: str, n_mels: int = 80, n_fft: int = 1024):
         """Initialize TFLite interpreter and mel parameters."""
@@ -73,8 +73,7 @@ class SEABADNetInference:
         return mel_spec
 
     def predict(self, mel_spec: np.ndarray) -> float:
-        """Run inference on mel spectrogram."""
-        # Add batch dimension
+        """Run inference on mel spectrogram; returns bird-positive probability in [0, 1]."""
         input_data = np.expand_dims(mel_spec, axis=0).astype(
             self.input_details[0]['dtype']
         )
@@ -82,9 +81,11 @@ class SEABADNetInference:
         self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
         self.interpreter.invoke()
 
+        # Output is [batch_size, 2] int8 (2-class softmax: [no_bird, bird]).
+        # Dequantize column 1 (bird class) using the model's output scale/zero-point.
         output_data = self.interpreter.get_tensor(self.output_details[0]['index'])
-        # Output is [batch_size, 1], extract probability for positive class
-        return float(output_data[0, 0])
+        scale, zero_point = self.output_details[0]['quantization']
+        return float(scale * (int(output_data[0, 1]) - zero_point))
 
 
 def load_seabad_test_set(dataset_path: str) -> Tuple[List[np.ndarray], List[int], List[str]]:
@@ -143,14 +144,14 @@ def load_seabad_test_set(dataset_path: str) -> Tuple[List[np.ndarray], List[int]
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SEABADNet-Edge inference on Raspberry Pi"
+        description="DrongoNet-Edge inference on Raspberry Pi"
     )
     parser.add_argument('--dataset-path', required=True,
                         help='Path to SEABAD dataset root')
-    parser.add_argument('--model', default='deploy/seabadnet_edge_int8.tflite',
-                        help='Path to TFLite model (default: deploy/seabadnet_edge_int8.tflite)')
-    parser.add_argument('--threshold', type=float, default=0.60,
-                        help='Decision threshold for binary classification (default: 0.60)')
+    parser.add_argument('--model', default='deploy/drongonet_edge_int8.tflite',
+                        help='Path to TFLite model (default: deploy/drongonet_edge_int8.tflite)')
+    parser.add_argument('--threshold', type=float, default=0.50,
+                        help='Decision threshold for binary classification (default: 0.50)')
     parser.add_argument('--output', default=None,
                         help='Output CSV file for results (optional)')
 
@@ -161,7 +162,7 @@ def main():
         logger.error(f"Model not found: {args.model}")
         sys.exit(1)
 
-    engine = SEABADNetInference(args.model)
+    engine = DrongoNetInference(args.model)
 
     # Load test set
     try:
@@ -204,9 +205,9 @@ def main():
 
     # Print results
     print("\n" + "=" * 70)
-    print("SEABADNet-Edge Evaluation Results")
+    print("DrongoNet-Edge Evaluation Results")
     print("=" * 70)
-    print(f"Model:          seabadnet_edge_int8.tflite")
+    print(f"Model:          drongonet_edge_int8.tflite")
     print(f"Dataset:        SEABAD test set ({len(audio_list)} samples)")
     print(f"Threshold (τ):  {args.threshold}")
     print("-" * 70)

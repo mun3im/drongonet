@@ -1,8 +1,8 @@
 # deploy/
 
-End-user artefacts for SEABADNet: pre-trained INT8 TFLite models, training wrappers with locked configs, and a firmware conversion tool.
+End-user artefacts for DrongoNet: pre-trained INT8 TFLite models, training wrappers with locked configs, and a firmware conversion tool.
 
-> **🟢 NEW: SEABADNet-Edge on Raspberry Pi!**  
+> **🟢 NEW: DrongoNet-Edge on Raspberry Pi!**  
 > For **SBC deployment** (Raspberry Pi 4/5, Pi Zero 2 W), see **[RASPBERRY_PI.md](RASPBERRY_PI.md)** for quick-start setup: download dataset from Zenodo → git clone → run inference.
 
 ## Dataset
@@ -45,9 +45,9 @@ TensorFlow Lite Micro and CMSIS-NN deployment on ARM Cortex-M.
 
 | File | Model | Size | τ | Recall | Seed |
 |---|---|---|---|---|---|
-| `seabadnet_nano_int8.tflite` | SEABADNet-Nano | 5.09 KB | — | — | 42 |
-| `seabadnet_micro_int8.tflite` | **SEABADNet-Micro** | 6.23 KB | 0.30 | ≥0.987 | 42 |
-| `seabadnet_edge_int8.tflite` | SEABADNet-Edge | 33.06 KB | 0.50 | ≥0.99 | 42 |
+| `drongonet_nano_int8.tflite` | DrongoNet-Nano | 5.09 KB | — | — | 42 |
+| `drongonet_micro_int8.tflite` | **DrongoNet-Micro** | 6.23 KB | 0.30 | ≥0.987 | 42 |
+| `drongonet_edge_int8.tflite` | DrongoNet-Edge | 33.06 KB | 0.50 | ≥0.99 | 42 |
 
 > **Output:** all three models emit a 2-class softmax (`[no_bird, bird]`) as int8.
 > Dequantize column 1 with the model's output `scale` and `zero_point`
@@ -63,23 +63,23 @@ TensorFlow Lite Micro and CMSIS-NN deployment on ARM Cortex-M.
 To retrain a model from scratch, only two arguments are required — all hyperparameters are locked:
 
 ```bash
-# SEABADNet-Nano  (5.09 KB INT8, no recall target)
+# DrongoNet-Nano  (5.09 KB INT8, no recall target)
 python deploy/train_nano.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft512_m16
 
-# SEABADNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
+# DrongoNet-Micro  (6.23 KB INT8, ≥0.987 recall @ τ=0.30)  ← primary model
 python deploy/train_micro.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m16
 
-# SEABADNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
+# DrongoNet-Edge   (33.06 KB INT8, ≥0.99 recall @ τ=0.50)
 python deploy/train_edge.py \
     --dataset-path /path/to/seabad \
     --cache-dir    /path/to/cache_fft1024_m80
 ```
 
-Optional: `--random_seed INT` (default: 42). Results land in `results/seabadnet_{model}_fft{n_fft}_m{n_mels}_s{seed}/`.
+Optional: `--random_seed INT` (default: 42). Results land in `results/seabadnet_{model}_fft{n_fft}_m{n_mels}_s{seed}/` (output-directory naming still reflects the pre-rename model name; not yet migrated to `drongonet_*`).
 
 ## convert_xxd.sh
 
@@ -89,13 +89,13 @@ Wraps `xxd -i` to produce an `alignas(8)` C array and matching header, ready to 
 bash deploy/convert_xxd.sh <model.tflite> <out_base> <symbol_prefix>
 ```
 
-**Example — SEABADNet-Micro:**
+**Example — DrongoNet-Micro:**
 
 ```bash
 bash deploy/convert_xxd.sh \
-    deploy/seabadnet_micro_int8.tflite \
-    src/seabadnet_micro_model_data \
-    g_seabadnet_model_data
+    deploy/drongonet_micro_int8.tflite \
+    src/drongonet_micro_model_data \
+    g_drongonet_model_data
 ```
 
-Produces `src/seabadnet_micro_model_data.h` and `.cc` with `alignas(8)` so the array satisfies TFLM's alignment requirement.
+Produces `src/drongonet_micro_model_data.h` and `.cc` with `alignas(8)` so the array satisfies TFLM's alignment requirement.

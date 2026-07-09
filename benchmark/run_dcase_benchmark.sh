@@ -1,14 +1,14 @@
 #!/bin/bash
-# run_dcase_benchmark.sh — SEABADNet on DCASE-2018 BAD (6x3s sliding-window, max-agg).
+# run_dcase_benchmark.sh — DrongoNet on DCASE-2018 BAD (6x3s sliding-window, max-agg).
 # All seeds for a variant run in one invocation (wav decode once; mels in RAM).
 set -u
-ROOT="/home/muneim/Dropbox/Conda/seabadnet"
+ROOT="/home/muneim/Dropbox/Conda/drongonet"
 cd "$ROOT"
 ENV=tf215_gpu
 LOG="benchmark_dcase_$(date +%Y%m%d_%H%M%S).log"
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 
-log "=== SEABADNet on DCASE-2018 (in-domain pool): nano+micro+edge, seeds 123/456/789 ==="
+log "=== DrongoNet on DCASE-2018 (in-domain pool): nano+micro+edge, seeds 123/456/789 ==="
 for v in nano micro edge; do
   log "[run] $v seeds 123 456 789"
   if conda run -n $ENV python benchmark/dcase_benchmark.py --variant "$v" --seeds 123 456 789 >> "$LOG" 2>&1; then
@@ -21,7 +21,7 @@ done
 log "=== Results ==="
 conda run -n $ENV python -c "
 import json, numpy as np
-print('\nSEABADNet on DCASE-2018 (in-domain pool, 10s clips, 6x3s sliding-window, clip-level MAX aggregation)')
+print('\nDrongoNet on DCASE-2018 (in-domain pool, 10s clips, 6x3s sliding-window, clip-level MAX aggregation)')
 print('variant      test AUC (mean ± std)    per-seed')
 for v in ['nano','micro','edge']:
     aucs=[]

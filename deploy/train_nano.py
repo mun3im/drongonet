@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-train_nano.py — SEABADNet-Nano
-Smallest variant (5.10 KB INT8, 763 params). No recall target; use when
+train_nano.py — DrongoNet-Nano
+Smallest variant (5.09 KB INT8, 763 params). No recall target; use when
 flash budget is the hard constraint.
 
 Locked configuration (do not change):
@@ -16,7 +16,7 @@ Usage:
 Optional:
     --random_seed  INT   (default 42)
 
-Results land in results/seabadnet_nano_s{seed}/ (set by the underlying script).
+Results land in results/drongonet_nano_s{seed}/ (set by the underlying script).
 """
 
 import sys
@@ -29,7 +29,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Train SEABADNet-Nano (locked config, 5.41 KB INT8)"
+        description="Train DrongoNet-Nano (locked config, 5.41 KB INT8)"
     )
     parser.add_argument('--dataset-path', required=True,
                         help='Path to the SEABAD dataset root')
