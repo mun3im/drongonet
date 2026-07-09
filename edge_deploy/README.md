@@ -234,7 +234,7 @@ loss = Focal Loss (α=0.25, γ=2.0)
 optimizer = Adam (lr=0.001)
 ```
 
-Results land in `results/seabadnet_edge_s{seed}/`.
+Results land in `results/drongonet_edge_s{seed}/`.
 
 ---
 

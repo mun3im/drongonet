@@ -79,7 +79,7 @@ python deploy/train_edge.py \
     --cache-dir    /path/to/cache_fft1024_m80
 ```
 
-Optional: `--random_seed INT` (default: 42). Results land in `results/seabadnet_{model}_fft{n_fft}_m{n_mels}_s{seed}/` (output-directory naming still reflects the pre-rename model name; not yet migrated to `drongonet_*`).
+Optional: `--random_seed INT` (default: 42). Results land in `results/drongonet_{model}_fft{n_fft}_m{n_mels}_s{seed}/`.
 
 ## convert_xxd.sh
 

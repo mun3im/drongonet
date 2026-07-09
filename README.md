@@ -47,7 +47,7 @@ python deploy/train_micro.py \
     --cache-dir    /path/to/cache_fft1024_m16
 ```
 
-Results land in `results/seabadnet_micro_fft1024_m16_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`. (Output-directory naming still reflects the pre-rename model name — internal training-script paths are not yet migrated to `drongonet_*`.)
+Results land in `results/drongonet_micro_fft1024_m16_s42/` and include float32 + INT8 TFLite evaluation, confusion matrix, ROC/PR curves, and a parseable `results_summary.txt`.
 
 ## Requirements
 

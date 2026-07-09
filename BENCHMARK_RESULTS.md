@@ -1,9 +1,9 @@
-# SEABADNet Cross-Dataset Benchmark Results — durable record
+# DrongoNet Cross-Dataset Benchmark Results — durable record
 
 _Saved 2026-06-22. Authoritative source: `results4arxiv/*/summary.json`. This file is a crash-safe
 snapshot; regenerate by reading those JSONs._
 
-Purpose: prove SEABADNet is **not overfit to SEABAD** and **adapts to other datasets / clip
+Purpose: prove DrongoNet is **not overfit to SEABAD** and **adapts to other datasets / clip
 lengths**. Compared against **bulbul** (Grill & Schlüter, EUSIPCO 2017), the BAD-challenge-winning
 CNN that inspired this work.
 
@@ -97,9 +97,9 @@ PDF: `/home/muneim/Dropbox/References/grill2017two.pdf` (Table I = arch). Paper-
 | sparrow | 309,843 | — | (companion model) |
 
 - Input: 80 mel, n_fft=1024 @ 22.05 kHz, log-mag, max-pool-over-time → single output. Closest to
-  **SEABADNet-Edge** (80 mel) → fair architectural head-to-head: 25,890 vs 373,169 = **14.4× smaller**.
+  **DrongoNet-Edge** (80 mel) → fair architectural head-to-head: 25,890 vs 373,169 = **14.4× smaller**.
 - bulbul hits 0.887 cross-corpus ONLY with heavy augmentation (cyclic time-shift, pitch-shift,
-  denoising); 0.855 without. SEABADNet uses no augmentation here.
+  denoising); 0.855 without. DrongoNet uses no augmentation here.
 - Param efficiency: Nano 763 (489× smaller), Micro 919 (406×), Edge 25,890 (14.4×).
 
 ---
@@ -129,12 +129,12 @@ In-domain column = bulbul-matched ff1010+warblr protocol (§2b), NOT the pooled 
 | System | Params | vs bulbul | In-domain AUC (dev) | Cross-corpus AUC |
 |--------|-------:|----------:|---------------------|------------------|
 | bulbul (2017) | 373,169 | 1× | ~0.96–0.97 (CV, +aug) | 0.887 / 0.855 no-aug |
-| SEABADNet-Edge (80 mel) | 25,890 | 14.4× smaller | 0.938 ± 0.010 (no aug) | 0.646 |
-| SEABADNet-Micro (16 mel) | 919 | 406× smaller | 0.847 ± 0.011 (no aug) | 0.488 |
-| SEABADNet-Nano (16 mel) | 763 | 489× smaller | 0.821 ± 0.002 (no aug) | 0.446 |
+| DrongoNet-Edge (80 mel) | 25,890 | 14.4× smaller | 0.938 ± 0.010 (no aug) | 0.646 |
+| DrongoNet-Micro (16 mel) | 919 | 406× smaller | 0.847 ± 0.011 (no aug) | 0.488 |
+| DrongoNet-Nano (16 mel) | 763 | 489× smaller | 0.821 ± 0.002 (no aug) | 0.446 |
 
 Window sweep (micro, dev): N=6 0.8465 / N=5 0.8333 / N=4 0.8301 (−0.013/−0.016 for 17%/33% fewer inferences).
-SEABADNet uses NO augmentation; bulbul uses cyclic time-shift+pitch-shift+denoising. In-domain gap ≈ capacity.
+DrongoNet uses NO augmentation; bulbul uses cyclic time-shift+pitch-shift+denoising. In-domain gap ≈ capacity.
 
 ---
 

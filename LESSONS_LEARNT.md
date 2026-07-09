@@ -1,12 +1,12 @@
 ---
 name: lessons-learnt
-description: Lessons learned from SEABADNet development and ablation experiments
+description: Lessons learned from DrongoNet development and ablation experiments
 metadata:
   type: reference
   date: 2026-06-22
 ---
 
-# Lessons Learnt from SEABADNet Development
+# Lessons Learnt from DrongoNet Development
 
 Captured from ablation studies, architecture exploration, and deployment research. These lessons apply to bird audio detection on resource-constrained hardware.
 
@@ -241,5 +241,5 @@ Dense(8) → Softmax
 ---
 
 **Last updated:** 2026-06-22  
-**Author:** SEABADNet development team  
+**Author:** DrongoNet development team  
 **Status:** Captured from 390+ ablation runs and deployment research

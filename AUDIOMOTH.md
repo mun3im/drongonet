@@ -9,7 +9,7 @@ metadata:
 
 ## Overview
 
-AudioMoth is deployed on the **Silicon Labs EFM32 Wonder Gecko (ARM Cortex-M4F)**, the most widely deployed Autonomous Recording Unit (ARU) platform. These specs determine the size and latency budgets for SEABADNet deployments.
+AudioMoth is deployed on the **Silicon Labs EFM32 Wonder Gecko (ARM Cortex-M4F)**, the most widely deployed Autonomous Recording Unit (ARU) platform. These specs determine the size and latency budgets for DrongoNet deployments.
 
 **Official Manufacturer Sources:**
 - [Open Acoustic Devices Datasheets](https://www.openacousticdevices.info/datasheets)
@@ -57,11 +57,11 @@ Comparison of detection algorithms on AudioMoth hardware. **Key insight:** Goert
 
 Goertzel's apparent efficiency is misleading. While its average current (11.87 mA) is competitive with ML methods, it produces 7× more false positives (0.63 hit rate), which dramatically increases SD card write energy. This demonstrates that ML-based detection achieves higher autonomy despite marginally higher per-detection overhead by drastically reducing false positives.
 
-## Implications for SEABADNet
+## Implications for DrongoNet
 
 - **Internal SRAM (32 KB) is the binding constraint** for AudioMoth deployment
-  - SEABADNet-Micro's tensor arena = ~23 KB measured (safe margin)
-  - SEABADNet-Edge requires SBC deployment (Raspberry Pi, Portenta X8)
+  - DrongoNet-Micro's tensor arena = ~23 KB measured (safe margin)
+  - DrongoNet-Edge requires SBC deployment (Raspberry Pi, Portenta X8)
   
 - **Clock speed (48 MHz) is 2.5–5× slower than desktop CPUs**
   - Latency targets: ≤1 ms for Micro, ≤2 ms for Edge

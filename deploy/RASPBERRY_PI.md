@@ -241,7 +241,7 @@ If you use DrongoNet-Edge in your research, please cite:
 
 ```bibtex
 @article{zabidi2026seabadnet,
-  title={SEABADNet: Efficient Bird Activity Detection on Embedded ARM Devices},
+  title={DrongoNet: Efficient Bird Activity Detection on Embedded ARM Devices},
   author={Zabidi, Mun3im and others},
   journal={IEEE IoT Journal},
   year={2026}
