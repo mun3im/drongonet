@@ -120,9 +120,9 @@ class TrainingConfig:
 def default_teacher_candidates():
     tag = 'macos' if platform.system() == 'Darwin' else 'linux'
     return [
-        f'results/seabadnet_edge_fft1024_m80_s42_{tag}/best_model.keras',
-        'results/seabadnet_edge_fft1024_m80_s42_linux/best_model.keras',
-        'results/seabadnet_edge_fft1024_m80_s42/best_model.keras',
+        f'results/drongonet_edge_fft1024_m80_s42_{tag}/best_model.keras',
+        'results/drongonet_edge_fft1024_m80_s42_linux/best_model.keras',
+        'results/drongonet_edge_fft1024_m80_s42/best_model.keras',
     ]
 
 
@@ -756,7 +756,7 @@ def main():
         teacher_cache = teacher_cache_dir_for(teacher, args.teacher_cache, config.n_fft)
         logger.info(f"Teacher cache: {teacher_cache}")
 
-        cache_key = Path(teacher_path).parent.name  # e.g. seabadnet_edge_..._s42_linux
+        cache_key = Path(teacher_path).parent.name  # e.g. drongonet_edge_..._s42_linux
         _, train_labels = load_cached_mels('train', config)
         _, val_labels = load_cached_mels('val', config)
 
