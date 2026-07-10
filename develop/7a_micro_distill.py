@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-8a_micro_distill.py: SEABADNet-Micro + knowledge distillation (Phase 5.5)
+7a_micro_distill.py: DrongoNet-Micro + knowledge distillation (Phase 7)
 
 Trains the EXACT locked 6b Micro architecture (FrequencyEmphasis → Conv2D(6,3×3)
 → MaxPool → Conv2D(12,3×3) → Conv2D(12,1×1) → GAP → Dropout(0.1) → Dense(2);
@@ -10,7 +10,7 @@ Trains the EXACT locked 6b Micro architecture (FrequencyEmphasis → Conv2D(6,3�
 
 following the WrenNet recipe (Ciapponi et al., ICASSP 2026: L = 0.6·focal +
 0.4·soft-KL, T = 3.0; they distilled from BirdNET — we distill from our own
-SEABADNet-Edge, float AUC ≈ 0.999).
+DrongoNet-Edge, float AUC ≈ 0.999).
 
 Zero inference cost: the exported INT8 TFLite is bit-identical in structure to
 6b (same 6.56 KB flash, same 0.10 ms latency) — only the weights differ.
@@ -28,15 +28,15 @@ Teacher handling:
   any 2-class .keras model works (Edge m80, Matchbox m16, 3f m16, ...) via
   --teacher_model + --teacher_cache.
 
-8b variant: pass --specaug to add SpecAugment masking (7a settings) on top of
+7b variant: pass --specaug to add SpecAugment masking (8a settings) on top of
 the repo-standard noise + time-shift augmentation. Output dir stem then becomes
-8b_micro_distill_specaug automatically.
+7b_micro_distill_specaug automatically.
 
 Usage:
-  conda run -n tf215_gpu python 8a_micro_distill.py --random_seed 42 --use_cache
-  conda run -n tf215_gpu python 8a_micro_distill.py --random_seed 42 --use_cache --specaug   # = 8b
+  conda run -n tf215_gpu python 7a_micro_distill.py --random_seed 42 --use_cache
+  conda run -n tf215_gpu python 7a_micro_distill.py --random_seed 42 --use_cache --specaug   # = 7b
 
-Output dir: results/8{a,b}_micro_distill[_specaug]_fft{n_fft}_m{n_mels}_s{seed}_{platform}/
+Output dir: results/7{a,b}_micro_distill[_specaug]_fft{n_fft}_m{n_mels}_s{seed}_{platform}/
 """
 
 import os
@@ -100,7 +100,7 @@ class TrainingConfig:
     early_stopping_patience: int = 15
     random_seed: int = 42
     dataset_path: str = DATASET_PATH
-    output_dir: str = f'{RESULTS_BASE}/8a_micro_distill'
+    output_dir: str = f'{RESULTS_BASE}/7a_micro_distill'
     cache_dir: str = f'{CACHE_BASE}_fft1024_m16'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -112,7 +112,7 @@ class TrainingConfig:
     kd_temperature: float = 3.0   # softmax temperature (WrenNet: 3.0)
     teacher_model: str = ''       # resolved at runtime if empty
     teacher_cache: str = ''       # resolved from teacher input shape if empty
-    use_specaug: bool = False     # --specaug → 8b variant
+    use_specaug: bool = False     # --specaug → 7b variant
 
 
 # Default teacher search order: same-platform Edge s42, then the Dropbox-synced
@@ -128,7 +128,7 @@ def default_teacher_candidates():
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Train SEABADNet-Micro (locked 6b arch) with knowledge distillation')
+        description='Train DrongoNet-Micro (locked 6b arch) with knowledge distillation')
     parser.add_argument('--repr_samples', type=int, default=500)
     parser.add_argument('--dataset-path', type=str, default=DATASET_PATH)
     parser.add_argument('--random_seed', type=int, default=42)
@@ -149,7 +149,7 @@ def parse_args():
     parser.add_argument('--force_teacher_recompute', action='store_true',
                         help='Recompute cached teacher soft labels')
     parser.add_argument('--specaug', action='store_true',
-                        help='Add SpecAugment masking → 8b variant (changes output dir stem)')
+                        help='Add SpecAugment masking → 7b variant (changes output dir stem)')
     parser.add_argument('--output-dir', type=str, default=None)
     return parser.parse_args()
 
@@ -199,7 +199,7 @@ class FrequencyEmphasis(tf.keras.layers.Layer):
 
 
 def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
-    """SEABADNet-Micro locked architecture — verbatim copy of 6b_micro_final.py."""
+    """DrongoNet-Micro locked architecture — verbatim copy of 6b_micro_final.py."""
     inputs = tf.keras.layers.Input(shape=input_shape)
 
     x = FrequencyEmphasis(freq_bins=input_shape[1], name='frequency_emphasis')(inputs)
@@ -230,7 +230,7 @@ def build_cnn_mel_low_power_optimized(input_shape=(184, 16, 1), num_classes=2):
     x = tf.keras.layers.Dropout(0.1)(x)
     outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-    return tf.keras.Model(inputs, outputs, name="SEABADNet_Micro_Distilled")
+    return tf.keras.Model(inputs, outputs, name="DrongoNet_Micro_Distilled")
 
 
 def get_optimizer(learning_rate: float):
@@ -247,7 +247,7 @@ def get_optimizer(learning_rate: float):
 # ============================================================================
 
 class ChannelFrequencyEmphasis(tf.keras.layers.Layer):
-    """Custom-object stub so a 7a Matchbox teacher can be deserialized."""
+    """Custom-object stub so a 8a Matchbox teacher can be deserialized."""
 
     def __init__(self, freq_bins=16, **kwargs):
         super().__init__(**kwargs)
@@ -299,7 +299,7 @@ def teacher_cache_dir_for(model: tf.keras.Model, explicit: str, n_fft: int) -> s
     if shape[3] == 1:
         t_mels = shape[2]        # 2D layout (time, n_mels, 1) — 6b/6c family
     else:
-        t_mels = shape[3]        # channel layout (time, 1, n_mels) — 7a family
+        t_mels = shape[3]        # channel layout (time, 1, n_mels) — 8a family
     return f'{CACHE_BASE}_fft{n_fft}_m{t_mels}'
 
 
@@ -456,7 +456,7 @@ def create_distill_dataset(split: str, config: TrainingConfig, teacher_soft: np.
                            augment: bool = False) -> tf.data.Dataset:
     """
     Yields (mel, (y_onehot, teacher_soft)). Augmentation is the exact 6b recipe
-    (noise + time-shift on axis 0); --specaug adds 7a-style masks adapted to
+    (noise + time-shift on axis 0); --specaug adds 8a-style masks adapted to
     the (time, freq, 1) layout. Teacher labels stay attached to the clean clip.
     """
     mel_specs, labels = load_cached_mels(split, config)
@@ -491,7 +491,7 @@ def create_distill_dataset(split: str, config: TrainingConfig, teacher_soft: np.
             mel = tf.cond(should_shift, lambda: time_shift(mel), lambda: mel)
 
             if use_specaug:
-                # 7a settings adapted to (time, freq, 1): 2 time masks (≤20
+                # 8a settings adapted to (time, freq, 1): 2 time masks (≤20
                 # frames) + 1 freq mask (≤3 bins), each applied with p=0.5
                 def time_mask(m):
                     w = tf.random.uniform((), 1, 21, dtype=tf.int32)
@@ -528,7 +528,7 @@ def create_distill_dataset(split: str, config: TrainingConfig, teacher_soft: np.
 
 
 # ============================================================================
-# EVALUATOR (same protocol as 7a/7b: float32 + INT8 + threshold sweep)
+# EVALUATOR (same protocol as 8a/8b: float32 + INT8 + threshold sweep)
 # ============================================================================
 
 class ModelEvaluator:
@@ -676,9 +676,9 @@ def save_config(config, output_dir, system_info, teacher_path, teacher_val_auc,
     path = Path(output_dir) / 'config.txt'
     with open(path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("SEABADNET-MICRO DISTILLATION TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-MICRO DISTILLATION TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
-        f.write("script=8a_micro_distill.py\n")
+        f.write("script=7a_micro_distill.py\n")
         f.write(f"git_hash={get_git_hash()}\n\n")
         f.write("Distillation:\n")
         f.write(f"  teacher_model: {teacher_path}\n")
@@ -714,7 +714,7 @@ def main():
     config.use_specaug = args.specaug
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
 
-    stem = '8b_micro_distill_specaug' if config.use_specaug else '8a_micro_distill'
+    stem = '7b_micro_distill_specaug' if config.use_specaug else '7a_micro_distill'
     platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
     config.output_dir = (args.output_dir or
                          f'results/{stem}_fft{config.n_fft}_m{config.n_mels}'
@@ -736,7 +736,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info(f"SEABADNet-Micro DISTILLATION ({stem})")
+    logger.info(f"DrongoNet-Micro DISTILLATION ({stem})")
     logger.info(f"kd_alpha={config.kd_alpha}, T={config.kd_temperature}, "
                 f"SpecAug={config.use_specaug}, seed={config.random_seed}")
     logger.info(f"Output: {config.output_dir}")
@@ -880,8 +880,8 @@ def main():
         total_time = time.time() - start_time
 
         with open(output_dir / 'results_summary.txt', 'w') as f:
-            f.write("=" * 60 + "\nSEABADNET-MICRO DISTILLATION RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
-            f.write(f"script=8a_micro_distill.py\n")
+            f.write("=" * 60 + "\nDRONGONET-MICRO DISTILLATION RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
+            f.write(f"script=7a_micro_distill.py\n")
             f.write(f"variant={stem}\n")
             f.write(f"n_mels={config.n_mels}\nn_fft={config.n_fft}\nseed={config.random_seed}\n")
             f.write(f"teacher_model={teacher_path}\n")

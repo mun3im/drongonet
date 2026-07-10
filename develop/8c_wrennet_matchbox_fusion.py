@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-7c_wrennet_matchbox_fusion.py: SEABADNet-WrenMatch — WrenNet + MatchboxNet fusion
+8c_wrennet_matchbox_fusion.py: DrongoNet-WrenMatch — WrenNet + MatchboxNet fusion
 (post-ablation exploratory variant, 2026-07-07)
 
 Combines the distinctive ideas from both papers:
 
   From WrenNet (Ciapponi et al., ICASSP 2026, ciapponi2026enabling):
-    1. Semi-learnable frequency front-end (SemiLearnableFrequencyMap from 7b)
+    1. Semi-learnable frequency front-end (SemiLearnableFrequencyMap from 8b)
     2. Squeeze-and-Excitation channel recalibration inside each residual block
        (WrenNet's SE Module, PhiNet-inspired; Hu et al. CVPR 2018 [16] in paper)
     3. Causal depthwise convolutions for streaming compatibility — implemented as
@@ -19,7 +19,7 @@ Combines the distinctive ideas from both papers:
     6. Wide-kernel epilogue conv (k=17) for large temporal receptive field
     7. SpecAugment-style time and frequency masking
 
-  From SEABADNet Micro chain:
+  From DrongoNet Micro chain:
     8. Focal loss (γ=2, α=0.5) — repo standard
     9. GAP classifier head (single Dense(2) + softmax)
     10. Threshold sweep written inline, same τ grid as all variants
@@ -33,15 +33,15 @@ Causal padding: (kernel-1) zeros prepended on the time axis before conv;
 DepthwiseConv2D uses padding='valid' so no future frames leak.
 
 Note on TFLite size: causal padding adds a PAD op per depthwise layer, pushing
-the op count higher than 7a/7b.  The SE block adds 2 Dense + 2 activations.
+the op count higher than 8a/8b.  The SE block adds 2 Dense + 2 activations.
 Expected size ~15–20 KB INT8 (still well under Edge's 33 KB).
 
 Usage:
-  conda run -n tf215_gpu python 7c_wrennet_matchbox_fusion.py --random_seed 42 --use_cache
-  conda run -n tf215_gpu python 7c_wrennet_matchbox_fusion.py --random_seed 100 --use_cache
-  conda run -n tf215_gpu python 7c_wrennet_matchbox_fusion.py --random_seed 786 --use_cache
+  conda run -n tf215_gpu python 8c_wrennet_matchbox_fusion.py --random_seed 42 --use_cache
+  conda run -n tf215_gpu python 8c_wrennet_matchbox_fusion.py --random_seed 100 --use_cache
+  conda run -n tf215_gpu python 8c_wrennet_matchbox_fusion.py --random_seed 786 --use_cache
 
-Output dir: results/7c_wrennet_matchbox_fusion_fft{n_fft}_m{n_mels}_s{seed}/
+Output dir: results/8c_wrennet_matchbox_fusion_fft{n_fft}_m{n_mels}_s{seed}/
 """
 
 import os
@@ -105,7 +105,7 @@ class TrainingConfig:
     early_stopping_patience: int = 15
     random_seed: int = 42
     dataset_path: str = DATASET_PATH
-    output_dir: str = f'{RESULTS_BASE}/7c_wrennet_matchbox_fusion'
+    output_dir: str = f'{RESULTS_BASE}/8c_wrennet_matchbox_fusion'
     cache_dir: str = f'{CACHE_BASE}_fft1024_m16'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -127,7 +127,7 @@ class TrainingConfig:
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='WrenNet + MatchboxNet fusion variant for SEABADNet')
+        description='WrenNet + MatchboxNet fusion variant for DrongoNet')
     parser.add_argument('--repr_samples', type=int, default=500)
     parser.add_argument('--dataset-path', type=str, default=DATASET_PATH)
     parser.add_argument('--random_seed', type=int, default=42)
@@ -145,7 +145,7 @@ def parse_args():
     parser.add_argument('--se_ratio', type=int, default=4,
                         help='SE squeeze ratio (default: 4)')
     parser.add_argument('--no_causal', action='store_true',
-                        help='Disable causal padding (use bidirectional convs like 7a)')
+                        help='Disable causal padding (use bidirectional convs like 8a)')
     parser.add_argument('--no_bn', action='store_true')
     parser.add_argument('--no_specaug', action='store_true')
     parser.add_argument('--frontend_lr_mult', type=float, default=15.0)
@@ -166,7 +166,7 @@ if args.force_cpu:
 class SemiLearnableFrequencyMap(tf.keras.layers.Layer):
     """
     WrenNet semi-learnable frequency emphasis (Ciapponi et al. 2026, §3).
-    Identical to 7b.  Learns per-bin gain as a sigmoid-gated convex combination
+    Identical to 8b.  Learns per-bin gain as a sigmoid-gated convex combination
     of log-emphasis and linear-emphasis weight vectors.
     Input/output: [batch, time, 1, n_mels]
     """
@@ -238,7 +238,7 @@ def causal_tcs_conv(x, filters, kernel, use_bn, stride=1, dilation=1,
     axis, then use padding='valid' so no future frame is seen.  This makes the
     conv streaming-safe (no lookahead).
 
-    Non-causal mode (fallback, same as 7a): padding='same'.
+    Non-causal mode (fallback, same as 8a): padding='same'.
 
     Stride still lives on the pointwise conv (TF DepthwiseConv2D rejects
     unequal strides at execution).
@@ -313,7 +313,7 @@ def build_wren_matchbox(input_shape=(TIME_STEPS, 1, 16), num_classes=2,
                          epilogue_channels=16, dropout=0.1, use_bn=True,
                          epilogue_dilation=1, se_ratio=4, use_causal=True):
     """
-    SEABADNet-WrenMatch fusion model.
+    DrongoNet-WrenMatch fusion model.
 
     Front-end: WrenNet semi-learnable frequency map
     Prologue:  causal TCS conv (k=9, stride=2) — halves time axis
@@ -360,7 +360,7 @@ def build_wren_matchbox(input_shape=(TIME_STEPS, 1, 16), num_classes=2,
 
 
 # ============================================================================
-# CUSTOM TRAINING STEP — dual-LR for WrenNet front-end params (same as 7b)
+# CUSTOM TRAINING STEP — dual-LR for WrenNet front-end params (same as 8b)
 # ============================================================================
 
 class WrenMatchTrainer(tf.keras.Model):
@@ -425,7 +425,7 @@ class WrenMatchTrainer(tf.keras.Model):
 
 
 # ============================================================================
-# DATASET — identical to 7a/7b
+# DATASET — identical to 8a/8b
 # ============================================================================
 
 class SEABADDataset:
@@ -598,7 +598,7 @@ def focal_loss(gamma=2.0, alpha=0.5):
 
 
 # ============================================================================
-# EVALUATOR — identical to 7b
+# EVALUATOR — identical to 8b
 # ============================================================================
 
 class ModelEvaluator:
@@ -734,8 +734,8 @@ def get_base_optimizer(lr):
 def save_config(config, output_dir, system_info, model_summary=""):
     path = Path(output_dir) / 'config.txt'
     with open(path, 'w') as f:
-        f.write("=" * 60 + "\nSEABADNET-WRENMATCH TRAINING CONFIGURATION\n" + "=" * 60 + "\n\n")
-        f.write(f"script=7c_wrennet_matchbox_fusion.py\ngit_hash={get_git_hash()}\n\n")
+        f.write("=" * 60 + "\nDRONGONET-WRENMATCH TRAINING CONFIGURATION\n" + "=" * 60 + "\n\n")
+        f.write(f"script=8c_wrennet_matchbox_fusion.py\ngit_hash={get_git_hash()}\n\n")
         f.write(f"blocks={config.blocks}\nsub_blocks={config.sub_blocks}\n")
         f.write(f"channels={config.channels}\nepilog_channels={config.epilogue_channels}\n")
         f.write(f"se_ratio={config.se_ratio}\nuse_causal={config.use_causal}\n")
@@ -777,7 +777,7 @@ def main():
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
     platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
     config.output_dir = (args.output_dir or
-                         f'results/7c_wrennet_matchbox_fusion_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}')
+                         f'results/8c_wrennet_matchbox_fusion_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}')
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -796,7 +796,7 @@ def main():
 
     causal_str = 'causal' if config.use_causal else 'bidirectional'
     logger.info("=" * 60)
-    logger.info("SEABADNet-WrenMatch (WrenNet + MatchboxNet fusion)")
+    logger.info("DrongoNet-WrenMatch (WrenNet + MatchboxNet fusion)")
     logger.info(f"B×R×C: {config.blocks}×{config.sub_blocks}×{config.channels}, "
                 f"SE ratio: {config.se_ratio}, Convs: {causal_str}")
     logger.info(f"FE LR mult: {config.frontend_lr_multiplier}×, "
@@ -925,8 +925,8 @@ def main():
         total_time = time.time() - start_time
 
         with open(output_dir / 'results_summary.txt', 'w') as f:
-            f.write("=" * 60 + "\nSEABADNET-WRENMATCH RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
-            f.write(f"script=7c_wrennet_matchbox_fusion.py\n")
+            f.write("=" * 60 + "\nDRONGONET-WRENMATCH RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
+            f.write(f"script=8c_wrennet_matchbox_fusion.py\n")
             f.write(f"arch=wrenmatch_{config.blocks}x{config.sub_blocks}x{config.channels}"
                     f"_se{config.se_ratio}_{'c' if config.use_causal else 'nc'}\n")
             f.write(f"n_mels={config.n_mels}\nn_fft={config.n_fft}\nseed={config.random_seed}\n")

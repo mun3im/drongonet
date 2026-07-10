@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-7b_wrennet_frontend.py: SEABADNet-Matchbox + WrenNet semi-learnable front-end
+8b_wrennet_frontend.py: DrongoNet-Matchbox + WrenNet semi-learnable front-end
 (post-ablation exploratory variant, 2026-07-07)
 
 WrenNet (Ciapponi et al., ICASSP 2026, ciapponi2026enabling) proposes a
@@ -9,7 +9,7 @@ of logarithmic and linear frequency mappings, parameterised by a breakpoint b
 (transition frequency) and a transition width w (sharpness).  The parameters
 are learned end-to-end with a higher LR (15× the main network).
 
-Adaptation for SEABADNet:
+Adaptation for DrongoNet:
   Since we operate on cached mel spectrograms (not raw audio + STFT), we cannot
   re-run the FFT bin mapping inside TF.  Instead we approximate the WrenNet idea
   at the mel-bin level: a SemiLearnableFrequencyMap layer applies a per-bin soft
@@ -31,16 +31,16 @@ Adaptation for SEABADNet:
   Silicon the two-optimizer approach is simplified: a single Adam pass with
   a moderate LR for the front-end params is used to avoid Metal instability.
 
-Backbone: identical to 7a (2×1×16 MatchboxNet-style TCS residual net).
+Backbone: identical to 8a (2×1×16 MatchboxNet-style TCS residual net).
 All other conventions (focal loss, threshold sweep, output format) follow the
-SEABADNet ablation chain and 7a_matchbox_micro.py.
+DrongoNet ablation chain and 8a_matchbox_micro.py.
 
 Usage:
-  conda run -n tf215_gpu python 7b_wrennet_frontend.py --random_seed 42 --use_cache
-  conda run -n tf215_gpu python 7b_wrennet_frontend.py --random_seed 100 --use_cache
-  conda run -n tf215_gpu python 7b_wrennet_frontend.py --random_seed 786 --use_cache
+  conda run -n tf215_gpu python 8b_wrennet_frontend.py --random_seed 42 --use_cache
+  conda run -n tf215_gpu python 8b_wrennet_frontend.py --random_seed 100 --use_cache
+  conda run -n tf215_gpu python 8b_wrennet_frontend.py --random_seed 786 --use_cache
 
-Output dir: results/7b_wrennet_frontend_fft{n_fft}_m{n_mels}_s{seed}/
+Output dir: results/8b_wrennet_frontend_fft{n_fft}_m{n_mels}_s{seed}/
 """
 
 import os
@@ -104,7 +104,7 @@ class TrainingConfig:
     early_stopping_patience: int = 15
     random_seed: int = 42
     dataset_path: str = DATASET_PATH
-    output_dir: str = f'{RESULTS_BASE}/7b_wrennet_frontend'
+    output_dir: str = f'{RESULTS_BASE}/8b_wrennet_frontend'
     cache_dir: str = f'{CACHE_BASE}_fft1024_m16'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -126,7 +126,7 @@ class TrainingConfig:
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Train SEABADNet-Matchbox + WrenNet semi-learnable front-end')
+        description='Train DrongoNet-Matchbox + WrenNet semi-learnable front-end')
     parser.add_argument('--repr_samples', type=int, default=500)
     parser.add_argument('--dataset-path', type=str, default=DATASET_PATH)
     parser.add_argument('--random_seed', type=int, default=42)
@@ -237,7 +237,7 @@ class SemiLearnableFrequencyMap(tf.keras.layers.Layer):
 
 
 def tcs_conv(x, filters, kernel, use_bn, stride=1, dilation=1, prefix=""):
-    """Time-channel separable conv — identical to 7a."""
+    """Time-channel separable conv — identical to 8a."""
     x = tf.keras.layers.DepthwiseConv2D(
         (kernel, 1), dilation_rate=(dilation, 1), padding='same',
         use_bias=False, name=f'{prefix}dw'
@@ -252,7 +252,7 @@ def tcs_conv(x, filters, kernel, use_bn, stride=1, dilation=1, prefix=""):
 
 
 def matchbox_block(x, filters, kernel, sub_blocks, dropout, use_bn, block_idx):
-    """MatchboxNet residual block — identical to 7a."""
+    """MatchboxNet residual block — identical to 8a."""
     in_ch = x.shape[-1]
     if in_ch == filters:
         skip = x
@@ -282,16 +282,16 @@ def build_wrennet_matchbox(input_shape=(TIME_STEPS, 1, 16), num_classes=2,
                             epilogue_channels=16, dropout=0.1, use_bn=True,
                             epilogue_dilation=1):
     """
-    SEABADNet-WrenNet: Matchbox TCS backbone with WrenNet semi-learnable
+    DrongoNet-WrenNet: Matchbox TCS backbone with WrenNet semi-learnable
     frequency front-end replacing the fixed ChannelFrequencyEmphasis.
-    Input: [time=184, 1, n_mels] — same layout as 7a.
+    Input: [time=184, 1, n_mels] — same layout as 8a.
     """
     inputs = tf.keras.layers.Input(shape=input_shape)
 
     # WrenNet semi-learnable front-end
     x = SemiLearnableFrequencyMap(n_mels=input_shape[2], name='slfe')(inputs)
 
-    # MatchboxNet TCS backbone (identical to 7a)
+    # MatchboxNet TCS backbone (identical to 8a)
     x = tcs_conv(x, channels, 9, use_bn, stride=2, prefix='p')
     x = tf.keras.layers.ReLU()(x)
     x = tf.keras.layers.Dropout(dropout)(x)
@@ -394,7 +394,7 @@ class WrenNetTrainer(tf.keras.Model):
 
 
 # ============================================================================
-# DATASET — identical to 7a
+# DATASET — identical to 8a
 # ============================================================================
 
 class SEABADDataset:
@@ -767,9 +767,9 @@ def save_config(config, output_dir, system_info, model_summary=""):
     path = Path(output_dir) / 'config.txt'
     with open(path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("SEABADNET-WRENNET FRONTEND TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-WRENNET FRONTEND TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
-        f.write(f"script=7b_wrennet_frontend.py\n")
+        f.write(f"script=8b_wrennet_frontend.py\n")
         f.write(f"git_hash={get_git_hash()}\n\n")
         f.write(f"arch=wmbx{config.blocks}x{config.sub_blocks}x{config.channels}\n")
         f.write(f"n_mels={config.n_mels}\nn_fft={config.n_fft}\n")
@@ -809,7 +809,7 @@ def main():
     config.cache_dir = f'{CACHE_BASE}_fft{config.n_fft}_m{config.n_mels}'
     platform_tag = 'macos' if platform.system() == 'Darwin' else 'linux'
     config.output_dir = (args.output_dir or
-                         f'results/7b_wrennet_frontend_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}')
+                         f'results/8b_wrennet_frontend_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}')
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -827,7 +827,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("SEABADNet-WrenNet Frontend TRAINING")
+    logger.info("DrongoNet-WrenNet Frontend TRAINING")
     logger.info(f"B×R×C: {config.blocks}×{config.sub_blocks}×{config.channels}, "
                 f"FE LR mult: {config.frontend_lr_multiplier}×")
     logger.info(f"Output: {config.output_dir}")
@@ -966,8 +966,8 @@ def main():
         total_time = time.time() - start_time
         summary = (output_dir / 'results_summary.txt')
         with open(summary, 'w') as f:
-            f.write("=" * 60 + "\nSEABADNET-WRENNET FRONTEND RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
-            f.write(f"script=7b_wrennet_frontend.py\n")
+            f.write("=" * 60 + "\nDRONGONET-WRENNET FRONTEND RESULTS SUMMARY\n" + "=" * 60 + "\n\n")
+            f.write(f"script=8b_wrennet_frontend.py\n")
             f.write(f"arch=wmbx{config.blocks}x{config.sub_blocks}x{config.channels}\n")
             f.write(f"n_mels={config.n_mels}\nn_fft={config.n_fft}\nseed={config.random_seed}\n")
             f.write(f"batch_norm={config.use_bn}\nspecaugment={config.use_specaug}\n")

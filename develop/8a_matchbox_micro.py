@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-7a_matchbox_micro.py: SEABADNet-Matchbox (exploratory, post-ablation)
+8a_matchbox_micro.py: DrongoNet-Matchbox (exploratory, post-ablation)
 MatchboxNet-inspired variant (Majumdar & Ginsburg, Interspeech 2020) scaled down
 ~40x from MatchboxNet-3x1x64. Positioned between Micro (6.23 KB) and Edge
 (33 KB): TFLite flatbuffer overhead (~3.5 KB base + ~0.3 KB/op) puts even a
@@ -98,7 +98,7 @@ class TrainingConfig:
     early_stopping_patience: int = 15
     random_seed: int = 42
     dataset_path: str = DATASET_PATH
-    output_dir: str = f'{RESULTS_BASE}/7a_matchbox_micro'
+    output_dir: str = f'{RESULTS_BASE}/8a_matchbox_micro'
     cache_dir: str = f'{CACHE_BASE}_fft1024_m16'
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -117,7 +117,7 @@ class TrainingConfig:
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Train SEABADNet-Matchbox (MatchboxNet-inspired Micro variant)')
+    parser = argparse.ArgumentParser(description='Train DrongoNet-Matchbox (MatchboxNet-inspired Micro variant)')
     parser.add_argument('--repr_samples', type=int, default=500,
                         help='Number of representative samples for TFLite quantization (default: 500)')
     parser.add_argument('--dataset-path', type=str, default=DATASET_PATH,
@@ -152,7 +152,7 @@ def parse_args():
     parser.add_argument('--no_specaug', action='store_true',
                         help='Disable SpecAugment time/freq masking augmentation')
     parser.add_argument('--output-dir', type=str, default=None,
-                        help='Override output directory (default: results/7a_matchbox_micro_fft{n_fft}_m{n_mels}_s{seed})')
+                        help='Override output directory (default: results/8a_matchbox_micro_fft{n_fft}_m{n_mels}_s{seed})')
     return parser.parse_args()
 
 
@@ -265,7 +265,7 @@ def build_matchbox(input_shape=(TIME_STEPS, 1, 16), num_classes=2,
                    blocks=2, sub_blocks=1, channels=16, epilogue_channels=16,
                    dropout=0.1, use_bn=True, epilogue_dilation=1):
     """
-    SEABADNet-Matchbox-BxRxC. Structure mirrors MatchboxNet (Table 1 of the
+    DrongoNet-Matchbox-BxRxC. Structure mirrors MatchboxNet (Table 1 of the
     paper) scaled to the Micro budget:
       ChannelEmphasis → Prologue TCSConv(k=9, stride 2)
       → B × [residual block, kernel 11, 13, 15, …]
@@ -959,10 +959,10 @@ def save_config(config: TrainingConfig, output_dir: Path, args, system_info: dic
 
     with open(config_path, 'w') as f:
         f.write("=" * 60 + "\n")
-        f.write("SEABADNET-MATCHBOX TRAINING CONFIGURATION\n")
+        f.write("DRONGONET-MATCHBOX TRAINING CONFIGURATION\n")
         f.write("=" * 60 + "\n\n")
 
-        f.write("script=7a_matchbox_micro.py\n")
+        f.write("script=8a_matchbox_micro.py\n")
         f.write(f"git_hash={get_git_hash()}\n\n")
 
         f.write("Model Information (MatchboxNet BxRxC):\n")
@@ -1042,7 +1042,7 @@ def main():
     if args.output_dir:
         config.output_dir = args.output_dir
     else:
-        config.output_dir = f'results/7a_matchbox_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
+        config.output_dir = f'results/8a_matchbox_micro_fft{config.n_fft}_m{config.n_mels}_s{config.random_seed}_{platform_tag}'
 
     tf.random.set_seed(config.random_seed)
     np.random.seed(config.random_seed)
@@ -1062,7 +1062,7 @@ def main():
     }
 
     logger.info("=" * 60)
-    logger.info("SEABADNet-Matchbox TRAINING")
+    logger.info("DrongoNet-Matchbox TRAINING")
     logger.info("=" * 60)
     logger.info(f"B x R x C: {config.blocks} x {config.sub_blocks} x {config.channels}")
     logger.info(f"n_mels: {config.n_mels}, BN: {config.use_bn}, SpecAug: {config.use_specaug}")
@@ -1202,9 +1202,9 @@ def main():
         summary_path = output_dir / 'results_summary.txt'
         with open(summary_path, 'w') as f:
             f.write("=" * 60 + "\n")
-            f.write("SEABADNET-MATCHBOX RESULTS SUMMARY\n")
+            f.write("DRONGONET-MATCHBOX RESULTS SUMMARY\n")
             f.write("=" * 60 + "\n\n")
-            f.write("script=7a_matchbox_micro.py\n")
+            f.write("script=8a_matchbox_micro.py\n")
             f.write(f"arch=matchbox_{config.blocks}x{config.sub_blocks}x{config.channels}\n")
             f.write(f"n_mels={config.n_mels}\n")
             f.write(f"n_fft={config.n_fft}\n")
@@ -1237,7 +1237,7 @@ def main():
 
         logger.info("=" * 60)
         logger.info("RESULTS SUMMARY:")
-        logger.info(f"  Model: SEABADNet-Matchbox {config.blocks}x{config.sub_blocks}x{config.channels}")
+        logger.info(f"  Model: DrongoNet-Matchbox {config.blocks}x{config.sub_blocks}x{config.channels}")
         logger.info(f"  Params: {total_params:,}")
         logger.info(f"  Float32 AUC: {float_auc:.4f}")
         logger.info(f"  TFLite AUC: {tflite_auc:.4f}")
