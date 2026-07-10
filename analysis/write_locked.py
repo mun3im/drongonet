@@ -10,9 +10,9 @@ import numpy as np, tensorflow as tf
 BASE = Path('/home/muneim/Dropbox/Conda/drongonet'); SEEDS = [42, 100, 786, 7, 1234]
 THRESHOLDS = np.round(np.arange(0.05, 0.96, 0.05), 2)
 CFG = {  # name: (tmpl, cache, pretty, floor, chosen_tau, basis_note)
-    'nano':  ('6a_nano_final_fft512_m16_s{s}',  'cache4arxiv_fft512_m16',  'SEABADNet-Nano',  0.97, 0.37, 'operating point (min-seed recall ≥0.97); Nano has no formal recall target'),
-    'micro': ('6b_micro_final_fft1024_m16_s{s}', 'cache4arxiv_fft1024_m16', 'SEABADNet-Micro', 0.98, 0.35, 'design target ≥0.98 (mean); min-seed 0.9788'),
-    'edge':  ('6c_edge_final_fft1024_m80_s{s}',  'cache4arxiv_fft1024_m80', 'SEABADNet-Edge',  0.99, 0.425, 'design target ≥0.99 (mean); τ=0.425 = highest τ with 5-seed mean recall ≥0.99'),
+    'nano':  ('6a_nano_final_fft512_m16_s{s}',  'cache4arxiv_fft512_m16',  'DrongoNet-Nano',  0.97, 0.37, 'operating point (min-seed recall ≥0.97); Nano has no formal recall target'),
+    'micro': ('6b_micro_final_fft1024_m16_s{s}', 'cache4arxiv_fft1024_m16', 'DrongoNet-Micro', 0.98, 0.35, 'design target ≥0.98 (mean); min-seed 0.9788'),
+    'edge':  ('6c_edge_final_fft1024_m80_s{s}',  'cache4arxiv_fft1024_m80', 'DrongoNet-Edge',  0.99, 0.425, 'design target ≥0.99 (mean); τ=0.425 = highest τ with 5-seed mean recall ≥0.99'),
 }
 
 

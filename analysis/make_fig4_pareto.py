@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """make_fig4_pareto.py — generates ONLY fig4_pareto.pdf (size vs SEABAD AUC).
 
-Self-contained data (SEABADNet 5-seed + baselines). Usage:
+Self-contained data (DrongoNet 5-seed + baselines). Usage:
   python analysis/make_fig4_pareto.py [--out-dir images/] [--fmt pdf]
 """
 import sys
@@ -14,11 +14,11 @@ from matplotlib.lines import Line2D
 sys.path.insert(0, str(Path(__file__).parent))
 import figcommon as fc
 
-# SEABADNet family (5-seed mean±std, full INT8) — seeds 42/100/786/7/1234
-SEABADNET = [
-    {'name': 'SEABADNet-Nano\n(512-FFT)',  'size': 5.09,  'auc': 0.9727, 'auc_std': 0.0016, 'color': fc.COLORS['nano'],  'marker': 'o'},
-    {'name': 'SEABADNet-Micro\n(1024-FFT)', 'size': 6.26,  'auc': 0.9810, 'auc_std': 0.0016, 'color': fc.COLORS['micro'], 'marker': 'o'},
-    {'name': 'SEABADNet-Edge\n(1024-FFT)', 'size': 33.06, 'auc': 0.9991, 'auc_std': 0.0002, 'color': fc.COLORS['edge'],  'marker': 'o'},
+# DrongoNet family (5-seed mean±std, full INT8) — seeds 42/100/786/7/1234
+DRONGONET = [
+    {'name': 'DrongoNet-Nano\n(512-FFT)',  'size': 5.09,  'auc': 0.9727, 'auc_std': 0.0016, 'color': fc.COLORS['nano'],  'marker': 'o'},
+    {'name': 'DrongoNet-Micro\n(1024-FFT)', 'size': 6.26,  'auc': 0.9810, 'auc_std': 0.0016, 'color': fc.COLORS['micro'], 'marker': 'o'},
+    {'name': 'DrongoNet-Edge\n(1024-FFT)', 'size': 33.06, 'auc': 0.9991, 'auc_std': 0.0002, 'color': fc.COLORS['edge'],  'marker': 'o'},
 ]
 # TinyChirp CNN-Mel retrained from scratch on SEABAD (3-seed mean, paper Table)
 BASELINE = [
@@ -56,24 +56,24 @@ def plot(out: Path, dpi: int):
             ax.annotate(pt['name'], (pt['size'], pt['auc']), textcoords='offset points',
                         xytext=(10, -5), fontsize=6.5, ha='left', color=pt['color'])
 
-        sb_sizes = [pt['size'] for pt in SEABADNET]
-        sb_aucs = [pt['auc'] for pt in SEABADNET]
+        sb_sizes = [pt['size'] for pt in DRONGONET]
+        sb_aucs = [pt['auc'] for pt in DRONGONET]
         ax.plot(sb_sizes, sb_aucs, color=fc.COLORS['micro'], lw=1.0, ls='--', alpha=0.5, zorder=2)
-        for pt in SEABADNET:
+        for pt in DRONGONET:
             ax.scatter(pt['size'], pt['auc'], s=100, color=pt['color'], marker=pt['marker'],
                        zorder=5, edgecolors='white', linewidths=0.8)
             if pt['auc_std']:
                 ax.errorbar(pt['size'], pt['auc'], yerr=pt['auc_std'], fmt='none',
                             color=pt['color'], capsize=3, lw=1.0, zorder=4)
         offsets = [(8,-8), (6, -16), (8, -8)]
-        for pt, off in zip(SEABADNET, offsets):
+        for pt, off in zip(DRONGONET, offsets):
             ax.annotate(pt['name'], (pt['size'], pt['auc']), textcoords='offset points',
                         xytext=off, fontsize=7, ha='left', color=pt['color'], fontweight='bold')
 
         ax.set_xscale('log')
         ax.set_xlabel('INT8 Model Size (kB, log scale)')
         ax.set_ylabel('AUC (mean ± std, 5 seeds)')
-        ax.set_title('Size–Accuracy Trade-off: SEABADNet Family vs Reference Models', fontweight='bold')
+        ax.set_title('Size–Accuracy Trade-off: DrongoNet Family vs Reference Models', fontweight='bold')
         ax.set_xlim(3, 40000)
         ax.set_ylim(0.966, 1.0025)
         ax.grid(True, alpha=0.25, ls=':', which='both')
@@ -84,7 +84,7 @@ def plot(out: Path, dpi: int):
             ax.text(xv, 0.9665, lbl, ha='center', fontsize=6.5, color='#888888')
 
         legend_elements = [
-            Line2D([0], [0], marker='o', color='w', label='SEABADNet family (INT8, 184-frame mel)',
+            Line2D([0], [0], marker='o', color='w', label='DrongoNet family (INT8, 184-frame mel)',
                    markerfacecolor=fc.COLORS['micro'], markersize=8),
             Line2D([0], [0], marker='s', color='w', label='TinyChirp baseline (INT8)',
                    markerfacecolor=fc.COLORS['base'], markersize=8),

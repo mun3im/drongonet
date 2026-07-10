@@ -20,9 +20,9 @@ THRESHOLDS = np.round(np.arange(0.005, 0.9951, 0.005), 3)  # fine grid: 0.05-mul
 
 # name: (dir template, cache, target_recall, pretty)
 VARIANTS = {
-    'nano':  ('6a_nano_final_fft512_m16_s{s}',  'cache4arxiv_fft512_m16',  0.98, 'SEABADNet-Nano'),
-    'micro': ('6b_micro_final_fft1024_m16_s{s}', 'cache4arxiv_fft1024_m16', 0.98, 'SEABADNet-Micro'),
-    'edge':  ('6c_edge_final_fft1024_m80_s{s}',  'cache4arxiv_fft1024_m80', 0.99, 'SEABADNet-Edge'),
+    'nano':  ('6a_nano_final_fft512_m16_s{s}',  'cache4arxiv_fft512_m16',  0.98, 'DrongoNet-Nano'),
+    'micro': ('6b_micro_final_fft1024_m16_s{s}', 'cache4arxiv_fft1024_m16', 0.98, 'DrongoNet-Micro'),
+    'edge':  ('6c_edge_final_fft1024_m80_s{s}',  'cache4arxiv_fft1024_m80', 0.99, 'DrongoNet-Edge'),
 }
 
 

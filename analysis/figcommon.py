@@ -142,7 +142,7 @@ def load_models(results_dir: Path = None) -> dict:
             continue
         models[name] = {
             'sweeps': sw, 'seeds': SEEDS, 'tau_op': TAU_OP[name],
-            'color': COLORS[name], 'label': f'SEABADNet-{name.capitalize()}',
+            'color': COLORS[name], 'label': f'DrongoNet-{name.capitalize()}',
         }
     return models
 

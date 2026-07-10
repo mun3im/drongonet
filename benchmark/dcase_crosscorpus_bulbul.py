@@ -2,7 +2,7 @@
 
 Same corpora (train ff1010bird+warblrb10k -> zero-shot test BirdVox-DCASE-20k), same seeds, same
 focal loss, same augmentation recipes as dcase_crosscorpus.py, same 80-mel / n_fft=1024 / 16 kHz
-front-end (fmin=100, fmax=8000). The ONLY thing that changes vs SEABADNet is the architecture and
+front-end (fmin=100, fmax=8000). The ONLY thing that changes vs DrongoNet is the architecture and
 its native input: bulbul reads the full 10 s clip as one contiguous 1000x80 log-mel spectrogram
 (hop=160 = 10 ms/frame -> 1000 frames), exactly its Table-I input, with one prediction per clip.
 At 1000 frames the model is ~373,202 params -- bulbul's literal capacity.

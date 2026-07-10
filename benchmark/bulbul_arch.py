@@ -13,8 +13,8 @@ Input: the genuine full 10 s clip as one contiguous 1000x80 log-mel spectrogram
 (hop=160 = 10 ms/frame at 16 kHz -> ~1000 frames), i.e. bulbul's literal Table-I input. At this
 size the architecture reproduces bulbul's capacity to the parameter (~373,202 vs 373,169).
 
-Deviations (required only to share the loss/feature convention with SEABADNet, not the capacity):
-  * 2-unit softmax head + focal loss, matching SEABADNet's head so the loss/output convention
+Deviations (required only to share the loss/feature convention with DrongoNet, not the capacity):
+  * 2-unit softmax head + focal loss, matching DrongoNet's head so the loss/output convention
     is identical across all compared models (bulbul's original sigmoid+BCE would be a confound;
     this accounts for the +33 params vs their 373,169).
   * No explicit mean-over-time subtraction (bulbul's colored-noise step); the per-frequency
