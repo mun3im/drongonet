@@ -1,6 +1,10 @@
 # benchmark/
 
-Cross-dataset benchmarks for DrongoNet generalization. All scripts retrain fresh models from scratch — no SEABAD weights transferred.
+Comparisons for DrongoNet against other datasets and architectures. Most scripts are
+cross-dataset generalization benchmarks (retrain fresh from scratch — no SEABAD weights
+transferred); `8a`–`8c` are a same-dataset (SEABAD) architecture comparison instead
+(moved from `develop/` 2026-07-10 — not part of the ablation chain, not in the paper;
+see CLAUDE.md's "Post-Ablation Exploration" and "Final decision" notes for why).
 
 ## Scripts
 
@@ -11,6 +15,11 @@ Cross-dataset benchmarks for DrongoNet generalization. All scripts retrain fresh
 | `augmentations.py` | Augmentation recipes: `none / mixup / specaug / pitch_time / full` |
 | `tinychirp_generalization.py` | TinyChirp Corn Bunting (paper-reported, f32 AUC only) |
 | `tinychirp_benchmark.py` | TinyChirp + INT8 quantization eval + mel caching (extended version) |
+| `bulbul_arch.py` | bulbul (Grill et al.) reference architecture, our pipeline |
+| `dcase_crosscorpus_bulbul.py` | bulbul cross-corpus comparison, matched protocol |
+| `8a_matchbox_micro.py` | MatchboxNet-inspired variant on SEABAD, n_mels=16 (same-dataset, not cross-corpus) |
+| `8b_wrennet_frontend.py` | Matchbox + WrenNet semi-learnable frequency front-end |
+| `8c_wrennet_matchbox_fusion.py` | WrenMatch: WrenNet + MatchboxNet fusion (SE + causal convs) |
 | `_dcase_diagnose.py` | Stale diagnostic — ignore |
 | `run_dcase_benchmark.sh` | Batch runner for `dcase_benchmark.py` |
 | `run_augmentation_sweep.sh` | Batch runner for the augmentation sweep (default: 27 runs) |

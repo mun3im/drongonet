@@ -43,6 +43,8 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 import pickle
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'develop'))
 from config import DATASET_PATH, RESULTS_BASE, CACHE_BASE
 
 # Suppress TensorFlow warnings and configure GPU BEFORE importing TensorFlow
