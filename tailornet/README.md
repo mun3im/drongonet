@@ -24,13 +24,61 @@ the [`tailornet.py`](tailornet.py) module docstring.
 Both are ~3.4x fewer parameters and ~4.1x smaller INT8 flash than the
 reference MynaNet 1o (120,500 params, 193.4 KB INT8).
 
+<details>
+<summary>TailorNet-12sp — INT8 per-class report (seed 42, 720 test clips, 60/class)</summary>
+
+|            Class          | Precision | Recall | F1-score |
+|----------------------------|:---------:|:------:|:--------:|
+| Asian Koel                 | 0.9667    | 0.9667 | 0.9667   |
+| Collared Kingfisher         | 0.9831    | 0.9667 | 0.9748   |
+| Common Iora                 | 0.9273    | 0.8500 | 0.8870   |
+| Common Tailorbird           | 0.9167    | 0.9167 | 0.9167   |
+| Coppersmith Barbet           | 0.9836    | 1.0000 | 0.9917   |
+| Large-tailed Nightjar        | 0.9833    | 0.9833 | 0.9833   |
+| Olive-backed Sunbird         | 0.9091    | 1.0000 | 0.9524   |
+| Pied Fantail                 | 0.8276    | 0.8000 | 0.8136   |
+| Spotted Dove                 | 1.0000    | 1.0000 | 1.0000   |
+| White-breasted Waterhen      | 0.9365    | 0.9833 | 0.9593   |
+| White-throated Kingfisher    | 0.9630    | 0.8667 | 0.9123   |
+| Yellow-vented Bulbul         | 0.8750    | 0.9333 | 0.9032   |
+| **accuracy**                |           |        | **0.9389** |
+| macro avg                   | 0.9393    | 0.9389 | 0.9384   |
+| weighted avg                 | 0.9393    | 0.9389 | 0.9384   |
+
+</details>
+
+<details>
+<summary>TailorNet-14sp — INT8 per-class report (seed 42, 840 test clips, 60/class)</summary>
+
+|            Class          | Precision | Recall | F1-score |
+|----------------------------|:---------:|:------:|:--------:|
+| Asian Koel                 | 0.8939    | 0.9833 | 0.9365   |
+| Collared Kingfisher         | 1.0000    | 0.9333 | 0.9655   |
+| Common Iora                 | 0.9375    | 0.7500 | 0.8333   |
+| Common Myna                  | 0.9365    | 0.9833 | 0.9593   |
+| Common Tailorbird           | 0.9767    | 0.7000 | 0.8155   |
+| Coppersmith Barbet           | 1.0000    | 1.0000 | 1.0000   |
+| Large-tailed Nightjar        | 0.9833    | 0.9833 | 0.9833   |
+| Olive-backed Sunbird         | 0.8939    | 0.9833 | 0.9365   |
+| Pied Fantail                 | 0.6944    | 0.8333 | 0.7576   |
+| Spotted Dove                 | 1.0000    | 1.0000 | 1.0000   |
+| White-breasted Waterhen      | 0.9194    | 0.9500 | 0.9344   |
+| White-throated Kingfisher    | 0.9180    | 0.9333 | 0.9256   |
+| Yellow-vented Bulbul         | 0.8769    | 0.9500 | 0.9120   |
+| Zebra Dove                   | 0.9828    | 0.9500 | 0.9661   |
+| **accuracy**                |           |        | **0.9238** |
+| macro avg                   | 0.9295    | 0.9238 | 0.9233   |
+| weighted avg                 | 0.9295    | 0.9238 | 0.9233   |
+
+</details>
+
+Full reports (with support column) are in each run's `classification_report_int8.txt` / `classification_report_fp32.txt`.
+
 ## Repository layout
 
 ```
 tailornet.py                       model definition, dataset loader, training/eval CLI
 eval_tailornet_seed7.py             reproduce a seed's INT8 test accuracy from its saved model
-plot_tailornet_history.py           plot train/val accuracy + loss curves from a training_history.csv
-plot_tailornet_cm.py                render a confusion-matrix figure from eval_tailornet_seed7.py's output
 retrain_tailornet_seed7_history.py  retrain one seed with a combined warmup+finetune epoch history log
 results_tailornet/                 one representative run per species count (seed 42):
                                     INT8 TFLite model, classification report, summary JSON
@@ -81,7 +129,7 @@ python eval_tailornet_seed7.py \
 ## Requirements
 
 - Python 3.10+, TensorFlow 2.15, `tf_keras`
-- librosa, numpy, scikit-learn, matplotlib
+- librosa, numpy, scikit-learn
 
 ## Relation to DrongoNet
 
