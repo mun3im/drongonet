@@ -32,9 +32,10 @@ eval_tailornet_seed7.py             reproduce a seed's INT8 test accuracy from i
 plot_tailornet_history.py           plot train/val accuracy + loss curves from a training_history.csv
 plot_tailornet_cm.py                render a confusion-matrix figure from eval_tailornet_seed7.py's output
 retrain_tailornet_seed7_history.py  retrain one seed with a combined warmup+finetune epoch history log
-results_tailornet/                  one representative run per species count (seed 42):
-                                     INT8 TFLite model, classification report, summary JSON
 ```
+
+Trained model weights and per-run results are not tracked in this
+repository; running `tailornet.py` regenerates them.
 
 ## Quickstart
 
@@ -52,13 +53,14 @@ mixup alpha, warmup/finetune epochs and learning rates, epilogue width).
 Results land in a directory containing FP32 + INT8 TFLite evaluation, a
 classification report, and a parseable `tailornet_summary.json`.
 
-To reproduce a specific seed's reported INT8 accuracy from its saved model:
+To reproduce a specific seed's reported INT8 accuracy from its saved model
+(i.e. a `--output_dir` produced by the `tailornet.py` run above):
 
 ```bash
 python eval_tailornet_seed7.py \
     --flat_dir   /path/to/mygardenbird16khz \
     --splits_csv /path/to/splits_mip_80_10_10.csv \
-    --result_dir results_tailornet/tailornet_12sp_epi128_drop0.2_mixup0.2_rand42
+    --result_dir /path/to/that/run/output_dir
 ```
 
 ## Requirements
