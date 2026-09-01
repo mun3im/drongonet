@@ -32,12 +32,27 @@ eval_tailornet_seed7.py             reproduce a seed's INT8 test accuracy from i
 plot_tailornet_history.py           plot train/val accuracy + loss curves from a training_history.csv
 plot_tailornet_cm.py                render a confusion-matrix figure from eval_tailornet_seed7.py's output
 retrain_tailornet_seed7_history.py  retrain one seed with a combined warmup+finetune epoch history log
+results_tailornet/                 one representative run per species count (seed 42):
+                                    INT8 TFLite model, classification report, summary JSON
 ```
 
-Trained model weights and per-run results are not tracked in this
-repository; running `tailornet.py` regenerates them.
-
 ## Quickstart
+
+Pre-trained INT8 TFLite models (seed 42) are in `results_tailornet/` — use
+them directly for deployment, no training required:
+
+```
+results_tailornet/tailornet_12sp_epi128_drop0.2_mixup0.2_rand42/model_int8.tflite
+results_tailornet/tailornet_14sp_epi128_drop0.2_mixup0.2_rand42/model_int8.tflite
+```
+
+Input tensor is `(184, 16, 1)` INT8-quantized mel-spectrogram (16 mels /
+1024-pt FFT / 184 frames — DrongoNet-Micro's exact front-end, see
+[`tailornet.py`](tailornet.py) for `compute_mel_spectrogram`); output is a
+softmax over the classes listed in that run's `classification_report_int8.txt`,
+alphabetically sorted.
+
+To retrain from scratch instead:
 
 ```bash
 python tailornet.py \
