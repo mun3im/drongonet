@@ -348,11 +348,47 @@ def convert_to_tflite_int8(model, X_calib, path):
     return tflite_model, size_kb
 
 
-def save_confusion_matrix(y_test, preds, class_names, output_dir, tag):
-    """Save a confusion matrix both as a machine-readable .npz (cm,
-    class_names, y_test, preds -- same schema paper8_repro's plotting
-    scripts historically consumed) and a plain-text .txt for quick
-    inspection without loading numpy."""
+def plot_confusion_matrix(cm, class_names, out_path, title="TailorNet -- confusion matrix"):
+    """Render a confusion-matrix heatmap PNG (matplotlib imported lazily
+    here so it isn't a hard dependency of training/evaluation itself,
+    only of this optional plot)."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    n = len(class_names)
+    fig, ax = plt.subplots(figsize=(0.55 * n + 2, 0.55 * n + 1.5))
+    im = ax.imshow(cm, cmap="Blues", vmin=0, vmax=cm.max())
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(class_names, rotation=45, ha="right", fontsize=8)
+    ax.set_yticklabels(class_names, fontsize=8)
+    ax.set_xlabel("Predicted", fontsize=10)
+    ax.set_ylabel("True", fontsize=10)
+    ax.set_title(title, fontsize=10)
+
+    thresh = cm.max() / 2.0
+    for i in range(n):
+        for j in range(n):
+            v = cm[i, j]
+            if v == 0:
+                continue
+            ax.text(j, i, str(v), ha="center", va="center",
+                     fontsize=7, color="white" if v > thresh else "black")
+
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_confusion_matrix(y_test, preds, class_names, output_dir, tag,
+                           title=None, plot=True):
+    """Save a confusion matrix as a machine-readable .npz (cm, class_names,
+    y_test, preds -- same schema paper8_repro's plotting scripts
+    historically consumed), a plain-text .txt for quick inspection without
+    loading numpy, and (if plot=True) a heatmap .png."""
     cm = confusion_matrix(y_test, preds)
     npz_path = os.path.join(output_dir, f"confusion_matrix_{tag}.npz")
     np.savez(npz_path, cm=cm, class_names=np.array(class_names),
@@ -369,6 +405,16 @@ def save_confusion_matrix(y_test, preds, class_names, output_dir, tag):
                  "index -> class name listed above)\n")
         for i, c in enumerate(class_names):
             f.write(f"  {i}: {c}\n")
+
+    if plot:
+        png_path = os.path.join(output_dir, f"confusion_matrix_{tag}.png")
+        try:
+            plot_confusion_matrix(cm, class_names, png_path,
+                                   title=title or f"TailorNet -- {tag} confusion matrix")
+            print(f"Saved confusion matrix plot: {png_path}")
+        except ImportError:
+            print("  (matplotlib not available -- skipped confusion matrix PNG, "
+                  f".txt/.npz still saved to {output_dir})")
     return cm
 
 

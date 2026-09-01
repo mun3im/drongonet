@@ -74,34 +74,14 @@ reference MynaNet 1o (120,500 params, 193.4 KB INT8).
 
 Full reports (with support column) are in each run's `classification_report_int8.txt` / `classification_report_fp32.txt`.
 
-<details>
-<summary>TailorNet-12sp — INT8 confusion matrix (seed 42, 720 test clips)</summary>
+**TailorNet-12sp — INT8 confusion matrix (seed 42, 720 test clips, 93.89% accuracy):**
 
-Rows = true label, columns = predicted label (abbreviated). 93.89% accuracy overall.
+![TailorNet-12sp INT8 confusion matrix](results_tailornet/tailornet_12sp_epi128_drop0.2_mixup0.2_rand42/confusion_matrix_int8.png)
 
-| True \ Pred | AK | CK | CI | CT | CB | LN | OS | PF | SD | WW | WK | YB |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **AK** Asian Koel | 58 |  | 1 |  |  |  |  |  |  |  |  | 1 |
-| **CK** Collared Kingfisher | 2 | 58 |  |  |  |  |  |  |  |  |  |  |
-| **CI** Common Iora |  | 1 | 51 |  |  |  | 4 |  |  |  |  | 4 |
-| **CT** Common Tailorbird |  |  |  | 55 |  |  |  | 5 |  |  |  |  |
-| **CB** Coppersmith Barbet |  |  |  |  | 60 |  |  |  |  |  |  |  |
-| **LN** Large-tailed Nightjar |  |  |  |  | 1 | 59 |  |  |  |  |  |  |
-| **OS** Olive-backed Sunbird |  |  |  |  |  |  | 60 |  |  |  |  |  |
-| **PF** Pied Fantail |  |  |  | 5 |  |  | 1 | 48 |  | 3 | 1 | 2 |
-| **SD** Spotted Dove |  |  |  |  |  |  |  |  | 60 |  |  |  |
-| **WW** White-breasted Waterhen |  |  |  |  |  |  |  |  |  | 59 |  | 1 |
-| **WK** White-throated Kingfisher |  |  | 2 |  |  |  | 1 | 5 |  |  | 52 |  |
-| **YB** Yellow-vented Bulbul |  |  | 1 |  |  | 1 |  |  |  | 1 | 1 | 56 |
-
-Most confusion is Pied Fantail <-> Common Tailorbird (5 clips) and
-White-throated Kingfisher <-> Pied Fantail (5 clips); every other
-species pair has at most 2 misclassified clips.
-
-Raw counts are also in `confusion_matrix_int8.txt` / `.npz` in that run's
-result directory.
-
-</details>
+Most confusion is Pied Fantail ↔ Common Tailorbird (5 clips) and
+White-throated Kingfisher ↔ Pied Fantail (5 clips); every other species
+pair has at most 2 misclassified clips. Raw counts are also in that run's
+`confusion_matrix_int8.txt` / `.npz`.
 
 A 14sp confusion matrix isn't published here: reconstructing that run's
 exact test set (base 12sp + the 2 "plus-edition" species merged) reproduces
@@ -123,12 +103,13 @@ results_tailornet/                 one representative run per species count (see
                                     confusion matrix (12sp only, see above), summary JSON
 ```
 
-`tailornet.py` generates `confusion_matrix_{int8,fp32}.{txt,npz}` in
+`tailornet.py` generates `confusion_matrix_{int8,fp32}.{txt,npz,png}` in
 `output_dir` automatically as part of evaluation -- no separate plotting
-step required. It also matches the splits CSV's `file_id`s against
-on-disk filenames case-insensitively (the MyGardenBird splits CSVs use
-`XC...` while the audio files are `xc....wav`); a case-sensitive match
-silently resolves 0 clips for every split.
+step required (the `.png` needs matplotlib; if it's missing the `.txt`/
+`.npz` are still written). It also matches the splits CSV's `file_id`s
+against on-disk filenames case-insensitively (the MyGardenBird splits
+CSVs use `XC...` while the audio files are `xc....wav`); a case-sensitive
+match silently resolves 0 clips for every split.
 
 ## Quickstart
 
@@ -176,6 +157,7 @@ python eval_tailornet_seed7.py \
 
 - Python 3.10+, TensorFlow 2.15, `tf_keras`
 - librosa, numpy, scikit-learn
+- matplotlib (optional, for the confusion-matrix `.png`)
 
 ## Relation to DrongoNet
 
