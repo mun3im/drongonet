@@ -74,6 +74,44 @@ reference MynaNet 1o (120,500 params, 193.4 KB INT8).
 
 Full reports (with support column) are in each run's `classification_report_int8.txt` / `classification_report_fp32.txt`.
 
+<details>
+<summary>TailorNet-12sp — INT8 confusion matrix (seed 42, 720 test clips)</summary>
+
+Rows = true label, columns = predicted label (abbreviated). 93.89% accuracy overall.
+
+| True \ Pred | AK | CK | CI | CT | CB | LN | OS | PF | SD | WW | WK | YB |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **AK** Asian Koel | 58 |  | 1 |  |  |  |  |  |  |  |  | 1 |
+| **CK** Collared Kingfisher | 2 | 58 |  |  |  |  |  |  |  |  |  |  |
+| **CI** Common Iora |  | 1 | 51 |  |  |  | 4 |  |  |  |  | 4 |
+| **CT** Common Tailorbird |  |  |  | 55 |  |  |  | 5 |  |  |  |  |
+| **CB** Coppersmith Barbet |  |  |  |  | 60 |  |  |  |  |  |  |  |
+| **LN** Large-tailed Nightjar |  |  |  |  | 1 | 59 |  |  |  |  |  |  |
+| **OS** Olive-backed Sunbird |  |  |  |  |  |  | 60 |  |  |  |  |  |
+| **PF** Pied Fantail |  |  |  | 5 |  |  | 1 | 48 |  | 3 | 1 | 2 |
+| **SD** Spotted Dove |  |  |  |  |  |  |  |  | 60 |  |  |  |
+| **WW** White-breasted Waterhen |  |  |  |  |  |  |  |  |  | 59 |  | 1 |
+| **WK** White-throated Kingfisher |  |  | 2 |  |  |  | 1 | 5 |  |  | 52 |  |
+| **YB** Yellow-vented Bulbul |  |  | 1 |  |  | 1 |  |  |  | 1 | 1 | 56 |
+
+Most confusion is Pied Fantail <-> Common Tailorbird (5 clips) and
+White-throated Kingfisher <-> Pied Fantail (5 clips); every other
+species pair has at most 2 misclassified clips.
+
+Raw counts are also in `confusion_matrix_int8.txt` / `.npz` in that run's
+result directory.
+
+</details>
+
+A 14sp confusion matrix isn't published here: reconstructing that run's
+exact test set (base 12sp + the 2 "plus-edition" species merged) reproduces
+a materially different accuracy from the recorded 92.38%, so which precise
+split the original run used is unresolved and a matrix built against the
+wrong split would misrepresent the model. The 14sp INT8 model, its
+classification report, and `tailornet_summary.json` are still accurate and
+usable as-is -- only the extra confusion-matrix artifact is withheld
+pending that resolution.
+
 ## Repository layout
 
 ```
@@ -81,8 +119,16 @@ tailornet.py                       model definition, dataset loader, training/ev
 eval_tailornet_seed7.py             reproduce a seed's INT8 test accuracy from its saved model
 retrain_tailornet_seed7_history.py  retrain one seed with a combined warmup+finetune epoch history log
 results_tailornet/                 one representative run per species count (seed 42):
-                                    INT8 TFLite model, classification report, summary JSON
+                                    INT8 TFLite model, classification report,
+                                    confusion matrix (12sp only, see above), summary JSON
 ```
+
+`tailornet.py` generates `confusion_matrix_{int8,fp32}.{txt,npz}` in
+`output_dir` automatically as part of evaluation -- no separate plotting
+step required. It also matches the splits CSV's `file_id`s against
+on-disk filenames case-insensitively (the MyGardenBird splits CSVs use
+`XC...` while the audio files are `xc....wav`); a case-sensitive match
+silently resolves 0 clips for every split.
 
 ## Quickstart
 

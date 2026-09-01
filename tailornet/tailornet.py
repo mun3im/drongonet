@@ -192,8 +192,14 @@ def parse_splits_csv(csv_path):
 
 
 def build_file_lookup(flat_dir):
-    """filename -> (class_name, full_path), class_name from alphabetically
-    sorted subdirectory listing (not file-encounter order)."""
+    """lowercased filename -> (class_name, full_path), class_name from
+    alphabetically sorted subdirectory listing (not file-encounter order).
+    Keyed lowercase because this dataset's splits CSVs use the XenoCanto
+    'XC...' file_id casing while the on-disk .wav files are all lowercase
+    ('xc...') -- confirmed 2026-09-01 by re-running eval against the actual
+    MyGardenBird directories: a case-sensitive lookup here resolved 0/720
+    test clips (every key missed), not a subtly-wrong subset, so this
+    wasn't a latent bug that happened to cancel out during past runs."""
     lookup = {}
     for class_name in sorted(os.listdir(flat_dir)):
         class_dir = os.path.join(flat_dir, class_name)
@@ -201,7 +207,7 @@ def build_file_lookup(flat_dir):
             continue
         for f in os.listdir(class_dir):
             if f.endswith('.wav'):
-                lookup[f] = (class_name, os.path.join(class_dir, f))
+                lookup[f.lower()] = (class_name, os.path.join(class_dir, f))
     return lookup
 
 
@@ -217,11 +223,13 @@ def load_split(flat_dir, splits_csv, target_split):
     # splits CSV file_ids may or may not carry the .wav extension across
     # this repo's various CSVs -- handle both, matching parse conventions
     # already established elsewhere (osr_common.featurise_dir's callers).
+    # Matched case-insensitively against build_file_lookup's lowercased keys.
     resolved = []
     for fn, sp in sorted(splits.items()):
         if sp != target_split:
             continue
-        key = fn if fn in lookup else (fn + '.wav')
+        fn_lower = fn.lower()
+        key = fn_lower if fn_lower in lookup else (fn_lower + '.wav')
         if key in lookup:
             resolved.append(lookup[key])
 
@@ -340,6 +348,30 @@ def convert_to_tflite_int8(model, X_calib, path):
     return tflite_model, size_kb
 
 
+def save_confusion_matrix(y_test, preds, class_names, output_dir, tag):
+    """Save a confusion matrix both as a machine-readable .npz (cm,
+    class_names, y_test, preds -- same schema paper8_repro's plotting
+    scripts historically consumed) and a plain-text .txt for quick
+    inspection without loading numpy."""
+    cm = confusion_matrix(y_test, preds)
+    npz_path = os.path.join(output_dir, f"confusion_matrix_{tag}.npz")
+    np.savez(npz_path, cm=cm, class_names=np.array(class_names),
+              y_test=y_test, preds=preds)
+
+    txt_path = os.path.join(output_dir, f"confusion_matrix_{tag}.txt")
+    col_w = max(len(c) for c in class_names) + 2
+    with open(txt_path, 'w') as f:
+        header = " " * col_w + "".join(f"{i:>5}" for i in range(len(class_names)))
+        f.write(header + "\n")
+        for i, row in enumerate(cm):
+            f.write(f"{class_names[i]:<{col_w}}" + "".join(f"{v:>5}" for v in row) + "\n")
+        f.write("\n(rows = true label, columns = predicted label index; "
+                 "index -> class name listed above)\n")
+        for i, c in enumerate(class_names):
+            f.write(f"  {i}: {c}\n")
+    return cm
+
+
 def evaluate_tflite(tflite_path, X_test, y_test, class_names, output_dir):
     interp = tf.lite.Interpreter(model_path=tflite_path)
     interp.allocate_tensors()
@@ -361,6 +393,7 @@ def evaluate_tflite(tflite_path, X_test, y_test, class_names, output_dir):
     with open(os.path.join(output_dir, "classification_report_int8.txt"), 'w') as f:
         f.write(report)
     print(f"\nINT8 Classification Report:\n{report}")
+    save_confusion_matrix(y_test, preds, class_names, output_dir, tag="int8")
     return acc
 
 
@@ -479,6 +512,7 @@ def main():
     report_fp32 = classification_report(y_test, y_pred_fp32, target_names=class_names, digits=4)
     with open(os.path.join(output_dir, "classification_report_fp32.txt"), 'w') as f:
         f.write(report_fp32)
+    save_confusion_matrix(y_test, y_pred_fp32, class_names, output_dir, tag="fp32")
 
     keras_path = os.path.join(output_dir, "model_fp32.keras")
     model.save(keras_path)
