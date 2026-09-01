@@ -24,6 +24,7 @@ saved_model/
 *.tflite
 !deploy/*.tflite
 !edge_deploy/*.tflite
+!tailornet/results_tailornet/**/*.tflite
 
 # Experiment results (regenerable from scripts)
 results/

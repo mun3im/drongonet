@@ -1,0 +1,18 @@
+                           precision    recall  f1-score   support
+
+               Asian Koel     0.9667    0.9667    0.9667        60
+      Collared Kingfisher     0.9831    0.9667    0.9748        60
+              Common Iora     0.9273    0.8500    0.8870        60
+        Common Tailorbird     0.9167    0.9167    0.9167        60
+       Coppersmith Barbet     0.9836    1.0000    0.9917        60
+    Large-tailed Nightjar     0.9833    0.9833    0.9833        60
+     Olive-backed Sunbird     0.9091    1.0000    0.9524        60
+             Pied Fantail     0.8276    0.8000    0.8136        60
+             Spotted Dove     1.0000    1.0000    1.0000        60
+  White-breasted Waterhen     0.9365    0.9833    0.9593        60
+White-throated Kingfisher     0.9630    0.8667    0.9123        60
+     Yellow-vented Bulbul     0.8750    0.9333    0.9032        60
+
+                 accuracy                         0.9389       720
+                macro avg     0.9393    0.9389    0.9384       720
+             weighted avg     0.9393    0.9389    0.9384       720
