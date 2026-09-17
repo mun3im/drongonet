@@ -44,20 +44,37 @@ class FrequencyEmphasis(L.Layer):
         return cfg
 
 
-def build_drongonet_micro(input_shape=(184, 16, 1), num_classes=2, dropout=0.1):
-    """Faithful drongonet-micro. 919 params at (184,16,1)."""
+def build_drongonet_micro(input_shape=(184, 16, 1), num_classes=2, dropout=0.1,
+                          batch_norm=False):
+    """drongonet-micro. 919 params at (184,16,1) in its faithful form.
+
+    batch_norm defaults to False because that is what drongonet actually ships, and
+    this is the baseline. Set it True for the *control* arm: batch norm alone was worth
+    ~0.13 cross-corpus AUC on SparrowNet, so comparing a BN'd SparrowNet against a
+    BN-less micro would credit the topology for a gain that normalization supplied.
+    The control separates the two.
+    """
     inputs = L.Input(shape=input_shape)
     x = FrequencyEmphasis(freq_bins=input_shape[1], name="frequency_emphasis")(inputs)
-    x = L.Conv2D(6, (3, 3), padding="same", activation="relu",
-                 kernel_regularizer=tf.keras.regularizers.l2(1e-4))(x)
+
+    def block(x, filters, kernel, name):
+        x = L.Conv2D(filters, kernel, padding="same",
+                     activation=None if batch_norm else "relu",
+                     kernel_regularizer=tf.keras.regularizers.l2(1e-4), name=name)(x)
+        if batch_norm:
+            x = L.BatchNormalization(name=f"{name}_bn")(x)
+            x = L.ReLU(name=f"{name}_relu")(x)
+        return x
+
+    x = block(x, 6, (3, 3), "conv1")
     x = L.MaxPooling2D((2, 2))(x)
-    x = L.Conv2D(12, (3, 3), padding="same", activation="relu",
-                 kernel_regularizer=tf.keras.regularizers.l2(1e-4))(x)
-    x = L.Conv2D(12, (1, 1), padding="same", activation="relu", name="pointwise_conv")(x)
+    x = block(x, 12, (3, 3), "conv2")
+    x = block(x, 12, (1, 1), "pointwise_conv")
     x = L.GlobalAveragePooling2D()(x)
     x = L.Dropout(dropout)(x)
     outputs = L.Dense(num_classes, activation="softmax")(x)
-    return tf.keras.Model(inputs, outputs, name="drongonet_micro")
+    return tf.keras.Model(inputs, outputs,
+                          name="drongonet_micro_bn" if batch_norm else "drongonet_micro")
 
 
 def time_receptive_field(n_time_stages: int, kernel_t: int = 3, head_kernel_t: int = 1) -> int:

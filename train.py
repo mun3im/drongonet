@@ -210,6 +210,9 @@ def main():
                     help="default: full for sparrownet, crop for drongonet_micro")
     ap.add_argument("--stages", type=int, default=6, help="sparrownet time stages (RF)")
     ap.add_argument("--pool", default="max", choices=["max", "avg"])
+    ap.add_argument("--bn", action="store_true",
+                    help="drongonet_micro only: add batch norm (control arm, not the "
+                         "faithful baseline)")
     ap.add_argument("--no-bn", action="store_true",
                     help="disable batch norm (it is required for stages>=6: without it "
                          "the deep stack collapses to a constant output)")
@@ -244,7 +247,7 @@ def main():
         + (f"_st{args.stages}_{args.pool}" if args.arch == "sparrownet" else "")
         + (f"_hk{args.head_kernel}" if args.head_kernel > 1 else "")
         + ("_noaug" if args.no_augment else "")
-        + ("_nobn" if args.no_bn else "")
+        + ("_nobn" if args.no_bn else "") + ("_bn" if args.bn else "")
         + ("_qat" if args.qat else "")
         + f"_s{args.seed}"
     )
@@ -282,8 +285,10 @@ def main():
                                  dropout=args.dropout, batch_norm=not args.no_bn)
         rf = model.receptive_field_frames
     elif args.arch == "drongonet_micro":
+        # --no-bn is the default here: the faithful baseline has no BN. Passing --bn
+        # gives the control arm that separates topology from normalization.
         model = build_drongonet_micro(input_shape=(n_frames, n_mels, 1),
-                                      dropout=args.dropout)
+                                      dropout=args.dropout, batch_norm=args.bn)
         rf = None
     else:
         model = BENCHMARK_BUILDERS[args.arch](input_shape=(n_frames, n_mels, 1))
@@ -362,7 +367,8 @@ def main():
         "stages": args.stages if args.arch == "sparrownet" else None,
         "pool": args.pool if args.arch == "sparrownet" else None,
         "head_kernel": args.head_kernel if args.arch == "sparrownet" else None,
-        "augment": not args.no_augment, "batch_norm": not args.no_bn,
+        "augment": not args.no_augment,
+        "batch_norm": args.bn if args.arch == "drongonet_micro" else not args.no_bn,
         "epochs_run": len(hist.history["loss"]), "train_minutes": round(train_min, 2),
         "float32": {"val_auc": val_auc, "test_auc": test_auc},
         "int8": {"val_auc": q_val_auc, "test_auc": q_test_auc,
