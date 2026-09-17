@@ -5,7 +5,15 @@ All scripts import from here. Edit this file to change locations.
 
 DATASET_PATH = "/Volumes/Evo/datasets"
 RESULTS_BASE = "results"
-CACHE_BASE = "cache"
+
+# Cache lives OUTSIDE Dropbox and off the root partition, on /home (225 GB free).
+# drongonet's PICKUP.md: an 11 GB mel cache on /tmp filled the root partition and
+# caused repeated training crashes. A Dropbox-resident cache would also sync ~1.4 GB.
+CACHE_BASE = "/home/muneim/.cache/sparrownet"
+
+# Conda env used for all runs (matches drongonet, so numbers stay comparable):
+#   /home/muneim/miniconda3/envs/tf215_gpu/bin/python   (TF 2.15.0, tfmot 0.8.0)
+CONDA_PYTHON = "/home/muneim/miniconda3/envs/tf215_gpu/bin/python"
 
 # Model size budget (INT8 .tflite, bytes)
 SIZE_SOFT_LIMIT_BYTES = 10 * 1024   # 10 KB — target
@@ -38,3 +46,10 @@ N_MELS = 16
 FMIN = 100.0
 FMAX = 8000.0
 N_FRAMES = 1 + (CLIP_SAMPLES - N_FFT) // HOP_LENGTH  # 184
+
+# Whole-clip mode: DCASE clips are 10s. Cache is a fixed-width array, so clips are
+# padded/truncated to this many frames (warblr runs ~10.03s -> 626 frames; dropping
+# 4 frames off the tail of a 10s clip is immaterial).
+FULL_CLIP_SECONDS = 10.0
+FULL_CLIP_SAMPLES = int(SAMPLE_RATE * FULL_CLIP_SECONDS)  # 160000
+FULL_N_FRAMES = 1 + (FULL_CLIP_SAMPLES - N_FFT) // HOP_LENGTH  # 622
