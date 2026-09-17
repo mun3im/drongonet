@@ -210,6 +210,9 @@ def main():
                     help="default: full for sparrownet, crop for drongonet_micro")
     ap.add_argument("--stages", type=int, default=6, help="sparrownet time stages (RF)")
     ap.add_argument("--pool", default="max", choices=["max", "avg"])
+    ap.add_argument("--no-bn", action="store_true",
+                    help="disable batch norm (it is required for stages>=6: without it "
+                         "the deep stack collapses to a constant output)")
     ap.add_argument("--head-kernel", type=int, default=1)
     ap.add_argument("--width", default="8,16")
     ap.add_argument("--dropout", type=float, default=0.1)
@@ -241,6 +244,7 @@ def main():
         + (f"_st{args.stages}_{args.pool}" if args.arch == "sparrownet" else "")
         + (f"_hk{args.head_kernel}" if args.head_kernel > 1 else "")
         + ("_noaug" if args.no_augment else "")
+        + ("_nobn" if args.no_bn else "")
         + ("_qat" if args.qat else "")
         + f"_s{args.seed}"
     )
@@ -275,7 +279,7 @@ def main():
         model = build_sparrownet(input_shape=(n_frames, n_mels, 1),
                                  n_time_stages=args.stages, pool=args.pool,
                                  head_kernel_t=args.head_kernel, width=width,
-                                 dropout=args.dropout)
+                                 dropout=args.dropout, batch_norm=not args.no_bn)
         rf = model.receptive_field_frames
     elif args.arch == "drongonet_micro":
         model = build_drongonet_micro(input_shape=(n_frames, n_mels, 1),
@@ -358,7 +362,7 @@ def main():
         "stages": args.stages if args.arch == "sparrownet" else None,
         "pool": args.pool if args.arch == "sparrownet" else None,
         "head_kernel": args.head_kernel if args.arch == "sparrownet" else None,
-        "augment": not args.no_augment,
+        "augment": not args.no_augment, "batch_norm": not args.no_bn,
         "epochs_run": len(hist.history["loss"]), "train_minutes": round(train_min, 2),
         "float32": {"val_auc": val_auc, "test_auc": test_auc},
         "int8": {"val_auc": q_val_auc, "test_auc": q_test_auc,

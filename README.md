@@ -82,19 +82,71 @@ Frontend (identical to drongonet-micro, so numbers stay comparable): resample to
 python3 data.py    # sanity check: counts, class balance, shapes
 ```
 
+## Running things
+
+```bash
+PY=/home/muneim/miniconda3/envs/tf215_gpu/bin/python   # TF 2.15.0 + tfmot 0.8.0, GPU
+
+$PY build_cache.py                      # 16-mel cache (1.35 GB, ~8 min)
+$PY build_cache.py --n-mels 80          # 80-mel cache for the paper baselines (7.1 GB)
+$PY train.py --arch sparrownet --held-out birdvox --seed 42
+$PY aggregate.py --group                # results table, grouped across seeds
+$PY deploy/footprint.py results/*/*.tflite
+$PY deploy/export_c_array.py results/<tag>/sparrownet_int8.tflite -o deploy/sparrownet-micro.h
+```
+
+Every module self-checks in its `__main__`: `data.py` (corpus counts/shapes),
+`dataset.py` (TF and numpy normalizers vs librosa), `models.py` (param counts and
+receptive fields), `benchmark_archs.py` (params vs published), `qat.py` (QAT clone).
+
 ## Plan / status
 
 - [x] Repo scaffold, config, DCASE data loader (verified against all three corpora)
-- [ ] Mel cache builder (write to `cache/`, **never** to `/tmp` or root — see drongonet's
-      `PICKUP.md`: a full root partition caused repeated crashes there)
-- [ ] Baseline: drongonet-micro **unmodified** on DCASE — isolates "dataset vs architecture"
-      before changing anything
-- [ ] SparrowNet float32 (`develop/`), focal loss + cyclic time-shift augmentation
-      (the paper's most important augmentation for both of its models)
-- [ ] Ablate local receptive field: 103 frames (paper's 1.5s) vs 184 (drongonet's 3s)
-- [ ] INT8 **QAT** (not PTQ), verify recall floor post-quantization, re-sweep tau on the
-      INT8 model
-- [ ] Cross-corpus eval: in-domain CV AUC *and* held-out-corpus AUC for all three folds
-- [ ] Benchmark table vs drongonet-micro / drongonet-edge / bulbul / sparrow at matched
-      protocol (drongonet has a faithful `bulbul_arch.py` to pattern a `sparrow_arch.py` on)
-- [ ] Cortex-M4 (AudioMoth) size + latency bench
+- [x] Mel cache builder — 35,690 clips, 0 failures. Caches **raw power mel** so one
+      cache serves both the 3s-crop and whole-clip paths; a cache-derived crop matches
+      direct computation to 1.3e-07. Lives in `~/.cache/sparrownet`, off Dropbox and
+      off the root partition (drongonet's `PICKUP.md`: an 11 GB cache on `/tmp` filled
+      root and crashed runs)
+- [x] Baseline: drongonet-micro **unmodified** on DCASE — port reproduces its 919
+      params and its documented INT8 quantization scales exactly
+- [x] SparrowNet float32, focal loss + cyclic time-shift augmentation
+- [x] INT8 quantization + threshold sweep on the INT8 model; QAT implemented
+      (`qat.py`, selective annotation around the custom FrequencyEmphasis layer)
+- [~] Ablate local receptive field — in progress (phase C); phase A's answer was
+      invalid past stages=5, see **Batch norm** below
+- [ ] Cross-corpus eval: all three held-out folds x 3 seeds
+- [ ] Benchmark table vs drongonet-micro / drongonet-edge / bulbul / sparrow
+- [x] Cortex-M4 footprint tooling (`deploy/footprint.py`, `deploy/export_c_array.py`)
+- [ ] Latency **measured on hardware** — everything so far is an analytic estimate
+
+## Findings so far
+
+**The cross-corpus problem is real and is not about capacity.** Held out birdvox,
+trained on freefield1010+warblr: drongonet-micro gets in-domain val AUC 0.795 and
+cross-corpus 0.491; SparrowNet gets 0.887 in-domain and 0.502 cross-corpus. Both sit
+at chance on birdvox despite a 9-point in-domain gap. The scores are not degenerate —
+they span the full range, with precision pinned at 0.501, exactly birdvox's base rate —
+so the models are confidently wrong as often as right. This reproduces drongonet's own
+measured micro cross-corpus AUC (0.459 +- 0.034), which means it is a property of the
+data, not of the ASEAN dataset or of either architecture. Larger receptive fields help
+somewhat (stages=5, 1.0s: 0.540).
+
+**Batch norm is load-bearing.** Without it, every stages>=6 SparrowNet collapsed to a
+constant output (AUC exactly 0.5000) — six undamped depthwise stages lose the signal.
+The paper applies BN to all layers of this architecture; omitting it was our bug, and
+it invalidated phase A's receptive-field sweep past stages=5.
+
+**Depthwise strides must be equal in both dimensions.** `(2,1)` is rejected outright on
+CPU and is a portability risk on TFLite Micro. Once frequency collapses to 1, stride 2
+with `same` padding is a no-op on that axis, so `(2,2)` throughout costs nothing.
+
+**Size is dominated by per-layer overhead, not weights.** SparrowNet at 1,219 params
+converts to 10.91 KB while 919-param drongonet-micro converts to 6.00 KB: the
+difference is FlatBuffer per-layer cost (quantization metadata, op descriptors). The
+lever for the 10 KB target is layer count and width, not parameter count.
+
+**A latency figure in drongonet's docs looks wrong.** `LESSONS_LEARNT.md` claims
+0.1-0.3 ms per 3s clip on a 48 MHz Cortex-M4. drongonet-micro is 741,912 MACs, which
+at 48 MHz cannot complete faster than ~15 ms even at 1 MAC/cycle; 0.2 ms would need
+~200 MACs/cycle. The claim appears ~100x optimistic and is worth rechecking before it
+informs any power budget.

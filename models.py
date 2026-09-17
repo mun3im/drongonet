@@ -75,7 +75,7 @@ def time_receptive_field(n_time_stages: int, kernel_t: int = 3, head_kernel_t: i
 
 def build_sparrownet(input_shape=(622, 16, 1), num_classes=2,
                      n_time_stages=4, head_kernel_t=1, width=(8, 16),
-                     dropout=0.1, pool="max", name="sparrownet"):
+                     dropout=0.1, pool="max", batch_norm=True, name="sparrownet"):
     """
     Local-window detector: a short-receptive-field fully-convolutional trunk emits a
     logit per time position, then ONE global max over time decides the clip.
@@ -89,16 +89,28 @@ def build_sparrownet(input_shape=(622, 16, 1), num_classes=2,
         3 -> 15 frames    4 -> 31      5 -> 63      6 -> 127 frames (~2.0s)
     Frequency is strided down alongside time for the first log2(n_mels) stages, then
     collapsed by a full-height depthwise conv so the trunk is time-only afterwards.
+
+    batch_norm is on by default and is load-bearing, not cosmetic: without it every
+    n_time_stages>=6 model collapsed to a constant output (AUC exactly 0.5000) because
+    the signal vanishes through six undamped depthwise stages. The paper does the same
+    thing for this architecture ("In sparrow, we also apply batch normalization to all
+    layers"), and TFLite folds BN into the preceding conv at conversion, so it costs
+    essentially nothing at inference.
     """
     c1, c2 = width
     n_mels = input_shape[1]
     inputs = L.Input(shape=input_shape)
     x = FrequencyEmphasis(freq_bins=n_mels, name="frequency_emphasis")(inputs)
 
+    def maybe_bn(x, name):
+        return L.BatchNormalization(name=name)(x) if batch_norm else x
+
     # Stage 1: full-width strided conv. Early layers stay wide (drongonet lesson:
     # narrowing the early layer is the one change that reliably breaks recall).
-    x = L.Conv2D(c1, (3, 3), strides=(2, 2), padding="same", activation="relu",
+    x = L.Conv2D(c1, (3, 3), strides=(2, 2), padding="same",
                  kernel_regularizer=tf.keras.regularizers.l2(1e-4), name="stem")(x)
+    x = maybe_bn(x, "stem_bn")
+    x = L.ReLU(name="stem_relu")(x)
     freq = int(np.ceil(n_mels / 2))
 
     # Stages 2..n: depthwise-separable, stride 2 in BOTH dims throughout.
@@ -109,7 +121,11 @@ def build_sparrownet(input_shape=(622, 16, 1), num_classes=2,
     # padding is a no-op on that axis (ceil(1/2) == 1), so equal strides cost nothing.
     for i in range(2, n_time_stages + 1):
         x = L.DepthwiseConv2D((3, 3), strides=(2, 2), padding="same", name=f"dw{i}")(x)
-        x = L.Conv2D(c2, (1, 1), padding="same", activation="relu", name=f"pw{i}")(x)
+        x = maybe_bn(x, f"dw{i}_bn")
+        x = L.ReLU(name=f"dw{i}_relu")(x)
+        x = L.Conv2D(c2, (1, 1), padding="same", name=f"pw{i}")(x)
+        x = maybe_bn(x, f"pw{i}_bn")
+        x = L.ReLU(name=f"pw{i}_relu")(x)
         freq = int(np.ceil(freq / 2))
 
     # Collapse any remaining frequency extent so the head is purely temporal.
