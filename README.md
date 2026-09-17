@@ -121,20 +121,31 @@ receptive fields), `benchmark_archs.py` (params vs published), `qat.py` (QAT clo
 
 ## Findings so far
 
-**The cross-corpus problem is real and is not about capacity.** Held out birdvox,
-trained on freefield1010+warblr: drongonet-micro gets in-domain val AUC 0.795 and
-cross-corpus 0.491; SparrowNet gets 0.887 in-domain and 0.502 cross-corpus. Both sit
-at chance on birdvox despite a 9-point in-domain gap. The scores are not degenerate —
-they span the full range, with precision pinned at 0.501, exactly birdvox's base rate —
-so the models are confidently wrong as often as right. This reproduces drongonet's own
-measured micro cross-corpus AUC (0.459 +- 0.034), which means it is a property of the
-data, not of the ASEAN dataset or of either architecture. Larger receptive fields help
-somewhat (stages=5, 1.0s: 0.540).
+**Batch norm was worth ~0.13 cross-corpus AUC, and its absence caused a wrong
+conclusion.** The honest sequence, because the mistake is instructive:
 
-**Batch norm is load-bearing.** Without it, every stages>=6 SparrowNet collapsed to a
-constant output (AUC exactly 0.5000) — six undamped depthwise stages lose the signal.
-The paper applies BN to all layers of this architecture; omitting it was our bug, and
-it invalidated phase A's receptive-field sweep past stages=5.
+1. Held out birdvox (trained on freefield1010+warblr), no BN: drongonet-micro scored
+   in-domain val 0.795 / cross-corpus 0.491; SparrowNet 0.887 / 0.502. Both at chance
+   cross-corpus despite a 9-point in-domain gap.
+2. Those scores were *not* degenerate — full range, precision pinned at 0.501, exactly
+   birdvox's base rate — and they matched drongonet's own measured micro cross-corpus
+   AUC (0.459 +- 0.034). That agreement made "irreducible domain shift" look
+   well-evidenced, and it was recorded here as such.
+3. It was wrong. Adding BN took the same SparrowNet config to **val 0.901 /
+   cross-corpus 0.629**. A third of the apparent "domain shift" was our own missing
+   normalization — something the paper explicitly specifies for this architecture
+   ("In sparrow, we also apply batch normalization to all layers").
+
+The lesson: reproducing someone else's number is not evidence that the number is a
+floor. Both projects shared the same omission, so agreement confirmed nothing.
+
+BN is also what keeps deep stacks alive at all — without it every stages>=6 SparrowNet
+collapsed to a constant output (AUC exactly 0.5000), which silently invalidated phase
+A's receptive-field sweep past stages=5. TFLite folds BN into the preceding conv, so
+it is close to free at inference.
+
+A cross-corpus gap remains (0.90 in-domain vs 0.63 held-out), so domain shift is real —
+but its size is now an open question rather than a settled one.
 
 **Depthwise strides must be equal in both dimensions.** `(2,1)` is rejected outright on
 CPU and is a portability risk on TFLite Micro. Once frequency collapses to 1, stride 2
@@ -143,7 +154,10 @@ with `same` padding is a no-op on that axis, so `(2,2)` throughout costs nothing
 **Size is dominated by per-layer overhead, not weights.** SparrowNet at 1,219 params
 converts to 10.91 KB while 919-param drongonet-micro converts to 6.00 KB: the
 difference is FlatBuffer per-layer cost (quantization metadata, op descriptors). The
-lever for the 10 KB target is layer count and width, not parameter count.
+lever for the 10 KB target is layer count and width, not parameter count. Adding BN
+pushed st4 to 12.41 KB — BN itself folds away, but conv->BN->ReLU stops the ReLU
+fusing into the conv, so each block costs an extra op. Still inside the 16 KB hard
+ceiling; whether anything clears 10 KB is what the width sweep is for.
 
 **A latency figure in drongonet's docs looks wrong.** `LESSONS_LEARNT.md` claims
 0.1-0.3 ms per 3s clip on a 48 MHz Cortex-M4. drongonet-micro is 741,912 MACs, which
