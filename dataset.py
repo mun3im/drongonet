@@ -52,6 +52,37 @@ def normalize_tf(power):
     return minmax_tf(power_to_db_tf(power))
 
 
+def log1p_minmax_tf(power):
+    """MyBAD's compression (np.log1p) followed by our per-clip min-max.
+
+    Isolates ONE variable against normalize_tf for the frontend ablation: log
+    compression of power (log1p) vs dB relative to the clip peak (power_to_db with
+    ref=max, top_db=80). MyBAD additionally clips to the 1st/99th percentile before
+    scaling; that is a third factor and is deliberately NOT varied here.
+
+    Note log1p barely compresses at these levels -- 99.1% of MyBAD's power-mel values
+    are below 0.1, where log1p(S) is within 5% of S -- so this arm is close to a linear
+    power spectrogram, which is the point of testing it.
+    """
+    return minmax_tf(tf.math.log1p(power))
+
+
+def log1p_minmax_np(power):
+    power = np.asarray(power, dtype=np.float32)
+    single = power.ndim == 2
+    if single:
+        power = power[np.newaxis]
+    x = np.log1p(power)
+    lo = x.min(axis=(-2, -1), keepdims=True)
+    hi = x.max(axis=(-2, -1), keepdims=True)
+    rng = hi - lo
+    out = np.where(rng > 0, (x - lo) / np.maximum(rng, 1e-12), 0.0)
+    return (out[0] if single else out).astype(np.float32)
+
+
+FRONTENDS_TF = {"db": lambda p: minmax_tf(power_to_db_tf(p)), "log1p": log1p_minmax_tf}
+
+
 def normalize_np(power, top_db=TOP_DB):
     """Numpy twin of normalize_tf, vectorized over a leading batch axis.
 
@@ -101,7 +132,7 @@ def _center_crop_time(power, n_frames):
 
 def make_dataset(mel, labels, mode="full", training=False, batch_size=64,
                  augment=True, num_classes=2, shuffle_buffer=4096, seed=None,
-                 n_mels=N_MELS):
+                 n_mels=N_MELS, n_frames=None, frontend="db"):
     """
     mode "full" -> whole clip, (FULL_N_FRAMES, N_MELS, 1)   [sparrownet]
     mode "crop" -> 3s window,  (N_FRAMES, N_MELS, 1)        [drongonet-micro baseline]
@@ -110,7 +141,10 @@ def make_dataset(mel, labels, mode="full", training=False, batch_size=64,
     honest reading of a clip-level label); in eval it is centered, so eval is
     deterministic.
     """
-    n_frames = FULL_N_FRAMES if mode == "full" else N_FRAMES
+    if n_frames is None:
+        n_frames = FULL_N_FRAMES if mode == "full" else N_FRAMES
+    src_frames = mel[0].shape[0] if len(mel) else n_frames
+    norm = FRONTENDS_TF[frontend]
     y = tf.keras.utils.to_categorical(labels, num_classes=num_classes).astype(np.float32)
 
     ds = tf.data.Dataset.from_tensor_slices((np.arange(len(labels), dtype=np.int64), y))
@@ -125,17 +159,17 @@ def make_dataset(mel, labels, mode="full", training=False, batch_size=64,
 
     def _map(idx, label):
         power = tf.py_function(_fetch, [idx], tf.float32)
-        power.set_shape((FULL_N_FRAMES, n_mels))
+        power.set_shape((src_frames, n_mels))
 
         if training and augment:
             power = _cyclic_shift(power)
 
-        if mode == "crop":
+        if mode == "crop" and src_frames > n_frames:
             power = _random_crop_time(power, n_frames) if training \
                 else _center_crop_time(power, n_frames)
             power.set_shape((n_frames, n_mels))
 
-        x = normalize_tf(power)
+        x = norm(power)
         x = tf.expand_dims(x, -1)
         x.set_shape((n_frames, n_mels, 1))
         return x, label
