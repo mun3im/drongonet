@@ -84,7 +84,9 @@ def main():
                          "recordings (learning curve; test set stays fixed)")
     ap.add_argument("--segments-per-source", type=int, default=0,
                     help="cap training clips per source recording (0 = no cap). "
-                         "MyBAD has ~2, the 2nd being the weaker-energy pick.")
+                         "MyBAD has ~2 clips per source, numbered _1/_2 by clip index. "
+                         "Measured: clip _1 averages 2.2 dB hotter than _2, consistent "
+                         "with the extractor emitting its picks strongest-first.")
     ap.add_argument("--tag", default=None)
     args = ap.parse_args()
 

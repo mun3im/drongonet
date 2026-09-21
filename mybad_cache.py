@@ -45,9 +45,14 @@ _SEG_SUFFIX = re.compile(r"_\d+$")
 
 
 def group_id(filename):
-    """Source recording for a clip: strip the trailing _<segment> index.
+    """Source recording for a clip: strip the trailing _<clip index>.
+
+    The trailing number is a CLIP INDEX (MyBAD keeps ~2 clips per source recording);
+    everything before it is the source filename. `xc<num>` stems come from Xeno-canto,
+    `*_ml<num>` from the Macaulay Library; the rest are upstream negative corpora.
 
     xc216946_2.wav        -> xc216946
+    magrob_ml12345_1.wav  -> magrob_ml12345
     ff-64486_1.wav        -> ff-64486
     esc-1-100032-A-0_1.wav-> esc-1-100032-A-0
     23_12301_1.wav        -> 23_12301
@@ -83,6 +88,9 @@ def origin(filename):
         return "esc50"
     if re.match(r"^[a-z]+_[a-z]{2}_xc", g):
         return "xenocanto_seasia"  # region-coded SE Asian ambience, only ~923 clips
+    if re.search(r"_ml\d+$", g):
+        return "macaulay"          # Macaulay Library; species-coded stems (magrob,
+                                   # blnori, whvmyn), 236 positive clips
     if g.startswith("xc"):
         return "xenocanto"
     return "other"

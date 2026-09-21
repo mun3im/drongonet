@@ -2,8 +2,10 @@
 # Phase H: how many positive recordings does SparrowNet actually need?
 #
 # Answers "how many samples do I need to keep/regenerate" with a learning curve over
-# positive SOURCE RECORDINGS (not clips), plus a test of whether the 2nd-choice
-# (weaker-energy) segment per recording earns its place.
+# positive SOURCE RECORDINGS (not clips), plus a test of whether the second clip per
+# recording earns its place. The _1/_2 suffix is a clip index, not a documented energy
+# rank -- but measured, _1 averages 2.2 dB hotter than _2, so capping at 1 clip per
+# source also happens to keep the hotter half.
 #
 # Training subsets only. Val and test keep every clip, so all points are comparable.
 set -u
