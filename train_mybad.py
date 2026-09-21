@@ -79,6 +79,12 @@ def main():
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--no-augment", action="store_true")
+    ap.add_argument("--pos-source-frac", type=float, default=1.0,
+                    help="keep only this fraction of positive TRAINING source "
+                         "recordings (learning curve; test set stays fixed)")
+    ap.add_argument("--segments-per-source", type=int, default=0,
+                    help="cap training clips per source recording (0 = no cap). "
+                         "MyBAD has ~2, the 2nd being the weaker-energy pick.")
     ap.add_argument("--tag", default=None)
     args = ap.parse_args()
 
@@ -103,6 +109,29 @@ def main():
     print(f"MyBAD: train {len(tr_idx)} / val {len(va_idx)} / test {len(te_idx)} clips "
           f"from {len(gtr)}/{len(gva)}/{len(gte)} sources (no overlap)")
     print(f"frontend={args.frontend} n_fft={args.n_fft} input ({N_FRAMES},{N_MELS},1)")
+
+    # Learning-curve / segment-cap subsetting. Applied to TRAINING ONLY -- val and
+    # test keep every clip, so every point on the curve is scored on the same data.
+    if args.pos_source_frac < 1.0 or args.segments_per_source:
+        keep = []
+        by_src = {}
+        for i in tr_idx:
+            by_src.setdefault(groups[i], []).append(i)
+        pos_srcs = sorted(s for s, ix in by_src.items() if labels[ix[0]] == 1)
+        neg_srcs = sorted(s for s, ix in by_src.items() if labels[ix[0]] == 0)
+        rng = np.random.RandomState(args.seed)
+        if args.pos_source_frac < 1.0:
+            n = int(round(len(pos_srcs) * args.pos_source_frac))
+            pos_srcs = list(rng.permutation(pos_srcs)[:n])
+        for s in pos_srcs + neg_srcs:
+            ix = sorted(by_src[s])
+            keep.extend(ix[:args.segments_per_source] if args.segments_per_source else ix)
+        tr_idx = np.array(sorted(keep))
+        rng.shuffle(tr_idx)
+        npos = int(labels[tr_idx].sum())
+        print(f"subset: {len(tr_idx)} training clips ({npos} pos / {len(tr_idx)-npos} neg) "
+              f"from {len(pos_srcs)} positive sources "
+              f"(frac={args.pos_source_frac}, seg_cap={args.segments_per_source or 'none'})")
 
     tr_mel, tr_lab = IndexedMel(mel, tr_idx), labels[tr_idx]
     va_mel, va_lab = IndexedMel(mel, va_idx), labels[va_idx]
@@ -188,6 +217,8 @@ def main():
         "params": int(model.count_params()), "stages": args.stages if rf else None,
         "width": list(width), "receptive_field_frames": rf,
         "epochs_run": len(hist.history["loss"]), "train_minutes": round(mins, 2),
+        "pos_source_frac": args.pos_source_frac,
+        "segments_per_source": args.segments_per_source,
         "n_train": int(len(tr_idx)), "n_val": int(len(va_idx)), "n_test": int(len(te_idx)),
         "n_sources_train": len(gtr), "n_sources_test": len(gte),
         "split": "grouped_by_source_recording",

@@ -3,6 +3,11 @@
 A field recording task. No machine learning knowledge needed — if you can operate a
 recorder and keep a tidy spreadsheet, you can do this well.
 
+> **Read [`INTERN_WORKPLAN.md`](INTERN_WORKPLAN.md) first.** It sets out the order of
+> work — field test the existing detector *before* collecting, so that what you record
+> is aimed at a failure you have actually seen. This document is the how-to for the
+> recording step itself.
+
 ---
 
 ## 1. What you are collecting, in one sentence
@@ -87,9 +92,17 @@ day's recording. Check them before every session.
 
 ## 5. How much, and how varied
 
-**Target: 10–15 hours of usable audio.** That becomes roughly 12,000–18,000 three-second
-examples, which is enough to roughly double the "no bird" side of our dataset with
-Malaysian content.
+**Eventual target: 10–15 hours of usable audio** — roughly 12,000–18,000 three-second
+examples, enough to roughly double the "no bird" side of our dataset with Malaysian
+content.
+
+**But do not collect all of that before the first retrain.** Per
+[`INTERN_WORKPLAN.md`](INTERN_WORKPLAN.md), the plan is: field test the existing
+detector first, record **4–5 hours** aimed at whatever actually fooled it, retrain, test
+again, then decide what else is worth recording. 4–5 hours is already enough for a
+useful first retrain, and recordings chosen after seeing a real failure are worth far
+more than recordings chosen by guessing. Treat 15 hours as where you end up after two or
+three rounds, not as a gate.
 
 **Variety beats volume.** 10 hours from 12 different places, times and weather
 conditions is worth far more than 30 hours from behind your house. Once the detector has
@@ -234,9 +247,9 @@ to every second of a 20-minute file, but do this:
    report cost us nothing; problems we discover later cost us a lot.
 
 Hand over in batches — after your first 1–2 hours, send those over before doing more.
-We will check the settings and naming and confirm you are on track. **Do not record all
-15 hours before anyone looks at the first file**, in case something about the gain or
-format needs changing.
+We will check the settings and naming and confirm you are on track. **Do not record for
+days before anyone looks at the first file**, in case something about the gain or format
+needs changing.
 
 ## 12. First session — a suggested start
 
