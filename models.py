@@ -157,11 +157,17 @@ def build_sparrownet(input_shape=(622, 16, 1), num_classes=2,
     x = L.Conv2D(num_classes, (1, 1), padding="same", name="local_logits")(x)
 
     # Pool the local decisions over time, then softmax once.
-    x = L.Reshape((-1, num_classes))(x)
+    #
+    # Pools in 2D over (time, freq) rather than Reshape((-1, C)) + 1D pooling. The
+    # reshape carried a -1, which made the converted graph emit SHAPE / STRIDED_SLICE /
+    # PACK and four dynamic-shape tensors — TFLite Micro requires static shapes, so
+    # that form is not deployable on the Cortex-M4 target. Frequency is already
+    # collapsed to 1 here, so pooling over (T,1) is numerically the same operation and
+    # converts to a single REDUCE_MAX with static shapes.
     if pool == "max":
-        x = L.GlobalMaxPooling1D(name="global_max")(x)
+        x = L.GlobalMaxPooling2D(name="global_max")(x)
     elif pool == "avg":
-        x = L.GlobalAveragePooling1D(name="global_avg")(x)
+        x = L.GlobalAveragePooling2D(name="global_avg")(x)
     else:
         raise ValueError(f"pool must be 'max' or 'avg', got {pool!r}")
     outputs = L.Softmax(name="softmax")(x)

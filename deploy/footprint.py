@@ -30,11 +30,22 @@ import tensorflow as tf
 
 from config import SIZE_SOFT_LIMIT_BYTES, SIZE_HARD_LIMIT_BYTES
 
-# Cortex-M4 with DSP extensions running CMSIS-NN INT8 kernels sustains roughly this
-# many MACs per cycle on convolution work. It is a throughput assumption, not a
-# guarantee: real kernels lose time to im2col, padding and memory stalls.
-MACS_PER_CYCLE_M4 = 1.0
+# CALIBRATED against a real measurement, not assumed. argus/WIO_TERMINAL_DRONGONET_
+# LATENCY.md reports drongonet-micro at 97.47 ms inference on a Wio Terminal
+# (ATSAMD51P19A, Cortex-M4F @ 120 MHz, N=100, reproduced across three flashes).
+# That model is 741,912 MACs, so:
+#     741,912 MACs / (0.09747 s * 120e6 Hz) = 0.0634 MACs/cycle
+# i.e. TFLite Micro INT8 on this part sustains ~1/16th of the naive 1 MAC/cycle
+# figure once interpreter dispatch, im2col and memory stalls are counted. The old
+# 1.0 default under-predicted that measurement by 15x.
+#
+# Caveat: one data point from one op mix. Depthwise convolutions generally achieve
+# lower MAC efficiency than dense ones, so a depthwise-heavy graph like SparrowNet
+# may run slower per MAC than this. Treat the output as an order-of-magnitude guide
+# and measure on hardware with the existing bench sketch.
+MACS_PER_CYCLE_M4 = 0.0634
 AUDIOMOTH_CLOCK_MHZ = 48.0
+WIO_TERMINAL_CLOCK_MHZ = 120.0
 
 
 def _dtype_bytes(dtype):
