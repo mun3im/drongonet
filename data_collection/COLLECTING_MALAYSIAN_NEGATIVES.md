@@ -3,10 +3,11 @@
 A field recording task. No machine learning knowledge needed — if you can operate a
 recorder and keep a tidy spreadsheet, you can do this well.
 
-> **Read [`INTERN_WORKPLAN.md`](INTERN_WORKPLAN.md) first.** It sets out the order of
-> work — field test the existing detector *before* collecting, so that what you record
-> is aimed at a failure you have actually seen. This document is the how-to for the
-> recording step itself.
+> **This is Track A's recording how-to.** Read
+> [`TRACK_A_COLLECT_AND_TRAIN.md`](TRACK_A_COLLECT_AND_TRAIN.md) first — it sets out
+> what to record and when, including the fact that Track B is measuring real failures
+> outdoors in week 1 so that your week 2 recording can aim at something measured rather
+> than guessed.
 
 ---
 
@@ -97,12 +98,12 @@ examples, enough to roughly double the "no bird" side of our dataset with Malays
 content.
 
 **But do not collect all of that before the first retrain.** Per
-[`INTERN_WORKPLAN.md`](INTERN_WORKPLAN.md), the plan is: field test the existing
-detector first, record **4–5 hours** aimed at whatever actually fooled it, retrain, test
-again, then decide what else is worth recording. 4–5 hours is already enough for a
-useful first retrain, and recordings chosen after seeing a real failure are worth far
-more than recordings chosen by guessing. Treat 15 hours as where you end up after two or
-three rounds, not as a gate.
+[`TRACK_A_COLLECT_AND_TRAIN.md`](TRACK_A_COLLECT_AND_TRAIN.md), the target for the first
+loop is **6 hours of raw audio** — about 5,000 usable clips once birds, silence and
+`maybe` flags are removed. That is already enough for a useful retrain, and recordings
+chosen after Track B has seen a real failure are worth far more than recordings chosen
+by guessing. Treat 15 hours as where you end up after two or three rounds, not as a
+gate.
 
 **Variety beats volume.** 10 hours from 12 different places, times and weather
 conditions is worth far more than 30 hours from behind your house. Once the detector has
