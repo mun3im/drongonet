@@ -229,10 +229,22 @@ def build(n_mels=N_MELS, n_fft=1024, workers=8, force=False):
 
 
 def load(n_mels=N_MELS, n_fft=1024, mmap=True):
+    """Returns (mel, labels, groups, origins).
+
+    `groups` and `origins` are RECOMPUTED from the cached paths, not read back from the
+    npz. Both are pure functions of the filename, so a stored copy goes stale the moment
+    group_id()/origin() learns a new pattern — which already bit us once: after Macaulay,
+    warblr and BirdVox were added to origin(), an `--exclude-origin macaulay` run
+    excluded nothing at all and reported 39138 -> 39138 clips, because the npz still said
+    every one of them was "other". Recomputing costs milliseconds and cannot go stale.
+    """
     mel_path, meta_path = cache_paths(n_mels, n_fft)
     mel = np.load(mel_path, mmap_mode="r" if mmap else None)
-    m = np.load(meta_path, allow_pickle=False)
-    return mel, m["labels"], m["groups"], m["origins"]
+    meta = np.load(meta_path, allow_pickle=False)
+    paths = meta["paths"]
+    groups = np.array([group_id(str(p)) for p in paths])
+    origins = np.array([origin(str(p)) for p in paths])
+    return mel, meta["labels"], groups, origins
 
 
 if __name__ == "__main__":

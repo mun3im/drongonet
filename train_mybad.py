@@ -79,6 +79,9 @@ def main():
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--no-augment", action="store_true")
+    ap.add_argument("--exclude-origin", default=None,
+                    help="drop this origin from TRAINING (e.g. macaulay). Test set "
+                         "keeps it, so recall on a wholly unseen source can be read off.")
     ap.add_argument("--pos-source-frac", type=float, default=1.0,
                     help="keep only this fraction of positive TRAINING source "
                          "recordings (learning curve; test set stays fixed)")
@@ -111,6 +114,16 @@ def main():
     print(f"MyBAD: train {len(tr_idx)} / val {len(va_idx)} / test {len(te_idx)} clips "
           f"from {len(gtr)}/{len(gva)}/{len(gte)} sources (no overlap)")
     print(f"frontend={args.frontend} n_fft={args.n_fft} input ({N_FRAMES},{N_MELS},1)")
+
+    # Hold out an entire upstream source from TRAINING only. Used to ask whether the
+    # detector needs to have heard a species at all, or whether "bird" generalizes:
+    # exclude e.g. macaulay (3 species that Xeno-canto blocks) and then read recall on
+    # those clips, none of which the model has seen.
+    if args.exclude_origin:
+        before = len(tr_idx)
+        tr_idx = np.array([i for i in tr_idx if origins[i] != args.exclude_origin])
+        print(f"excluded origin '{args.exclude_origin}' from training: "
+              f"{before} -> {len(tr_idx)} clips")
 
     # Learning-curve / segment-cap subsetting. Applied to TRAINING ONLY -- val and
     # test keep every clip, so every point on the curve is scored on the same data.
@@ -212,6 +225,37 @@ def main():
         print(f"DCASE cross-corpus {corpus}: AUC {dcase[corpus]['auc']:.4f}"
               + ("  [CONTAMINATED: its negatives are in MyBAD]" if contaminated else ""))
 
+    # Per-origin recall over EVERY positive clip of the excluded origin (not just the
+    # test split), since none of them were trained on when --exclude-origin is set.
+    per_origin = {}
+    if args.exclude_origin:
+        sel = np.where((origins == args.exclude_origin) & (labels == 1))[0]
+        if len(sel):
+            ds = make_dataset(IndexedMel(mel, sel), labels[sel], training=False,
+                              batch_size=128, augment=False, **kw)
+            p = model.predict(ds, verbose=0)[:, 1]
+            per_origin[args.exclude_origin] = {
+                "n": int(len(sel)), "mean_score": float(p.mean()),
+                "recall_at_0.30": float((p >= 0.30).mean()),
+                "recall_at_0.50": float((p >= 0.50).mean())}
+            print(f"UNSEEN origin '{args.exclude_origin}': n={len(sel)} "
+                  f"recall@0.30={per_origin[args.exclude_origin]['recall_at_0.30']:.4f} "
+                  f"recall@0.50={per_origin[args.exclude_origin]['recall_at_0.50']:.4f}")
+        # same measurement on xenocanto positives, as the seen-origin reference
+        sel2 = np.where((origins == "xenocanto") & (labels == 1))[0]
+        rng2 = np.random.RandomState(0)
+        sel2 = rng2.choice(sel2, size=min(2000, len(sel2)), replace=False)
+        ds2 = make_dataset(IndexedMel(mel, sel2), labels[sel2], training=False,
+                           batch_size=128, augment=False, **kw)
+        p2 = model.predict(ds2, verbose=0)[:, 1]
+        per_origin["xenocanto_reference"] = {
+            "n": int(len(sel2)), "mean_score": float(p2.mean()),
+            "recall_at_0.30": float((p2 >= 0.30).mean()),
+            "recall_at_0.50": float((p2 >= 0.50).mean())}
+        print(f"SEEN origin 'xenocanto' (reference): n={len(sel2)} "
+              f"recall@0.30={per_origin['xenocanto_reference']['recall_at_0.30']:.4f} "
+              f"recall@0.50={per_origin['xenocanto_reference']['recall_at_0.50']:.4f}")
+
     rows, chosen = threshold_sweep(q_lab, q_scores)
     result = {
         "tag": tag, "arch": args.arch, "trained_on": "mybad",
@@ -227,7 +271,8 @@ def main():
         "mybad_val_auc": val_auc, "mybad_test_auc": test_auc,
         "mybad_test_auc_int8": q_test_auc,
         "int8": {"size_bytes": size, "size_kb": round(size/1024, 2), "verdict": verdict},
-        "dcase_crosscorpus": dcase,
+        "dcase_crosscorpus": dcase, "exclude_origin": args.exclude_origin,
+        "per_origin_unseen": per_origin,
         "threshold_sweep_int8_mybad_test": rows, "chosen_tau": chosen,
         "weights": ckpt,
     }
