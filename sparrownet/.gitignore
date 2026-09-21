@@ -3,3 +3,5 @@ __pycache__/
 cache/
 results/
 *.log
+.Rhistory
+.DS_Store
