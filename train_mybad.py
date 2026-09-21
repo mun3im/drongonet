@@ -10,9 +10,10 @@ Splits are by SOURCE RECORDING, never by clip: MyBAD's 56,000 clips come from 37
 recordings (~1.9 segments each for positives), and a clip-level split would put
 segments of one recording on both sides -- measured at 48.7% of test clips leaking.
 
-The DCASE cross-check EXCLUDES freefield1010, because all 5,754 `ff-*` sources in
-MyBAD's negatives are freefield1010 items (negative in both datasets). Scoring a
-MyBAD-trained model on freefield1010 would be scoring it on its own training audio.
+The DCASE cross-check is reported but is NOT clean for any corpus: MyBAD's negatives
+absorb the entire negative half of all three (freefield1010, warblr, BirdVox -- 19,643
+clips, 35.1% of MyBAD), so a MyBAD-trained model has seen part of every DCASE corpus.
+The numbers are kept for continuity with earlier phases and flagged, not trusted.
 
 Usage:
     python train_mybad.py --frontend db    --n-fft 1024 --seed 42
@@ -165,16 +166,20 @@ def main():
     # secondary: DCASE cross-corpus, EXCLUDING freefield1010 (it is inside MyBAD)
     dcase = {}
     for corpus in DCASE_CORPORA:
-        if corpus == "freefield1010":
-            dcase[corpus] = {"skipped": "overlaps MyBAD negatives (all 5754 ff- ids)"}
-            continue
+        # Every DCASE corpus's negatives are inside MyBAD, so none is a clean
+        # cross-corpus test. Score them anyway for continuity, but record the taint.
+        contaminated = corpus in mybad_cache.DCASE_DERIVED
         dm, dl, _ = load_cache(corpus, mmap=True)
         ds = make_dataset(dm, dl, mode="crop", n_frames=N_FRAMES, n_mels=N_MELS,
                           frontend=args.frontend, training=False, batch_size=128,
                           augment=False)
         p = model.predict(ds, verbose=0)[:, 1]
-        dcase[corpus] = {"auc": float(roc_auc_score(dl, p)), "n": int(len(dl))}
-        print(f"DCASE cross-corpus {corpus}: AUC {dcase[corpus]['auc']:.4f}")
+        dcase[corpus] = {"auc": float(roc_auc_score(dl, p)), "n": int(len(dl)),
+                         "contaminated": contaminated,
+                         "note": ("this corpus's negatives are inside MyBAD's training "
+                                  "pool" if contaminated else "")}
+        print(f"DCASE cross-corpus {corpus}: AUC {dcase[corpus]['auc']:.4f}"
+              + ("  [CONTAMINATED: its negatives are in MyBAD]" if contaminated else ""))
 
     rows, chosen = threshold_sweep(q_lab, q_scores)
     result = {

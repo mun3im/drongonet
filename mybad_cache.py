@@ -18,11 +18,11 @@ Two label hazards this module exists to handle:
    inflates test scores. `group_id()` recovers the source and `grouped_split()` splits
    on it.
 
-2. DCASE OVERLAP. Every one of the 5,754 `ff-*` source ids in MyBAD's negatives is a
-   freefield1010 itemid, negative in both datasets -- i.e. essentially all of
-   freefield1010's negatives are reused here (~10% of all MyBAD clips). Any
-   DCASE-trained model evaluated on MyBAD has therefore already seen them. `origin()`
-   labels each clip so those can be excluded or reported separately.
+2. DCASE OVERLAP. MyBAD's negatives absorb the entire negative half of ALL THREE DCASE
+   corpora -- freefield1010, warblr and BirdVox -- 19,643 clips, 70.2% of MyBAD's
+   negatives and 35.1% of the whole dataset. So a DCASE-trained model scored on MyBAD
+   has already seen a third of it, and a MyBAD-trained model has no clean DCASE
+   cross-corpus test left. `origin()` tags every clip; see DCASE_DERIVED.
 """
 
 import os
@@ -56,13 +56,33 @@ def group_id(filename):
     return _SEG_SUFFIX.sub("", stem)
 
 
+# ALL THREE DCASE corpora are inside MyBAD's negatives. Verified 2026-09-21 against
+# each corpus's own metadata CSV: every `ff-` id (5,754) is a freefield1010 itemid,
+# every `wb-` id (1,955) a warblr itemid, every `bv-` id (9,983) a BirdVox itemid --
+# and all of them are labelled negative in their origin dataset too. MyBAD's negative
+# pool absorbs the entire negative half of all three:
+#     bv 9,983 + ff 5,755 + wb 3,905 = 19,643 clips
+#     = 70.2% of MyBAD's negatives, 35.1% of all MyBAD
+# Consequences: (1) a DCASE-trained model scored on MyBAD has already seen a third of
+# it; (2) there is NO clean DCASE cross-corpus test left for a MyBAD-trained model;
+# (3) MyBAD's notion of "not a bird" is overwhelmingly UK/US, not Malaysian -- only
+# 923 negative clips (3.3%) are region-coded SE Asian ambience.
+DCASE_DERIVED = ("freefield1010", "warblr", "birdvox")
+
+
 def origin(filename):
     """Which upstream corpus a clip came from, inferred from its name."""
     g = group_id(filename)
     if g.startswith("ff-"):
-        return "freefield1010"     # overlaps our DCASE training data
+        return "freefield1010"     # overlaps DCASE: all of ff1010's negatives
+    if g.startswith("wb-"):
+        return "warblr"            # overlaps DCASE: all of warblr's negatives
+    if g.startswith("bv-"):
+        return "birdvox"           # overlaps DCASE: all of BirdVox's negatives
     if g.startswith("esc-"):
         return "esc50"
+    if re.match(r"^[a-z]+_[a-z]{2}_xc", g):
+        return "xenocanto_seasia"  # region-coded SE Asian ambience, only ~923 clips
     if g.startswith("xc"):
         return "xenocanto"
     return "other"
@@ -226,8 +246,12 @@ if __name__ == "__main__":
             print(f"  {name}: {len(sub)} clips, {len({c['group'] for c in sub})} sources")
             for o, k in collections.Counter(c["origin"] for c in sub).most_common():
                 print(f"      {o:14s} {k:6d} clips")
-        ff = [c for c in clips if c["origin"] == "freefield1010"]
-        print(f"  freefield1010-derived (overlaps DCASE training): {len(ff)} clips "
-              f"= {100*len(ff)/len(clips):.1f}% of MyBAD")
+        dc = [c for c in clips if c["origin"] in DCASE_DERIVED]
+        print(f"  DCASE-derived (freefield1010+warblr+birdvox): {len(dc)} clips "
+              f"= {100*len(dc)/len(clips):.1f}% of MyBAD")
+        sea = [c for c in clips if c["origin"] == "xenocanto_seasia"]
+        negs = [c for c in clips if c["label"] == 0]
+        print(f"  SE Asian ambience among negatives: {len(sea)} clips "
+              f"= {100*len(sea)/len(negs):.1f}% of negatives")
     else:
         build(args.n_mels, args.n_fft, args.workers, args.force)
