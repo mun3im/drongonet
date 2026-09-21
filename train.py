@@ -46,6 +46,30 @@ except Exception:
 
 # ---------------------------------------------------------------- data
 
+def build_splits_all(seed, n_mels=N_MELS):
+    """Train on ALL three DCASE corpora with an in-domain val split, no held-out fold.
+
+    For an external test set (MyBAD), holding out a DCASE corpus only throws away
+    training data: the generalization question is DCASE -> Malaysia, not
+    DCASE-minus-one -> DCASE-one. The reported "test" here is the in-domain val split;
+    the external score comes from evaluate_mybad.py.
+    """
+    mels, labels = [], []
+    for name in DCASE_CORPORA:
+        m, lab, _ = load_cache(name, mmap=True, n_mels=n_mels)
+        mels.append(m)
+        labels.append(lab)
+    mel = ConcatMel(mels)
+    all_labels = np.concatenate(labels)
+    tr_idx, va_idx = stratified_split(all_labels, val_fraction=0.15, seed=seed)
+    return {
+        "train_corpora": list(DCASE_CORPORA),
+        "train_mel": mel, "train_labels": all_labels,
+        "tr_idx": tr_idx, "va_idx": va_idx,
+        "test_mel": IndexedMel(mel, va_idx), "test_labels": all_labels[va_idx],
+    }
+
+
 def build_splits_single_corpus(corpus, seed, n_mels=N_MELS):
     """Diagnostic split: train/val/test all inside ONE corpus (70/15/15).
 
@@ -205,7 +229,9 @@ def main():
                     choices=["sparrownet", "drongonet_micro"] + list(BENCHMARK_BUILDERS))
     ap.add_argument("--n-mels", type=int, default=N_MELS,
                     help="must match a built cache; 80 for the bulbul/sparrow baselines")
-    ap.add_argument("--held-out", default="birdvox", choices=list(DCASE_CORPORA))
+    ap.add_argument("--held-out", default="birdvox",
+                    choices=list(DCASE_CORPORA) + ["all"],
+                    help="'all' trains on every corpus (for an external test set)")
     ap.add_argument("--mode", default=None, choices=["full", "crop"],
                     help="default: full for sparrownet, crop for drongonet_micro")
     ap.add_argument("--stages", type=int, default=6, help="sparrownet time stages (RF)")
@@ -257,6 +283,8 @@ def main():
 
     if args.single_corpus:
         S = build_splits_single_corpus(args.single_corpus, args.seed, n_mels=n_mels)
+    elif args.held_out == "all":
+        S = build_splits_all(args.seed, n_mels=n_mels)
     else:
         S = build_splits(args.held_out, args.seed, n_mels=n_mels)
     n_frames = FULL_N_FRAMES if mode == "full" else N_FRAMES
@@ -329,7 +357,7 @@ def main():
     te_scores = predict_keras(model, S["test_mel"], S["test_labels"], mode, n_mels=n_mels)
     val_auc = float(roc_auc_score(va_lab, va_scores))
     test_auc = float(roc_auc_score(S["test_labels"], te_scores))
-    kind = "in-domain" if args.single_corpus else "cross-corpus"
+    kind = "in-domain" if (args.single_corpus or args.held_out == "all") else "cross-corpus"
     print(f"float32:  val AUC {val_auc:.4f} | {kind}({target}) AUC {test_auc:.4f}")
 
     # ---- INT8 (post-training quantization, calibrated on the training split)
@@ -377,6 +405,8 @@ def main():
                  "verdict": verdict},
         "threshold_sweep_int8_crosscorpus": sweep_rows,
         "chosen_tau": chosen,
+        "width": list(width), "dropout": args.dropout,
+        "weights": os.path.join(out_dir, "best.weights.h5"),
         "n_train": int(len(S["tr_idx"])), "n_val": int(len(S["va_idx"])),
         "n_test": int(len(S["test_labels"])),
     }
