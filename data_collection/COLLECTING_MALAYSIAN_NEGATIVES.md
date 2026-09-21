@@ -171,10 +171,23 @@ Rules:
   numbered parts automatically, keep those parts and name them `_01a`, `_01b` — just
   tell us they belong together.
 
-Why so fussy: our training code groups files by name to make sure two pieces of the
-*same* recording never end up on opposite sides of a train/test split. If that grouping
-breaks, our accuracy numbers silently become wrong — this has already bitten this
-project once. The naming is how we prevent it.
+Why so fussy: our training code groups files **by source recording**, using the name, so
+that two pieces of one recording never land on opposite sides of a train/test split. Two
+3-second slices of the same take share the same insects, the same wind, the same
+microphone position — so if one went into training and the other into testing, the model
+would be scored on what it had already seen and the result would look far better than it
+is. We measured this on the existing dataset: a careless clip-level split leaked **48.7%
+of the test set**.
+
+Your long takes become many clips each, so this matters more for your recordings than
+for anything else in the dataset. The ingest script handles it automatically **provided
+the names follow the pattern above** — and it is worth knowing that a broken name does
+not cause an error, it causes a quietly inflated accuracy number. Hence the fussiness.
+
+Keeping site nicknames consistent has a second payoff: it lets us hold out whole
+*locations* for testing, which measures how the detector behaves somewhere it has never
+heard before — much closer to the real deployment question than holding out random
+clips.
 
 ## 8. The log — as important as the audio
 

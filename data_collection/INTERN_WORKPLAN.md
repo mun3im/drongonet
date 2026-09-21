@@ -124,6 +124,31 @@ guidance here said "25% is enough"; a second training seed showed that was noise
 25% actually costs about 0.007 AUC. Not much, but there is no reason to pay it when the
 full run is ten minutes.
 
+### "Both clips come from one recording — won't that inflate the results?"
+
+Good question, and the honest answer is: it *would*, badly, if the split were done
+naively — but it is not, so **keep both clips**.
+
+A split that picked random *clips* would put `xc216946_1` in training and `xc216946_2`
+in test. Those are two slices of the same bird in the same recording with the same
+background, so the model would effectively be tested on its training data and the score
+would come out flattering and meaningless. On this dataset we measured that a naive
+clip-level split would leak **48.7% of the test set** — nearly half.
+
+The code splits by **source recording** instead, so both clips of a recording always
+land on the same side. Verified on the real data: of the 18,864 sources that have
+exactly 2 clips, **0** had their clips end up in different splits. `train_mybad.py`
+also re-checks this on every run and aborts if it is ever violated, so it cannot
+quietly regress.
+
+Because there is no leak to fix, halving the data would only throw away real training
+signal: one clip per recording scores 0.9689 against 0.9716 for both. Keep both.
+
+There is one place this concern still bites, and it is on **your** side: two takes
+recorded at the same site an hour apart are *not* the same recording by filename, but
+they do share place, weather and insects. Section 7 of the collection protocol explains
+the naming that lets us group them properly at ingest.
+
 ### The minimal dataset
 
 | part | how many clips | where from |
@@ -156,28 +181,45 @@ or missing from the log, is listed as skipped and left out — go back and re-li
 those, then re-log them as `no` if they are clean. It also tells you how far you are
 from the ~5,000-clip target and how many more minutes you need.
 
-Then build the features and retrain:
+Then build the features and retrain.
+
+**Use `--n-fft 1024`, and this matters.** Week 1 flashed the `n_fft_1024` model because
+it works with the device's existing `mel_tables.h` untouched. The model and the device's
+mel settings must agree: flash a 512-trained model onto the 1024 mel pipeline and it
+will run happily and produce nonsense, with no error to warn you. Train at 1024, keep
+the same tables, change one thing at a time. (1024 vs 512 is worth 0.0012 AUC — noise.)
 
 ```bash
 # ~6 min, only needed when audio has been added
-python mybad_cache.py --n-fft 512
+python mybad_cache.py --n-fft 1024
 
-# retrain (all positives + your new negatives)
-python train_mybad.py --frontend db --n-fft 512 --seed 42 --tag LOOP1
+# retrain: all positives + your new negatives. Three seeds, not one -- see below.
+for S in 42 100 786; do
+  python train_mybad.py --frontend db --n-fft 1024 --seed $S --tag LOOP1_s$S
+done
 
-# build the flashable model
-python deploy/finalize.py results/LOOP1
+# build the flashable model from whichever seed you flash
+python deploy/finalize.py results/LOOP1_s42
 ```
 
-Then compare against what exists:
+**Run three seeds and compare the mean.** A single run is not a result. Twice in this
+project a single-seed number sent us down the wrong path — once picking the wrong
+receptive field, once concluding "a quarter of the data is enough" when it was not.
+Different random seeds on the same data can differ by more than the effect you are
+trying to measure.
 
 ```bash
 python -c "
-import json
-for t in ['G1_sparrow_db_fft512_s42','LOOP1']:
-    d=json.load(open(f'results/{t}/summary.json'))
-    print(f\"{t:28s} MyBAD test AUC {d['mybad_test_auc_int8']:.4f}\")"
+import glob, json, numpy as np
+for pat in ['results/G1_sparrow_db_fft1024_s*','results/LOOP1_s*']:
+    a=[json.load(open(f+'/summary.json'))['mybad_test_auc_int8'] for f in glob.glob(pat)]
+    print(f'{pat:36s} {np.mean(a):.4f} +- {np.std(a):.4f}  (n={len(a)})')"
 ```
+
+Also sanity-check each run's own output as it goes: it prints the split sizes and
+`(no overlap)`, the clip counts it actually used, and the float32-vs-INT8 gap. If the
+INT8 number is much worse than float32, stop and tell Muneim — that is a frontend
+problem, not a training problem.
 
 **What to expect, and this is important:** the MyBAD test AUC may go *down* slightly,
 and that can still be a success. The MyBAD test set is mostly UK/US negatives, so a
@@ -188,10 +230,10 @@ Two things to also try, each one flag, each ~10 minutes:
 
 ```bash
 # drongonet-micro instead: smaller (5.98 KB vs 8.57 KB), was 0.966 vs 0.971
-python train_mybad.py --arch drongonet_micro --frontend db --n-fft 512 --seed 42 --tag LOOP1_micro
+python train_mybad.py --arch drongonet_micro --frontend db --n-fft 1024 --seed 42 --tag LOOP1_micro
 
 # a quarter of the positives, to check they are not the limiting factor any more
-python train_mybad.py --frontend db --n-fft 512 --pos-source-frac 0.25 --seed 42 --tag LOOP1_quarterpos
+python train_mybad.py --frontend db --n-fft 1024 --pos-source-frac 0.25 --seed 42 --tag LOOP1_quarterpos
 ```
 
 ---
