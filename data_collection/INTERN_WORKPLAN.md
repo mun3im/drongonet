@@ -78,9 +78,14 @@ settings, naming, logging, the no-birds rule.
 
 | | |
 |---|---|
-| **Target for loop 1** | **4–5 hours of usable audio** |
-| Why that number | 5 hours ≈ 6,000 three-second clips, which is enough to replace the entire non-Malaysian negative side of a minimal training set (see [the numbers](#appendix--why-those-numbers)) |
+| **Record for loop 1** | **6 hours of raw audio** |
+| Which yields | ~5,000 usable 3-second clips — enough to match the positives on the negative side |
+| Why 6 and not 4 | 5,000 clips is 4.2 h of *usable* audio; budget ~30% loss to birds, silence and `maybe` flags, so record 6 h to land 5,000 |
 | Priority | Whatever fooled the device in Week 1, first and most |
+
+**Hand over the first hour before recording the other five.** Auto-gain left on, or the
+wrong file format, would silently spoil the whole batch, and the only way to catch it is
+for someone to look at real files early.
 
 Split it roughly:
 
@@ -96,34 +101,38 @@ retraining.
 
 ## Week 3 — Build the minimal dataset and retrain
 
-### Using the positive WAVs
+### Using the positive WAVs — you already have them, and there is nothing to do
 
-Muneim will give you `/Volumes/Evo/mybad0/positive` — 28,000 three-second WAVs of
-Malaysian birds, already cut and ready.
+You have `/Volumes/Evo/mybad0/positive`: 28,000 three-second WAVs of Malaysian birds,
+already cut and ready. **Use all of them, as they are.** Three rules, all "don't":
 
-**Three rules:**
+1. **Don't re-cut, re-extract, or re-download.** They are finished. The full-length
+   originals they were cut from no longer exist, and you do not need them.
+2. **Don't rename them.** The filenames are load-bearing. The trailing `_1`/`_2` is a
+   clip index and everything before it is the source recording, so `xc216946_1.wav` and
+   `xc216946_2.wav` are two pieces of the *same* recording. The training code reads that
+   shared `xc216946` prefix to keep both on the same side of the train/test split. Rename
+   them and our accuracy numbers silently become wrong — no error, just wrong.
+3. **Don't hand-pick a "best" subset.** If you ever need fewer for speed, use the
+   `--pos-source-frac` flag, which samples whole source recordings at random with a
+   fixed seed. Choosing by loudness or "clarity" would re-introduce exactly the bias
+   that already makes this dataset optimistic (see [the numbers](#appendix--why-those-numbers)).
 
-1. **Do not re-cut, re-extract, or re-download them.** They are finished. The originals
-   they were cut from no longer exist, and you do not need them.
-2. **Do not rename them.** The filenames carry information the training code depends on:
-   `xc216946_1.wav` and `xc216946_2.wav` are two pieces of the *same* original
-   recording, and the code uses the shared `xc216946` prefix to keep them on the same
-   side of the train/test split. Rename them and our accuracy numbers silently become
-   wrong.
-3. **You do not need all 28,000.** We measured this. About **25% of them is enough** —
-   see the table below. Using a quarter makes every experiment four times faster, which
-   matters far more than the last 0.004 of accuracy while you are still iterating.
+**You do not need to subset at all.** A full run takes about 10 minutes on your GPU
+(~7 minutes on CPU — measured, so the GPU is a convenience, not a requirement). Earlier
+guidance here said "25% is enough"; a second training seed showed that was noise, and
+25% actually costs about 0.007 AUC. Not much, but there is no reason to pay it when the
+full run is ten minutes.
 
 ### The minimal dataset
 
 | part | how many clips | where from |
 |---|---|---|
-| Positives (bird) | **~5,000** | 25% of the folder Muneim gives you — the training script picks them for you with one flag |
+| Positives (bird) | **28,000** — all of them | the folder you already have |
 | Negatives (no bird) | **~5,000** | your Week 2 recordings, cut into 3s pieces |
-| | **~10,000 total** | roughly balanced, which is what you want |
 
-That is a dataset you can retrain in **under 10 minutes** on your laptop's GPU (about
-7 minutes on CPU alone — I measured it, so a GPU is a convenience, not a requirement).
+The positives already outnumber what you will collect, and that is fine — the script
+handles the imbalance. Your job is entirely the negative side.
 
 ### Retraining
 
@@ -153,13 +162,11 @@ Then build the features and retrain:
 # ~6 min, only needed when audio has been added
 python mybad_cache.py --n-fft 512
 
-# retrain on the minimal set
-python train_mybad.py --frontend db --n-fft 512 \
-    --pos-source-frac 0.25 \
-    --seed 42 --tag LOOP1_minimal
+# retrain (all positives + your new negatives)
+python train_mybad.py --frontend db --n-fft 512 --seed 42 --tag LOOP1
 
 # build the flashable model
-python deploy/finalize.py results/LOOP1_minimal
+python deploy/finalize.py results/LOOP1
 ```
 
 Then compare against what exists:
@@ -167,7 +174,7 @@ Then compare against what exists:
 ```bash
 python -c "
 import json
-for t in ['G1_sparrow_db_fft512_s42','LOOP1_minimal']:
+for t in ['G1_sparrow_db_fft512_s42','LOOP1']:
     d=json.load(open(f'results/{t}/summary.json'))
     print(f\"{t:28s} MyBAD test AUC {d['mybad_test_auc_int8']:.4f}\")"
 ```
@@ -183,8 +190,8 @@ Two things to also try, each one flag, each ~10 minutes:
 # drongonet-micro instead: smaller (5.98 KB vs 8.57 KB), was 0.966 vs 0.971
 python train_mybad.py --arch drongonet_micro --frontend db --n-fft 512 --seed 42 --tag LOOP1_micro
 
-# all the positives instead of a quarter, to see if it matters with your new negatives
-python train_mybad.py --frontend db --n-fft 512 --seed 42 --tag LOOP1_allpos
+# a quarter of the positives, to check they are not the limiting factor any more
+python train_mybad.py --frontend db --n-fft 512 --pos-source-frac 0.25 --seed 42 --tag LOOP1_quarterpos
 ```
 
 ---
@@ -265,24 +272,55 @@ If you get all four in a month, that is a very good month.
 
 ## Appendix — why those numbers
 
-**"25% of the positives is enough."** We trained on different fractions of the positive
-*source recordings*, keeping the test set fixed, and measured on 8,412 held-out clips:
+**How much do the positives matter?** We trained on different fractions of the positive
+*source recordings*, keeping the test set fixed, and scored 8,412 held-out clips. Two
+seeds each:
 
 | positive sources used | positive clips | MyBAD test AUC |
 |---|---|---|
-| 12.5% (1,303 sources) | 2,447 | 0.9579 |
-| **25% (2,607 sources)** | **4,889** | **0.9678** |
-| 50% (5,214 sources) | 9,791 | 0.9679 |
-| 100% (14,896 sources) | 19,566 | 0.9715 |
+| 12.5% (1,303 sources) | 2,445 | 0.9578 ± 0.0001 |
+| 25% (2,607 sources) | 4,887 | 0.9648 ± 0.0029 |
+| 50% (5,214 sources) | 9,797 | 0.9685 ± 0.0006 |
+| **100% (all sources)** | **19,611** | **0.9716 ± 0.0012** |
+| 1 clip per source, all sources | 10,427 | 0.9689 ± 0.0005 |
 
-It flattens after 25%: doubling from 25% to 50% bought **0.0001**. The last 0.004 needs
-four times the data. So while you are iterating, use a quarter. (One seed so far; a
-second is running and may shift these by a few thousandths, not more.)
+Diminishing but never flat — each doubling still buys about 0.003. An earlier draft of
+this document said it "flattens after 25%", which came from a single seed where 25% and
+50% happened to land 0.0001 apart; the second seed showed that was luck. Corrected: use
+all of them, since a full run is ten minutes.
 
-**"5 hours of negatives is enough for loop 1."** 5 hours ≈ 6,000 three-second clips,
-which covers the ~5,000 negatives a balanced minimal set needs. For comparison, MyBAD
-currently has only **923 Southeast Asian negative clips out of 28,000** — so 5 hours of
-your recordings would multiply the Malaysian negative material by roughly six.
+The last row is the interesting one. Using one clip from *every* recording (10,427
+clips) scores the same as two clips from *half* the recordings (9,797 clips) — 0.9689
+vs 0.9685. At matched clip count, recording variety and clip count are worth about the
+same here, so there is no clever subset to find. More data helps a little; nothing else
+about the positives is a lever.
+
+**Why 6 hours of negatives.** 5,000 clips is 4.2 h of usable audio, and roughly 30% of
+raw recording is lost to birds, silence and `maybe` flags — hence 6 h. For scale, MyBAD
+currently holds only **923 Southeast Asian negative clips out of 28,000**, so 6 hours
+multiplies the Malaysian negative material by about six.
+
+**Species coverage does not matter (tested).** 236 of the positives come from the
+Macaulay Library, covering 3 species Xeno-canto blocks. We trained with those clips
+entirely removed and then measured detection on them:
+
+| | recall on those 236 clips | overall AUC |
+|---|---|---|
+| trained on them | 0.804 | 0.9716 |
+| never saw them | 0.777 | 0.9707 |
+
+Having heard a species is worth about 2.7 points of recall on it. The detector is
+learning what a bird *sounds like*, not which bird it is, so it finds unfamiliar species
+from the general pattern. **Practical consequence: never go hunting for more species
+coverage.** Nothing about the bird side of this dataset needs your attention.
+
+That same test surfaced something more useful, and it is the reason to distrust the
+headline number: those Macaulay clips score ~0.80 while Xeno-canto clips score ~0.94,
+*whether or not* the model trained on them. Macaulay holds more incidental and
+soundscape recordings; Xeno-canto skews to deliberate close-microphone captures. If
+field audio resembles Macaulay more, then **0.80 predicts your field recall better than
+0.97 does**. Which is the whole reason Week 1 is a field test and not another
+experiment.
 
 **Why negatives and not more positives.** MyBAD's negatives are 70% UK and US
 recordings; only 3.3% are Southeast Asian. Meanwhile the positives are already Malaysian
